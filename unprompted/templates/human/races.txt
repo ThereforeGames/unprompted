@@ -1,0 +1,12 @@
+[choose]
+white
+black
+native american
+indian
+asian
+hispanic
+peurto rican
+eurasian
+middle eastern
+nordic
+[/choose]

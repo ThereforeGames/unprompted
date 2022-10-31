@@ -1,0 +1,1 @@
+[choose]black|blue|green|purple|orange|pink|silver|gold[/choose]

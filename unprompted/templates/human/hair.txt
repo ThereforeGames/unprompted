@@ -1,0 +1,7 @@
+[choose]
+blonde
+brunette
+ginger
+bald
+[file ./colors]-haired
+[/choose]

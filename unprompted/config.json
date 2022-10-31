@@ -1,0 +1,23 @@
+{
+	"_about":"STOP! Instead of modifying this file, create config_user.json and make your changes there.",
+	"app":"unprompted",
+	"debug":false,
+	"template_directory":"./unprompted/templates",
+	"txt_format":".txt",
+	"base_dir":"./unprompted",
+	"subdirectories":
+	{
+		"shortcodes":"shortcodes"
+	},
+	"syntax":
+	{
+		"n_temp":"\\n",
+		"n_final":" ",
+		"tag_start":"[",
+		"tag_end":"]",
+		"tag_start_alt":"<",
+		"tag_end_alt":">",
+		"tag_close":"/",
+		"tag_escape":"`"
+	}
+}

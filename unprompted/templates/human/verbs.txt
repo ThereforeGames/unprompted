@@ -1,0 +1,11 @@
+[choose]
+smiling
+frowning
+dancing
+jumping
+singing
+talking
+pointing
+gesturing
+scowling
+[/choose]
