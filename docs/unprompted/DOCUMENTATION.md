@@ -166,6 +166,10 @@ Returns the value of `variable`.
 
 Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="<file example>"]`
 
+```
+My name is [get name]
+```
+
 ### [if variable {_not}]
 
 Checks whether `variable` is equal to the given value, returning the content if true, otherwise discarding the content.
@@ -173,6 +177,10 @@ Checks whether `variable` is equal to the given value, returning the content if 
 Supports the testing of multiple variables, e.g. `[if var_a=1 var_b=50 var_c="something"]`. If one or more variables return false, the content is discarded.
 
 The optional `_not` argument allows you to test for false instead of true, e.g. `[if _not my_variable=1]` will return the content if `my_variable` does *not* equal 1.
+
+```
+[if subject="man"]wearing a business suit[/if]
+```
 
 ### [override variable]
 
@@ -194,6 +202,10 @@ You can specify the lower and upper boundaries of the range with `_min` and `_ma
 
 If you pass `_float` into this shortcode, it will support decimal numbers instead of integers.
 
+```
+[set restore_faces][random 1][/set]
+```
+
 ### [set {_append} {_prepend}]
 
 Sets a variable to the given content.
@@ -203,3 +215,7 @@ Sets a variable to the given content.
 `_prepend` will instead add the content to the beginning of the variable's current value.
 
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.
+
+```
+[set my_var]This is the value of my_var[/set]
+```
