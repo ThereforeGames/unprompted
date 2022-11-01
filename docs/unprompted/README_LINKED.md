@@ -47,9 +47,9 @@ There are too many features to include on one page!
 
 To learn more about what Unprompted is (and isn't) capable of, please check out the following resources:
 
-- [Starter Guide](GUIDE.md)
-- [Full Documentation](DOCUMENTATION.md)
-- [Changelog](CHANGELOG.md)
+- [Starter Guide](../docs/unprompted/GUIDE.md)
+- [Full Documentation](../docs/unprompted/DOCUMENTATION.md)
+- [Changelog](../docs/unprompted/CHANGELOG.md)
 
 For an example of a working, sophisticated template, you can [check out the inexpensive Fantasy Card Template here](https://payhip.com/b/hdgNR). Purchases will help continue to fund this project. ❤
 
