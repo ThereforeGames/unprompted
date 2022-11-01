@@ -8,7 +8,7 @@ import inspect
 
 class Unprompted:
 	def __init__(self):
-		print("(Unprompted v0.0.1 by Therefore Games)")
+		print("(Unprompted v0.1.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -76,6 +76,13 @@ class Unprompted:
 			if show_caller: this_string += " ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]"
 			this_string += f" {string}"
 			print(this_string)
+
+	def is_equal(self,var_a,var_b):
+		"""Checks if two variables equal each other, taking care to account for datatypes."""
+		if (self.is_float(var_a)): var_a = float(var_a)
+		if (self.is_float(var_b)): var_b = float(var_b)
+		if (str(var_a) == str(var_b)): return True
+		else: return False
 
 	def is_float(self,value):
 		try:

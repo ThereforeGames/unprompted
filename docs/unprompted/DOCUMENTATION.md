@@ -108,6 +108,10 @@ Use this to write comments in your templates. Comments are ultimately discarded 
 [# This is my comment.]
 ```
 
+### [case]
+
+See `[switch]`.
+
 ### [chance int]
 
 Returns the content if the integer you passed is greater than or equal to a randomly generated number between 1 and 100.
@@ -206,6 +210,19 @@ If you pass `_float` into this shortcode, it will support decimal numbers instea
 [set restore_faces][random 1][/set]
 ```
 
+### [repeat times(int)]
+
+Processes and returns the content a number of `times`.
+
+Supports secondary shortcode tags with the optional `_times` argument, e.g. `[repeat _times="<get my_var>"]`.
+
+```
+[set my_var]0[/set]
+[repeat 5]
+Variable is currently: <set my_var _out _append>1</set>
+[/repeat]
+```
+
 ### [set {_append} {_prepend}]
 
 Sets a variable to the given content.
@@ -218,4 +235,21 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 
 ```
 [set my_var]This is the value of my_var[/set]
+```
+
+### [switch var(str)]
+
+Allows you to run different logic blocks with inner case statements that match the value of the given `var`.
+
+Supports secondary shortcode tags with the optional `_var` argument, e.g. `[switch _var="<file my_file>"]`.
+
+```
+[set my_var]100[/set]
+[switch my_var]
+<case 1>Does not match</case>
+<case 2>Does not match</case>
+<case 100>Matches! This content will be returned</case>
+<case 4>Does not match</case>
+<case>If no other case matches, this content will be returned by default</case>
+[/switch]
 ```
