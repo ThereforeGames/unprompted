@@ -6,8 +6,11 @@ class Shortcode():
 		else: parg = pargs[0]
 
 		if (parg in self.Unprompted.shortcode_user_vars):
-			if ("after" in kwargs):
-				self.Unprompted.shortcode_user_vars[parg] = str(self.Unprompted.shortcode_user_vars[parg]) + kwargs["after"]
+			if ("_before" in kwargs):
+				self.Unprompted.shortcode_user_vars[parg] = kwargs["_before"] + str(self.Unprompted.shortcode_user_vars[parg])
+			if ("_after" in kwargs):
+				self.Unprompted.shortcode_user_vars[parg] = str(self.Unprompted.shortcode_user_vars[parg] + kwargs["_after"])
+			# self.Unprompted.log(str(self.Unprompted.shortcode_user_vars[parg]))
 			return(str(self.Unprompted.shortcode_user_vars[parg]))
 		else:
 			return("")

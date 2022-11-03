@@ -170,6 +170,8 @@ Returns the value of `variable`.
 
 Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="<file example>"]`
 
+You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`
+
 ```
 My name is [get name]
 ```

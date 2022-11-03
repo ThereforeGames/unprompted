@@ -10,4 +10,5 @@ class Shortcode():
 		# Remove empty lines
 		parts = list(filter(None, parts))
 		# self.Unprompted.log(f"List of options: {parts}")
-		return self.Unprompted.parse_alt_tags(random.choice(parts),context)
+		selected = self.Unprompted.parse_alt_tags(random.choice(parts),context)
+		return selected

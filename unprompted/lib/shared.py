@@ -8,7 +8,7 @@ import inspect
 
 class Unprompted:
 	def __init__(self):
-		print("(Unprompted v0.1.0 by Therefore Games)")
+		print("(Unprompted v0.1.1 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -76,6 +76,17 @@ class Unprompted:
 			if show_caller: this_string += " ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]"
 			this_string += f" {string}"
 			print(this_string)
+	
+	def strip_str(self,string,chop):
+		while True:
+			if chop and string.endswith(chop):
+				string = string[:-len(chop)]
+			else: break
+		while True:
+			if chop and string.startswith(chop):
+				string = string[len(chop):]
+			else: break
+		return string
 
 	def is_equal(self,var_a,var_b):
 		"""Checks if two variables equal each other, taking care to account for datatypes."""

@@ -22,4 +22,4 @@ class Shortcode():
 		file_contents = open(file).read().replace('\n', self.Unprompted.Config.syntax.n_temp)
 
 		self.Unprompted.shortcode_objects["else"].do_else = False
-		return(self.Unprompted.shortcode_parser.parse(file_contents,path))
+		return(self.Unprompted.strip_str(self.Unprompted.shortcode_parser.parse(file_contents,path),self.Unprompted.Config.syntax.n_temp))

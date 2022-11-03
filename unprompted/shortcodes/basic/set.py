@@ -6,6 +6,8 @@ class Shortcode():
 
 		if (pargs[0] in overrides.shortcode_overrides):
 			content = overrides.shortcode_overrides[pargs[0]]
+		else:
+			content = self.Unprompted.parse_alt_tags(content,context)
 
 		if (self.Unprompted.is_float(content)): content = float(content)
 		elif (self.Unprompted.is_int(content)): content = int(content)

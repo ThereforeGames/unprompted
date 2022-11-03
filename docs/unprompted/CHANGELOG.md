@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.1.1 - 2 November 2022
+### Added
+- `[get]` now supports `_before` and `_after` arguments
+- `[set]` now supports secondary shortcode tags
+- `[file]` now strips leading and trailing newline characters
+
 ## 0.1.0 - 1 November 2022
 ### Added
 - Added `[switch]` and `[case]` shortcodes
