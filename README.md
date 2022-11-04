@@ -56,7 +56,7 @@ To learn more about what Unprompted is (and isn't) capable of, please check out 
 
 - [Starter Guide](./docs/GUIDE.md)
 - [Manual](./docs/MANUAL.md)
-- [Changelog](./unprompted/CHANGELOG.md)
+- [Changelog](./docs/CHANGELOG.md)
 
 For an example of a working, sophisticated template, you can [check out the inexpensive Fantasy Card Template here](https://payhip.com/b/hdgNR). Purchases will help continue to fund this project. ❤
 
