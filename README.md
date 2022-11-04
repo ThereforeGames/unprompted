@@ -7,7 +7,7 @@ Supercharge your prompt workflow with this powerful scripting language!
 
 **Unprompted** is a highly modular extension for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that allows you to include various shortcodes in your prompts. You can pull text from files, set up your own variables, process text through conditional functions, and so much more - it's like wildcards on steroids.
 
-While the intended usecase is Stable Diffusion, **this engine is also flexible enough to serve as an all-purpose text generator.**
+While the intended usecase is Stable Diffusion, **this engine is also flexible enough to serve as an all-purpose text generator.** You can run the included `unprompted_dry.py` without any external dependencies.
 
 Still under active development - I am excited to read your feedback but please keep in mind that this is an early release!
 
@@ -23,8 +23,6 @@ Developed & tested on Windows 11 with Python v3.9.7.
 2. Visit the **Install from URL** subtab.
 3. Paste the URL for this repo and enter `unprompted` as the local directory name.
 4. Press Install!
-
-> **💡 Tip:** You can run the included `unprompted_dry.py` to generate text in Command Prompt without needing Stable Diffusion. No external dependencies required!
 
 ## Basic Usage
 
