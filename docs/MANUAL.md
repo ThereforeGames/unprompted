@@ -96,6 +96,64 @@ Secondary shortcode tags give us a couple additional benefits:
 - If your shortcode is computationally expensive, you can avoid running it unless the outer shortcode succeeds. This is good for performance.
 - **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance _probability="<get my_var>"]content[/chance]`
 
+## The config file
+
+Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
+
+If you wish to override the default settings, you should make another file at the same location called `config_user.json`. Modifications to the original config file will **not** be preserved between updates.
+
+Here are some of the settings you can modify:
+
+### debug (bool)
+
+When `True`, you will see a lot more diagnostic information printed to the console during a run. You should use this when creating your own shortcode, template, or when filing a bug report.
+
+### template_directory (str)
+
+This is the base directory for your text files.
+
+### txt_format (str)
+
+This is the file extension that Unprompted will assume you're looking for with `[file]`.
+
+### syntax/n_temp (str)
+
+This is a temporary string that replaces all newline characters for easier/safer processing with Unprompted.
+
+### syntax/n_final (str)
+
+This is a string that `n_temp` is replaced with in the final output. Defaults to a space, which is helpful in most cases when coding multiline templates. In my experience, space creates the fewest problems, but feel free to experiment with other values.
+
+### syntax/tag_start (str)
+
+This is the string that indicates the start of a shortcode.
+
+### syntax/tag_end (str)
+
+This is the string that indicates the end of a shortcode.
+
+
+### syntax/tag_start_alt (str)
+
+This is the string that indicates the start of a secondary shortcode.
+
+### syntax/tag_end_alt (str)
+
+This is the string that indicates the end of a secondary shortcode.
+
+### syntax/tag_close (str)
+
+This is the string that indicates the closing tag of a block-scoped shortcode.
+
+### syntax/tag_escape (str)
+
+This is the string that allows you to print a shortcode as a literal string, bypassing the shortcode processor.
+
+Note that you only have to include this string once, before the shortcode, as opposed to in front of every bracket.
+
+In my experience, the escape character should be used sparingly as it doesn't play well with nested statements.
+
+
 ## Basic Shortcodes
 
 This section describes all of the included basic shortcodes and their functionality.
@@ -106,6 +164,18 @@ Use this to write comments in your templates. Comments are ultimately discarded 
 
 ```
 [# This is my comment.]
+```
+
+### [##]
+
+Same as `[#]` but for multiline comments.
+
+```
+[##]
+This is my multiline comment.
+We're still commenting.
+I can't believe it, we're doing 3 lines of text!
+[/##]
 ```
 
 ### [case]
@@ -176,13 +246,17 @@ You can add `_before` and `_after` content to your variable. This is particularl
 My name is [get name]
 ```
 
-### [if variable {_not}]
+### [if variable {_not} {_any} {_operator}]
 
 Checks whether `variable` is equal to the given value, returning the content if true, otherwise discarding the content.
 
 Supports the testing of multiple variables, e.g. `[if var_a=1 var_b=50 var_c="something"]`. If one or more variables return false, the content is discarded.
 
+The optional `_any` argument allows you to return the content if one of many variables return true. This is the equivalent of running "or" instead of "and" in programming, e.g. `[if _any var_a=1 var_b=50]`.
+
 The optional `_not` argument allows you to test for false instead of true, e.g. `[if _not my_variable=1]` will return the content if `my_variable` does *not* equal 1.
+
+The optional `_operator` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _operator="<="]`
 
 ```
 [if subject="man"]wearing a business suit[/if]

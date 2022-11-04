@@ -1,26 +1,27 @@
 import json
 from types import SimpleNamespace
-from unprompted.lib import shortcodes as shortcodes
+import lib.shortcodes as shortcodes
 import os
 import glob
 import importlib
 import inspect
+import sys
 
 class Unprompted:
-	def __init__(self):
-		print("(Unprompted v0.1.1 by Therefore Games)")
+	def __init__(self, base_dir="."):
+		print("(Unprompted v0.2.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
 		self.shortcode_user_vars = {}
 		self.cleanup_routines = []
-		self.sys_dir = "./unprompted"
+		self.base_dir = base_dir
 
 		self.log("Loading configuration files...",False,"SETUP")
 
-		cfg_dict = json.load(open(f"{self.sys_dir}/config.json", "r", encoding="utf8"))
-		user_config = f"{self.sys_dir}/config_user.json"
+		cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
+		user_config = f"{base_dir}/config_user.json"
 		if (os.path.isfile(user_config)): cfg_dict.update(json.load(open(user_config,"r",encoding="utf8")))
 		
 		self.Config = json.loads(json.dumps(cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
@@ -28,14 +29,18 @@ class Unprompted:
 		self.log(f"Debug mode is {self.Config.debug}",False,"SETUP")
 		
 		# Load shortcodes
-		all_shortcodes = glob.glob(self.Config.base_dir + "/" + self.Config.subdirectories.shortcodes + "/**/*.py", recursive=True)
+		# self.log(f"Short path??? {short_path}")
+		# sys.path.append(short_path)
+		import importlib.util
+
+		all_shortcodes = glob.glob(self.base_dir + self.Config.base_dir + "/" + self.Config.subdirectories.shortcodes + "/**/*.py", recursive=True)
 		for file in all_shortcodes:
 			shortcode_name = os.path.basename(file).split(".")[0]
-			#TODO: maybe do this with regex
-			module_name = file.replace(".py","").replace("./","").replace(".","").replace("/",".").replace("\\",".")
 
 			# Import shortcode as module
-			self.shortcode_modules[shortcode_name] = importlib.import_module(module_name)
+			spec = importlib.util.spec_from_file_location(shortcode_name, file)
+			self.shortcode_modules[shortcode_name] = importlib.util.module_from_spec(spec)
+			spec.loader.exec_module(self.shortcode_modules[shortcode_name])
 
 			# Create handlers dynamically
 			self.shortcode_objects[shortcode_name] = self.shortcode_modules[shortcode_name].Shortcode(self)

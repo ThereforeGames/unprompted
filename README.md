@@ -5,17 +5,24 @@ Supercharge your prompt workflow with this powerful scripting language!
 
 ## Introduction
 
-**Unprompted** is a highly modular addon for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that allows you to include various shortcodes in your prompts. You can pull text from files, set up your own variables, process text through conditional functions, and so much more - it's like wildcards on steroids.
+**Unprompted** is a highly modular extension for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) that allows you to include various shortcodes in your prompts. You can pull text from files, set up your own variables, process text through conditional functions, and so much more - it's like wildcards on steroids.
 
 While the intended usecase is Stable Diffusion, **this engine is also flexible enough to serve as an all-purpose text generator.**
 
 Still under active development - I am excited to read your feedback but please keep in mind that this is an early release!
 
+Developed & tested on Windows 11 with Python v3.9.7.
+
 > Unprompted is built on top of Darren Mulholland's excellent [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library.
 
 ## Installation
 
-Simply clone or download this repo and place the files in the base directory of Automatic's web UI.
+> **⚠️ Important!** Unprompted was converted from a script to an extension on 11/4. The file structure has changed as a result. If you installed an old version of Unprompted, you should remove `unprompted.py` from `/scripts` as well as the `unprompted` directory (taking a backup of your customizations if needed) before updating.
+
+1. Visit the **Extensions** tab of Automatic's WebUI.
+2. Visit the **Install from URL** subtab.
+3. Paste the URL for this repo and enter `unprompted` as the local directory name.
+4. Press Install!
 
 > **💡 Tip:** You can run the included `unprompted_dry.py` to generate text in Command Prompt without needing Stable Diffusion. No external dependencies required!
 
@@ -47,9 +54,9 @@ There are too many features to include on one page!
 
 To learn more about what Unprompted is (and isn't) capable of, please check out the following resources:
 
-- [Starter Guide](../docs/unprompted/GUIDE.md)
-- [Full Documentation](../docs/unprompted/DOCUMENTATION.md)
-- [Changelog](../docs/unprompted/CHANGELOG.md)
+- [Starter Guide](./docs/GUIDE.md)
+- [Manual](./docs/MANUAL.md)
+- [Changelog](./unprompted/CHANGELOG.md)
 
 For an example of a working, sophisticated template, you can [check out the inexpensive Fantasy Card Template here](https://payhip.com/b/hdgNR). Purchases will help continue to fund this project. ❤
 

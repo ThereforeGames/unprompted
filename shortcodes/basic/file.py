@@ -12,7 +12,7 @@ class Shortcode():
 		if (file_string[0] == "."):
 			path = os.path.dirname(context) + "/" + file_string + self.Unprompted.Config.txt_format
 		# Absolute path
-		else: path = self.Unprompted.Config.template_directory + "/" + file_string + self.Unprompted.Config.txt_format
+		else: path = self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string + self.Unprompted.Config.txt_format
 		
 		files = glob.glob(path)
 		file = random.choice(files)

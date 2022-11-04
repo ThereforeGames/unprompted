@@ -153,6 +153,6 @@ I hope you found this starter guide useful and now have a better idea of what Un
 
 We have only scratched the surface here - when you're ready to do a deeper dive, please check out the full documentation here:
 
-[Unprompted Documentation](DOCUMENTATION.md)
+[Unprompted Manual](MANUAL.md)
 
 Good luck!

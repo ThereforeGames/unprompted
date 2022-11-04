@@ -2,11 +2,10 @@
 # https://patreon.com/thereforegames
 # https://github.com/ThereforeGames/unprompted
 
-from unprompted.lib.shared import Unprompted
+from lib.shared import Unprompted
 
 # Main object
 Unprompted = Unprompted()
-
 
 def do_unprompted(string):
 	# Reset vars
