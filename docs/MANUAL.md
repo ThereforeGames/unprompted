@@ -212,7 +212,7 @@ Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) 
 
 ### [eval]
 
-Parses the content using Python's `eval()` statement, returning the result. Particularly useful for arithmetic.
+Parses the content using Python's `eval()` statement, returning the result. Particularly useful for arithmetic. **Not safe over the network! Do not provide end users access to this shortcode with --share environments. Unprompted is intended for local use.**
 
 ```
 [eval]5 + 5[/eval]
