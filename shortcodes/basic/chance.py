@@ -9,7 +9,9 @@ class Shortcode():
 		if ("_probability" in kwargs): this_number = self.Unprompted.parse_alt_tags(kwargs["_probability"],context)
 		else: this_number = pargs[0]
 		
-		if (int(float(this_number)) >= random.randint(1, 100)):
+		_sides = kwargs["_sides"] if "_sides" in kwargs else 100
+
+		if (int(float(this_number)) >= random.randint(1, _sides)):
 			self.Unprompted.shortcode_objects["else"].do_else = False
 			return(self.Unprompted.parse_alt_tags(content,context))
 		else:

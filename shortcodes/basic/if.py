@@ -9,7 +9,7 @@ class Shortcode():
 
 		is_true = not _any
 
-		_op = kwargs["_operator"] if "_operator" in kwargs else "=="
+		_is = kwargs["_is"] if "_is" in kwargs else "=="
 		
 		for key, value in kwargs.items():
 			if (key[0] == "_"): continue # Skips system arguments
@@ -17,11 +17,11 @@ class Shortcode():
 			this_value = self.Unprompted.parse_alt_tags(value,context)
 			
 			# Fix data type
-			if (_op != "=="):
+			if (_is != "=="):
 				self.Unprompted.shortcode_user_vars[key] = float(self.Unprompted.shortcode_user_vars[key])
 				this_value = float(this_value)
 			
-			if (self.ops[_op](self.Unprompted.shortcode_user_vars[key],this_value)):
+			if (self.ops[_is](self.Unprompted.shortcode_user_vars[key],this_value)):
 				if _any:
 					is_true = True
 					break

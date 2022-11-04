@@ -96,6 +96,35 @@ Secondary shortcode tags give us a couple additional benefits:
 - If your shortcode is computationally expensive, you can avoid running it unless the outer shortcode succeeds. This is good for performance.
 - **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance _probability="<get my_var>"]content[/chance]`
 
+Secondary shortcode tags can have infinite nested depth. The number of `<>` around a shortcode indicates its nested level. Consider this example:
+
+```
+[if my_var=1]
+<if another_var=1>
+<<if third_var=1>>
+<<<if fourth_var=1>>>
+wow
+<<</if>>>
+<</if>>
+</if>
+[/if]
+```
+
+Whenever the `[]` statement succeeds, it will decrease the nested level of the resulting content. Our example returns:
+
+```
+[if another_var=1]
+<if third_var=1>
+<<if fourth_var=1>>
+wow
+<</if>>
+</if>
+[/if]
+```
+
+Rinse and repeat until no `<>` remain.
+
+
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
@@ -182,9 +211,11 @@ I can't believe it, we're doing 3 lines of text!
 
 See `[switch]`.
 
-### [chance int]
+### [chance int {_sides}]
 
 Returns the content if the integer you passed is greater than or equal to a randomly generated number between 1 and 100.
+
+You can change the upper boundary by specifying the optional `_sides` argument.
 
 Supports secondary shortcode tags with the optional `_probability` argument, e.g. `[chance _probability="<get my_var>"]content[/chance]`
 
@@ -256,7 +287,7 @@ The optional `_any` argument allows you to return the content if one of many var
 
 The optional `_not` argument allows you to test for false instead of true, e.g. `[if _not my_variable=1]` will return the content if `my_variable` does *not* equal 1.
 
-The optional `_operator` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _operator="<="]`
+The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _is="<="]`
 
 ```
 [if subject="man"]wearing a business suit[/if]
@@ -328,4 +359,24 @@ Supports secondary shortcode tags with the optional `_var` argument, e.g. `[swit
 <case 4>Does not match</case>
 <case>If no other case matches, this content will be returned by default</case>
 [/switch]
+```
+
+### [while variable {_not} {_any} {_operator}]
+
+Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
+
+Supports the testing of multiple variables, e.g. `[while var_a=1 var_b=50 var_c="something"]`. If one or more variables return false, the loop ends.
+
+The optional `_any` argument will continue the loop if any of the provided conditions returns true.
+
+The optional `_not` argument allows you to test for false instead of true, e.g. `[while _not my_variable=1]` will continue the loop so long as `my_variable` does *not* equal 1.
+
+The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[while my_var="5" _is="<="]`
+
+```
+[set my_var]3[/set]
+[while my_var="10" _is="<"]
+Output
+<set my_var _append>1</set>
+[/while]
 ```

@@ -9,7 +9,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v0.2.0 by Therefore Games)")
+		print("(Unprompted v0.3.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -29,8 +29,6 @@ class Unprompted:
 		self.log(f"Debug mode is {self.Config.debug}",False,"SETUP")
 		
 		# Load shortcodes
-		# self.log(f"Short path??? {short_path}")
-		# sys.path.append(short_path)
 		import importlib.util
 
 		all_shortcodes = glob.glob(self.base_dir + self.Config.base_dir + "/" + self.Config.subdirectories.shortcodes + "/**/*.py", recursive=True)
@@ -73,7 +71,37 @@ class Unprompted:
 
 	def parse_alt_tags(self,string,context=None):
 		"""Converts any alt tags and then parses the resulting shortcodes"""
-		return(self.shortcode_parser.parse(string.replace(self.Config.syntax.tag_start_alt,self.Config.syntax.tag_start).replace(self.Config.syntax.tag_end_alt,self.Config.syntax.tag_end),context))
+
+		# Find maximum nested depth
+		nested = 0
+		while True:
+			start_tag = self.Config.syntax.tag_start_alt * (nested + 1)
+			if start_tag in string:
+				nested += 1
+			else: break
+		
+		tmp_start = "%_ts%"
+		tmp_end = "%_te%"
+		for i in range(nested,0,-1):
+			# Lower nested level by 1
+			if i > 1:
+				start_old = self.Config.syntax.tag_start_alt * i
+				start_new = tmp_start * (i-1)
+				end_old = self.Config.syntax.tag_end_alt * i
+				end_new = tmp_end * (i-1)
+			# Convert secondary tag to square bracket
+			else:
+				start_old = self.Config.syntax.tag_start_alt
+				start_new = self.Config.syntax.tag_start
+				end_old = self.Config.syntax.tag_end_alt
+				end_new = self.Config.syntax.tag_end
+
+			string = string.replace(start_old,start_new).replace(end_old,end_new)		
+
+		# Get rid of the temporary characters
+		string = string.replace(tmp_start,self.Config.syntax.tag_start_alt).replace(tmp_end,self.Config.syntax.tag_end_alt)
+
+		return(self.shortcode_parser.parse(string,context))
 	
 	def log(self,string,show_caller=True,context="DEBUG"):
 		if (context != "DEBUG" or self.Config.debug):

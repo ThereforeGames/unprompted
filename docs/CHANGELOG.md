@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.3.0 - 4 November 2022
+### Added
+- Support for infinite nesting of secondary shortcode tags
+- New shortcode `[while]` for looping content until the condition returns false
+- `[chance]` now supports `_sides` which determines the upper bound of the chance roll (default is 100)
+- The `[if]` `_operator` argument has been renamed to `_is` for readability
+
 ## 0.2.0 - 4 November 2022
 ### Added
 - New shortcode `[##]` for multiline comments
