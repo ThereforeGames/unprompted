@@ -24,15 +24,7 @@ Developed & tested on Windows 11 with Python v3.9.7. Built on top of Darren Mulh
 
 ## Basic Usage
 
-From either the txt2img or img2img screen, select Unprompted as your active script:
-
-![unprompted](https://user-images.githubusercontent.com/95403634/198924886-da1bd887-5e9f-4c29-a321-0bb1b590a327.png)
-
-Now, shortcodes in your prompt will be processed through Unprompted to assemble the final string for image generation.
-
-### Trying out the included demo
-
-Enter the following as your prompt:
+Try the included demo by entering the following as your prompt:
 
 `[file human/main]`
 
