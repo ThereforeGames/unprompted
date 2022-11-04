@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.4.0 - 4 November 2022
+### Added
+- Config option `batch_support` which, if enabled, will generate random prompts for every image in a batch as opposed to using the same prompt for the entire batch
+
 ## 0.3.0 - 4 November 2022
 ### Added
 - Support for infinite nesting of secondary shortcode tags

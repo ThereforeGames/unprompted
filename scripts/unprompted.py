@@ -36,6 +36,7 @@ class Scripts(scripts.Script):
 			Unprompted.Config.debug = True
 
 		# Reset vars
+		original_prompt = p.prompt;
 		Unprompted.shortcode_user_vars = {}
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
@@ -43,7 +44,7 @@ class Scripts(scripts.Script):
 			if not att.startswith("__"):
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
-		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(p.prompt)
+		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(original_prompt)
 
 		# Apply any updates to system vars
 		for att in dir(p):
@@ -56,9 +57,16 @@ class Scripts(scripts.Script):
 			p.all_seeds[0] = p.seed
 		else:
 			p.seed = -1
-			p.seed = fix_seed(p)			
-		for i, val in enumerate(p.all_prompts):
-			p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
+			p.seed = fix_seed(p)
+
+		if (Unprompted.Config.stable_diffusion.batch_support):
+			for i, val in enumerate(p.all_prompts):
+				if (i == 0): p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
+				else: p.all_prompts[i] = Unprompted.process_string(original_prompt)			
+				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False,"INFO")
+		else:
+			for i, val in enumerate(p.all_prompts):
+				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 
 		# Process any remaining shortcodes in the negative prompt
 		p.negative_prompt = Unprompted.process_string(p.negative_prompt)

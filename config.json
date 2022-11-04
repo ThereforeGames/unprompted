@@ -19,5 +19,9 @@
 		"tag_end_alt":">",
 		"tag_close":"/",
 		"tag_escape":"`"
+	},
+	"stable_diffusion":
+	{
+		"batch_support":true
 	}
 }
