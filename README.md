@@ -11,9 +11,7 @@ While the intended usecase is Stable Diffusion, **this engine is also flexible e
 
 Still under active development - I am excited to read your feedback but please keep in mind that this is an early release!
 
-Developed & tested on Windows 11 with Python v3.9.7.
-
-> Unprompted is built on top of Darren Mulholland's excellent [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library.
+Developed & tested on Windows 11 with Python v3.9.7. Built on top of Darren Mulholland's excellent [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library.
 
 ## Installation
 
