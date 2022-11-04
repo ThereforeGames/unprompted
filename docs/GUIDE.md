@@ -6,7 +6,7 @@ For the purposes of this guide, we will construct a basic "human generator" simi
 
 ## 1) Create the entry point
 
-In the root directory of the app, navigate to `unprompted/templates`. This is where all your templates belong - you can organize the files here in any way you like.
+In the root directory of the WebUI app, navigate to `extensions/unprompted/templates`. This is where all your templates belong - you can organize the files here in any way you like.
 
 Create a blank text file called `example.txt`. This will serve as the "entry point" for our new template.
 
