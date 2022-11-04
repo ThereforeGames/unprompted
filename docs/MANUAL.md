@@ -277,7 +277,7 @@ You can add `_before` and `_after` content to your variable. This is particularl
 My name is [get name]
 ```
 
-### [if variable {_not} {_any} {_operator}]
+### [if variable {_not} {_any} {_is}]
 
 Checks whether `variable` is equal to the given value, returning the content if true, otherwise discarding the content.
 
@@ -361,7 +361,7 @@ Supports secondary shortcode tags with the optional `_var` argument, e.g. `[swit
 [/switch]
 ```
 
-### [while variable {_not} {_any} {_operator}]
+### [while variable {_not} {_any} {_is}]
 
 Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
 
