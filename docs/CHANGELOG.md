@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.5.0 - 5 November 2022
+### Added
+- Button for dismissing the ad
+- The ad will be dismissed automatically if you purchase the Fantasy Template Pack
+
 ## 0.4.0 - 4 November 2022
 ### Added
 - Config option `batch_support` which, if enabled, will generate random prompts for every image in a batch as opposed to using the same prompt for the entire batch
