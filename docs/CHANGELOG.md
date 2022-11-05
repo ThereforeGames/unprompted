@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.5.1 - 5 November 2022
+### Changed
+- Fixed an issue with `[set]` converting to float in situations where int is preferred
+
 ## 0.5.0 - 5 November 2022
 ### Added
 - Button for dismissing the ad

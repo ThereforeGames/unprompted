@@ -3,13 +3,16 @@ class Shortcode():
 		self.Unprompted = Unprompted
 	def run_block(self, pargs, kwargs, context, content):
 		overrides = self.Unprompted.shortcode_objects["override"]
+		original_content = content
 
 		if (pargs[0] in overrides.shortcode_overrides):
 			content = overrides.shortcode_overrides[pargs[0]]
 		else:
 			content = self.Unprompted.parse_alt_tags(content,context)
 
-		if (self.Unprompted.is_float(content)): content = float(content)
+		if (self.Unprompted.is_float(content)):
+			content = float(content)
+			if int(content) == content and "." not in original_content: content = int(content)
 		elif (self.Unprompted.is_int(content)): content = int(content)
 		
 		if ("_append" in pargs): self.Unprompted.shortcode_user_vars[pargs[0]] += content
