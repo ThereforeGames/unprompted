@@ -9,7 +9,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v0.5.0 by Therefore Games)")
+		print("(Unprompted v0.6.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -141,3 +141,12 @@ class Unprompted:
 			return True
 		except:
 			return False
+
+	def autocast(self,var):
+		"""Converts a variable between string, int, and float depending on how it's formatted"""
+		original_var = var
+		if (self.is_float(var)):
+			var = float(var)
+			if int(var) == var and "." not in original_var: var = int(var)
+		elif (self.is_int(var)): var = int(var)
+		return(var)
