@@ -231,6 +231,16 @@ Returns one of multiple options, as delimited by the vertical pipe or newline ch
 [choose]red|yellow|blue|green[/choose]
 ```
 
+### [elif]
+
+Shorthand "else if." Equivalent to `[else]<if my_var="something">content</if>[/else]`.
+
+```
+[set my_var]5[/set]
+[if my_var=6]Discard this content[/if]
+[elif my_var=5]Return this content![/elif]
+```
+
 ### [else]
 
 Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) failed its check, otherwise discards content.
@@ -322,6 +332,10 @@ If you pass `_float` into this shortcode, it will support decimal numbers instea
 Processes and returns the content a number of `times`.
 
 Supports secondary shortcode tags with the optional `_times` argument, e.g. `[repeat _times="<get my_var>"]`.
+
+Supports the optional `_sep` argument which is a string delimiter inserted after each output, excluding the final output. Example: `[repeat 3 _sep="|"]content[/repeat]` will return `content|content|content`.
+
+Supports float values as well. For example, `[repeat 4.2]content[/repeat]` will have a 20% chance to return `content` 5 times instead of 4.
 
 ```
 [set my_var]0[/set]

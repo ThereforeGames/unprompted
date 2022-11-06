@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 - New `[elif]` shortcode
 - The `[repeat]` shortcode now accepts floats, e.g. 4.6 has a 60% chance of repeating 5 times instead of 4
 - The `[repeat]` shortcode now supports `_sep` which is a string delimiter to insert after each output, excluding the final output
-- Added `autocast()` function to shared.py that will convert a variable to str, int, or float automatically
-- Added `templates/examples` for snippets of code that demonstrate cool ways of combining shortcodes you may not have considered
+- New `autocast()` function in shared.py that will convert a variable to str, int, or float automatically
+- New `templates/examples` for snippets of code that demonstrate cool ways of combining shortcodes you may not have considered
 
 ## Changed
 - Fixed an issue with `[repeat]` outputting its content once more than intended
