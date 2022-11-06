@@ -1,4 +1,4 @@
-# Documentation
+# Unprompted Manual
 
 **Note:** This file is a work-in-progress and might be better suited to a Wiki if there's enough interest. Shortcode syntax is subject to change based on community feedback.
 
@@ -327,7 +327,7 @@ If you pass `_float` into this shortcode, it will support decimal numbers instea
 [set restore_faces][random 1][/set]
 ```
 
-### [repeat times(int)]
+### [repeat times(int) {_sep}]
 
 Processes and returns the content a number of `times`.
 
