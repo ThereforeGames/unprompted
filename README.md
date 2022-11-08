@@ -48,6 +48,8 @@ To learn more about what Unprompted is (and isn't) capable of, please check out 
 
 For an example of a working, sophisticated template, you can [check out the inexpensive Fantasy Card Template here](https://payhip.com/b/hdgNR). Purchases will help continue to fund this project. ❤
 
+**Note for clarity:** Unprompted is free to use. There are no extra features locked behind the premium template, nor does it capitalize on the existing work of the incredible Stable Diffusion community. The template is my own creative effort and should be considered a separate product.
+
 > 🔧 If you run into a problem, feel free to [open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
 
 > 💬 For general discussion and template sharing, use [our Discussions board.](https://github.com/ThereforeGames/unprompted/discussions)
