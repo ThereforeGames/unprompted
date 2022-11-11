@@ -231,6 +231,24 @@ Returns one of multiple options, as delimited by the vertical pipe or newline ch
 [choose]red|yellow|blue|green[/choose]
 ```
 
+### [config]
+
+Updates your Unprompted settings with the content for the duration of a run.
+
+Supports inline JSON as well as external JSON files.
+
+Supports relative and absolute filepaths.
+
+Do not enter a file extension, `.json` is assumed.
+
+```
+[config]{"debug":True,"shortcodes":{"choose_delimiter":"*"}}[/config]
+```
+
+```
+[config]./my_custom_settings[/config]
+```
+
 ### [elif]
 
 Shorthand "else if." Equivalent to `[else]<if my_var="something">content</if>[/else]`.

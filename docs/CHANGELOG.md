@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.0 - 11 November 2022
+## Added
+- New `[config]` shortcode
+- The `[choose]` delimiter is now specified in config.json (defaults to `|`)
+- New `parse_filepath(string, context)` function in shared.py that supports both relative and absolute path handling
+
 ## 0.6.0 - 6 November 2022
 ## Added
 - New `[elif]` shortcode

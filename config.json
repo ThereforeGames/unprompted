@@ -20,6 +20,10 @@
 		"tag_close":"/",
 		"tag_escape":"`"
 	},
+	"shortcodes":
+	{
+		"choose_delimiter":"|"
+	},
 	"stable_diffusion":
 	{
 		"batch_support":true

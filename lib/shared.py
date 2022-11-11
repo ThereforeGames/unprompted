@@ -16,15 +16,16 @@ class Unprompted:
 		self.shortcode_objects = {}
 		self.shortcode_user_vars = {}
 		self.cleanup_routines = []
+		self.after_routines = []
 		self.base_dir = base_dir
 
 		self.log("Loading configuration files...",False,"SETUP")
 
-		cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
+		self.cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
 		user_config = f"{base_dir}/config_user.json"
-		if (os.path.isfile(user_config)): cfg_dict.update(json.load(open(user_config,"r",encoding="utf8")))
+		if (os.path.isfile(user_config)): self.cfg_dict.update(json.load(open(user_config,"r",encoding="utf8")))
 		
-		self.Config = json.loads(json.dumps(cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
+		self.Config = json.loads(json.dumps(self.cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
 
 		self.log(f"Debug mode is {self.Config.debug}",False,"SETUP")
 		
@@ -52,9 +53,11 @@ class Unprompted:
 				def handler(keyword, pargs, kwargs, context, content):
 					return(self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 			
-			# Add to cleanup routines
+			# Setup extra routines
 			if (hasattr(self.shortcode_objects[shortcode_name],"cleanup")):
 				self.cleanup_routines.append(shortcode_name)
+			if (hasattr(self.shortcode_objects[shortcode_name],"after")):
+				self.after_routines.append(shortcode_name)
 
 			self.log(f"Loaded shortcode: {shortcode_name}",False)
 
@@ -67,6 +70,14 @@ class Unprompted:
 	def process_string(self, string):
 		string = self.shortcode_parser.parse(string).replace(self.Config.syntax.n_temp," ")
 		string = " ".join(string.split()) # Cleanup extra spaces
+		return(string)
+
+	def parse_filepath(self,string,context = ""):
+		# Relative path
+		if (string[0] == "."):
+			string = os.path.dirname(context) + "/" + string
+		# Absolute path
+		else: string = self.base_dir + "/" + self.Config.template_directory + "/" + string
 		return(string)
 
 	def parse_alt_tags(self,string,context=None):

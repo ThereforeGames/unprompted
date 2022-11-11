@@ -69,7 +69,8 @@ class Scripts(scripts.Script):
 		if (Unprompted.Config.stable_diffusion.batch_support):
 			for i, val in enumerate(p.all_prompts):
 				if (i == 0): p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
-				else: p.all_prompts[i] = Unprompted.process_string(original_prompt)			
+				else:
+					p.all_prompts[i] = Unprompted.process_string(original_prompt)			
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False,"INFO")
 		else:
 			for i, val in enumerate(p.all_prompts):
@@ -85,8 +86,15 @@ class Scripts(scripts.Script):
 			Unprompted.Config.debug = temp_debug
 
 		# Cleanup routines
-		Unprompted.log("Entering cleanup routine...",False)
+		Unprompted.log("Entering Cleanup routine...",False)
 		for i in Unprompted.cleanup_routines:
 			Unprompted.shortcode_objects[i].cleanup()
 		
-		# Extensions do not need to return anything
+		# Extensions do not need to return anything, gg no re
+
+	# After routines
+	def run(self, p):
+		# After routines
+		Unprompted.log("Entering After routine...")
+		for i in Unprompted.after_routines:
+			Unprompted.shortcode_objects[i].after()

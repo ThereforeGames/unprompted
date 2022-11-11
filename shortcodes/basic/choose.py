@@ -6,7 +6,7 @@ class Shortcode():
 		self.Unprompted = Unprompted
 
 	def run_block(self, pargs, kwargs, context, content):
-		parts = content.replace(self.Unprompted.Config.syntax.n_temp,"|").split("|")
+		parts = content.replace(self.Unprompted.Config.syntax.n_temp,self.Unprompted.Config.shortcodes.choose_delimiter).split(self.Unprompted.Config.shortcodes.choose_delimiter)
 		# Remove empty lines
 		parts = list(filter(None, parts))
 		# self.Unprompted.log(f"List of options: {parts}")
