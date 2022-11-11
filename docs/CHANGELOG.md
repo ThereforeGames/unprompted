@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 - New `[config]` shortcode
 - The `[choose]` delimiter is now specified in config.json (defaults to `|`)
 - New `parse_filepath(string, context)` function in shared.py that supports both relative and absolute path handling
+- Merged `.gitignore` PR (thank you @MaikoTan!)
 
 ## 0.6.0 - 6 November 2022
 ## Added
