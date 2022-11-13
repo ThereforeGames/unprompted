@@ -124,7 +124,6 @@ wow
 
 Rinse and repeat until no `<>` remain.
 
-
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
@@ -182,6 +181,14 @@ Note that you only have to include this string once, before the shortcode, as op
 
 In my experience, the escape character should be used sparingly as it doesn't play well with nested statements.
 
+## System Variables
+
+In addition to all the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following:
+
+### batch_index
+
+An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
+
 
 ## Basic Shortcodes
 
@@ -225,7 +232,9 @@ Supports secondary shortcode tags with the optional `_probability` argument, e.g
 
 ### [choose]
 
-Returns one of multiple options, as delimited by the vertical pipe or newline character.
+Randomly returns one of multiple options, as delimited by the vertical pipe or newline character.
+
+Supports `_case` which overrides the random nature of this shortcode with a pre-determined index (starting at 0.) Example: `[choose _case=1]red|yellow|green[/choose]` will always return `yellow`. You can also pass a variable into this argument.
 
 ```
 [choose]red|yellow|blue|green[/choose]
