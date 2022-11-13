@@ -242,7 +242,7 @@ Supports `_case` which overrides the random nature of this shortcode with a pre-
 
 ### [config]
 
-Updates your Unprompted settings with the content for the duration of a run.
+Updates your Unprompted settings with the content for the duration of a run. Generally you would put this at the top of a template.
 
 Supports inline JSON as well as external JSON files.
 
