@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.8.0 - 13 November 2022
+## Added
+- New system variable `batch_index` for making decisions based on the progress into a batch run
+- The `[choose]` shortcode now accepts `_case` which bypasses the random selection with a given number or variable
+
 ## 0.7.0 - 11 November 2022
 ## Added
 - New `[config]` shortcode

@@ -9,6 +9,10 @@ class Shortcode():
 		parts = content.replace(self.Unprompted.Config.syntax.n_temp,self.Unprompted.Config.shortcodes.choose_delimiter).split(self.Unprompted.Config.shortcodes.choose_delimiter)
 		# Remove empty lines
 		parts = list(filter(None, parts))
-		# self.Unprompted.log(f"List of options: {parts}")
-		selected = self.Unprompted.parse_alt_tags(random.choice(parts),context)
+
+		if ("_case" in kwargs):
+			part_idx = max(min(len(parts)-1, int(self.Unprompted.parse_alt_tags(kwargs["_case"],context))), 0)
+			selected = self.Unprompted.parse_alt_tags(parts[part_idx],context)
+		else: selected = self.Unprompted.parse_alt_tags(random.choice(parts),context)
+
 		return selected

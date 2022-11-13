@@ -46,6 +46,9 @@ class Scripts(scripts.Script):
 		original_prompt = p.prompt;
 		Unprompted.shortcode_user_vars = {}
 
+		# Extra vars
+		Unprompted.shortcode_user_vars["batch_index"] = 0
+
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
 			if not att.startswith("__"):
@@ -58,7 +61,6 @@ class Scripts(scripts.Script):
 			if not att.startswith("__"):
 				setattr(p,att,Unprompted.shortcode_user_vars[att])	
 
-		# Batch support
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
 			p.all_seeds[0] = p.seed
@@ -66,12 +68,16 @@ class Scripts(scripts.Script):
 			p.seed = -1
 			p.seed = fix_seed(p)
 
+		# Batch support
 		if (Unprompted.Config.stable_diffusion.batch_support):
 			for i, val in enumerate(p.all_prompts):
+				Unprompted.shortcode_user_vars["batch_index"] = i
+
 				if (i == 0): p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 				else:
 					p.all_prompts[i] = Unprompted.process_string(original_prompt)			
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False,"INFO")
+		# Keep the same prompt between runs
 		else:
 			for i, val in enumerate(p.all_prompts):
 				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
