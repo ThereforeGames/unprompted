@@ -6,7 +6,7 @@
 
 Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within the `/custom` subdirectory.)
 
-The shortcode name is defined by the filename, e.g. `overrides.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
+The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
 
 A shortcode is structured as follows:
 
