@@ -124,6 +124,18 @@ wow
 
 Rinse and repeat until no `<>` remain.
 
+## Escaping characters
+
+Use the backtick to print a shortcode as a literal part of your prompt. This may be useful if you wish to take advantage of the prompt editing features of the A1111 WebUI (which are denoted with square brackets and could thus conflict with Unprompted shortcodes.)
+
+Note: you only need to put a single backtick at the start of the shortcode to escape the entire sequence. Inner shortcodes will be processed as normal.
+
+Also note: if a shortcode is undefined, Unprompted will print it as a literal as if you had escaped it.
+
+```
+Photo of a `[cat|dog]
+```
+
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
@@ -178,8 +190,6 @@ This is the string that indicates the closing tag of a block-scoped shortcode.
 This is the string that allows you to print a shortcode as a literal string, bypassing the shortcode processor.
 
 Note that you only have to include this string once, before the shortcode, as opposed to in front of every bracket.
-
-In my experience, the escape character should be used sparingly as it doesn't play well with nested statements.
 
 ## System Variables
 
