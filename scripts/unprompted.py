@@ -75,16 +75,17 @@ class Scripts(scripts.Script):
 
 				if (i == 0): p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 				else:
-					p.all_prompts[i] = Unprompted.process_string(original_prompt)			
+					p.all_prompts[i] = Unprompted.process_string(original_prompt)
+
+				p.all_negative_prompts[i] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.negative_prompt)	
+
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False,"INFO")
 		# Keep the same prompt between runs
 		else:
 			for i, val in enumerate(p.all_prompts):
 				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
-
-		# Process any remaining shortcodes in the negative prompt
-		p.negative_prompt = Unprompted.process_string(p.negative_prompt)
-
+				p.all_negative_prompts[i] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.negative_prompt)
+				
 		# Skips the bulk of inference (note: still produces a blank image)
 		if (dry_run):
 			p.batch_size = 1

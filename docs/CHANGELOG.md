@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.9.0 - 29 November 2022
+## Added
+- Updated `negative_prompt` to support the latest version of Automatic1111's WebUI, which permits batch support for negative prompts
+
 ## 0.8.0 - 13 November 2022
 ## Added
 - New system variable `batch_index` for making decisions based on the progress into a batch run
