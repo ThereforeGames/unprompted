@@ -19,7 +19,7 @@ class Shortcode():
 
 		self.Unprompted.log(f"Loading file: {file}")
 
-		file_contents = open(file).read().replace('\n', self.Unprompted.Config.syntax.n_temp)
+		file_contents = open(file).read()
 
 		self.Unprompted.shortcode_objects["else"].do_else = False
-		return(self.Unprompted.strip_str(self.Unprompted.shortcode_parser.parse(file_contents,path),self.Unprompted.Config.syntax.n_temp))
+		return(self.Unprompted.process_string(file_contents,path))

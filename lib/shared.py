@@ -9,7 +9,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v0.9.0 by Therefore Games)")
+		print("(Unprompted v0.10.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -67,8 +67,19 @@ class Unprompted:
 	def shortcode_string_log(self):
 		return("["+os.path.basename(inspect.stack()[1].filename)+"]")
 
-	def process_string(self, string):
-		string = self.shortcode_parser.parse(string).replace(self.Config.syntax.n_temp," ")
+	def process_string(self, string, context=None):
+		# First, sanitize contents
+		for k,v in self.Config.syntax.sanitize_before.__dict__.items():
+			string = string.replace(k,v)
+
+		string = self.shortcode_parser.parse(string,context)
+
+		# Final sanitization routine
+		sanitization_items = self.Config.syntax.sanitize_after.__dict__.items()
+		for k in sanitization_items:
+			string = self.strip_str(string,k)
+		for k,v in sanitization_items:
+			string = string.replace(k,v)
 		string = " ".join(string.split()) # Cleanup extra spaces
 		return(string)
 

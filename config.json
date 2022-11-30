@@ -11,8 +11,8 @@
 	},
 	"syntax":
 	{
-		"n_temp":"\\n",
-		"n_final":" ",
+		"sanitize_before":{"\n":"\\n","\t":"\\n"},
+		"sanitize_after":{"\\n":" "},
 		"tag_start":"[",
 		"tag_end":"]",
 		"tag_start_alt":"<",

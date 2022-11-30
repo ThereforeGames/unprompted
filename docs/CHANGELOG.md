@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.10.0 - 30 November 2022
+## Added
+- New `[replace]` shortcode
+
+## Changed
+- Replaced `n_temp` and `n_final` config settings with `sanitize_before` and `sanitize_after` that let you define any number of characters to modify before/after processing
+- Tab character (`\t`) is now ignored by default, which will hopefully make it easier to format complex templates for readability
+- All string sanitization logic has been moved into the `process_string()` function
+- Fixed an issue with `negative_prompt` logic
+
 ## 0.9.0 - 29 November 2022
 ## Added
 - Updated `negative_prompt` to support the latest version of Automatic1111's WebUI, which permits batch support for negative prompts
