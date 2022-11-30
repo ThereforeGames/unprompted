@@ -144,13 +144,13 @@ This is the base directory for your text files.
 
 This is the file extension that Unprompted will assume you're looking for with `[file]`.
 
-### syntax/n_temp (str)
+### syntax/sanitize_before (str)
 
-This is a temporary string that replaces all newline characters for easier/safer processing with Unprompted.
+This is a dictionary of strings that will be replaced at the start of processing. By default, Unprompted will swap newline and tab characters to the `\\n` placeholder.
 
 ### syntax/n_final (str)
 
-This is a string that `n_temp` is replaced with in the final output. Defaults to a space, which is helpful in most cases when coding multiline templates. In my experience, space creates the fewest problems, but feel free to experiment with other values.
+This is a dictionary of strings that will be replaced after processing. By default, Unprompted will convert the `\\n` placeholder to a space.
 
 ### syntax/tag_start (str)
 
@@ -183,7 +183,7 @@ In my experience, the escape character should be used sparingly as it doesn't pl
 
 ## System Variables
 
-In addition to all the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following:
+In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
 
 ### batch_index
 
@@ -369,6 +369,21 @@ Supports float values as well. For example, `[repeat 4.2]content[/repeat]` will 
 [repeat 5]
 Variable is currently: <set my_var _out _append>1</set>
 [/repeat]
+```
+
+### [replace]
+
+Updates the content using argument pairings as replacement logic.
+
+Arguments are case-sensitive.
+
+```
+[replace green="purple" flowers="marbles"]
+A photo of green flowers.
+[/replace]
+```
+```
+Result: A photo of purple marbles.
 ```
 
 ### [set {_append} {_prepend}]
