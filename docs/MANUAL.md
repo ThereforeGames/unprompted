@@ -144,11 +144,11 @@ This is the base directory for your text files.
 
 This is the file extension that Unprompted will assume you're looking for with `[file]`.
 
-### syntax/sanitize_before (str)
+### syntax/sanitize_before (dict)
 
 This is a dictionary of strings that will be replaced at the start of processing. By default, Unprompted will swap newline and tab characters to the `\\n` placeholder.
 
-### syntax/n_final (str)
+### syntax/sanitize_after (dict)
 
 This is a dictionary of strings that will be replaced after processing. By default, Unprompted will convert the `\\n` placeholder to a space.
 
@@ -378,8 +378,8 @@ Updates the content using argument pairings as replacement logic.
 Arguments are case-sensitive.
 
 ```
-[replace green="purple" flowers="marbles"]
-A photo of green flowers.
+[replace red="purple" flowers="marbles"]
+A photo of red flowers.
 [/replace]
 ```
 ```
