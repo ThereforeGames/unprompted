@@ -11,7 +11,7 @@
 	},
 	"syntax":
 	{
-		"sanitize_before":{"\n":"\\n","\t":"\\n"},
+		"sanitize_before":{"\n":"\\n","\t":""},
 		"sanitize_after":{"\\n":" "},
 		"tag_start":"[",
 		"tag_end":"]",

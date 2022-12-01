@@ -308,6 +308,8 @@ Supports relative paths by starting the `path` with `./`, e.g. `[file ./main]` w
 
 If the given `path` is a directory as opposed to a file, `[file]` will return the contents of a random file in that directory.
 
+Supports optional keyword arguments that are passed to `[set]` for your convenience. This effectively allows you to use `[file]` like a function in programming, e.g. `[file convert_to_roman_numeral number=7]`.
+
 ```
 [file my_template/common/adjective]
 ```
@@ -316,9 +318,11 @@ If the given `path` is a directory as opposed to a file, `[file]` will return th
 
 Returns the value of `variable`.
 
-Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="<file example>"]`
+Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="<file example>"]`.
 
-You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`
+You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`.
+
+Supports the optional `_default` argument, the value of which is returned if your variable does not exist e.g. `[get car_color _default="red"]`.
 
 ```
 My name is [get name]
@@ -338,6 +342,21 @@ The optional `_is` argument allows you to specify the comparison logic for your 
 
 ```
 [if subject="man"]wearing a business suit[/if]
+```
+
+### [info]
+
+Prints metadata about the content. You must pass the type(s) of data as positional arguments.
+
+Supports `character_count` for retrieving the number of individual characters in the content.
+
+Supports `word_count` for retrieving the number of words in the content, using space as a delimiter.
+
+```
+[info word_count]A photo of Emma Watson.[/info]
+```
+```
+Result: 5
 ```
 
 ### [override variable]
@@ -387,6 +406,8 @@ Updates the content using argument pairings as replacement logic.
 
 Arguments are case-sensitive.
 
+Supports the optional `_from` and `_to` arguments, which can process secondary shortcode tags as replacement targets, e.g. `[replace _from="<get var_a>" _to="<get var_b>"]`.
+
 ```
 [replace red="purple" flowers="marbles"]
 A photo of red flowers.
@@ -408,6 +429,25 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 
 ```
 [set my_var]This is the value of my_var[/set]
+```
+
+### [substring {start} {end} {step} {unit}]
+
+Returns a slice of the content as determined by the keyword arguments.
+
+`start` is the beginning of the slice, zero indexed. Defaults to 0.
+
+`end` is the last position of the slice. Defaults to 0.
+
+`step` is the skip interval. Defaults to 1 (in other words, a continuous substring.)
+
+`unit` is either `characters` or `words` and refers to the unit of the aforementioned arguments. Defaults to `characters`.
+
+```
+[substring start=1 end=3 unit=words]A photo of a giant dog.[/substring]
+```
+```
+Result: photo of a
 ```
 
 ### [switch var(str)]
@@ -442,7 +482,7 @@ The optional `_is` argument allows you to specify the comparison logic for your 
 ```
 [set my_var]3[/set]
 [while my_var="10" _is="<"]
-Output
-<set my_var _append>1</set>
+	Output
+	<set my_var _append>1</set>
 [/while]
 ```

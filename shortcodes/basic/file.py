@@ -8,6 +8,7 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		file_string = pargs[0]
+		
 		# Relative path
 		if (file_string[0] == "."):
 			path = os.path.dirname(context) + "/" + file_string + self.Unprompted.Config.txt_format
@@ -20,6 +21,10 @@ class Shortcode():
 		self.Unprompted.log(f"Loading file: {file}")
 
 		file_contents = open(file).read()
+
+		# Use [set] with keyword arguments
+		for key, value in kwargs.items():
+			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value)
 
 		self.Unprompted.shortcode_objects["else"].do_else = False
 		return(self.Unprompted.process_string(file_contents,path))

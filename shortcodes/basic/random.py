@@ -1,6 +1,7 @@
 import random
 
 class Shortcode():
+	"""Returns a random number between 0 and a given max value (inclusive)"""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 	def run_atomic(self, pargs, kwargs, context):

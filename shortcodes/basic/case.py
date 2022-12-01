@@ -5,8 +5,6 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context, content):
 		_var = self.Unprompted.shortcode_objects["switch"].switch_var
-		
-		# self.Unprompted.log(pargs[0])
 
 		if (_var in self.Unprompted.shortcode_user_vars):
 			# Default case
@@ -18,4 +16,3 @@ class Shortcode():
 				return(self.Unprompted.parse_alt_tags(content,context))
 		
 		return("")
-	

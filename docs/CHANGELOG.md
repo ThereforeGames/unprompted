@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.0.0 - 1 December 2022
+## Added
+- New `[info]` shortcode that prints metadata about the content (either `character_count` or `word_count` at the moment)
+- New `[substring]` shortcode for slicing content
+- The `[file]` shortcode now supports the setting of variables through keyword arguments, which effectively allows you to use this shortcode like a function in programming
+- The `[get]` shortcode now supports optional `_default` argument, the value of which is returned if the selected variable does not exist
+- The `[replace]` shortcode now supports optional `_from` and `_to` arguments which can process secondary shortcode tags
+- New example `random_emphasis.txt`
+
+## Changed
+- The `[eval]` shortcode now utilizes the simpleeval library by @danthedeckie, which should be safe for networked environments (no gurantees though - use Unprompted at your own risk)
+- Check `shortcodes/basic/eval.py` for instructions on reverting the shortcode to its old, strictly-for-local-use behavior
+- The tab character is now replaced with a blank string instead of space
+
 ## 0.10.0 - 30 November 2022
 ## Added
 - New `[replace]` shortcode
