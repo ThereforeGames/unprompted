@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.1.0 - 2 December 2022
+## Added
+- New `[for]` shortcode, as in for loops
+- New `[casing]` shortcode powered by @dmlls casefy library
+- The `[if]` and `[while]` shortcodes now support advanced expressions via safeeval, e.g. `[if "var_a==10 and var_b<=50"]`
+- The `[if]` and `[while]` shortcodes now support `!=` as an operator type for `_is`
+
 ## 1.0.0 - 1 December 2022
 ## Added
 - New `[info]` shortcode that prints metadata about the content (either `character_count` or `word_count` at the moment)

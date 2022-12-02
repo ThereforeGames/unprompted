@@ -136,6 +136,24 @@ Also note: if a shortcode is undefined, Unprompted will print it as a literal as
 Photo of a `[cat|dog]
 ```
 
+## Advanced expressions
+
+The following shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval):
+
+- `[if]`
+- `[for]`
+- `[while]`
+
+This allows you to test complex conditions in ways that would not be possible with standard shortcode arguments. For example, the `[if]` shortcode expects unique variable keys and a single type of comparison logic, which means you **cannot** do something like this:
+
+`[if var_a>=1 var_a!=5]`
+
+However, with advanced expressions, you definitely can! Simply put quotes around your expression and Unprompted will parse it with simpleeval. Check it out:
+
+`[if "var_a>=10 and var_a!=5"]Print me[/if]`
+
+For more information on constructing advanced expressions, check the docs linked above.
+
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
@@ -228,6 +246,32 @@ I can't believe it, we're doing 3 lines of text!
 
 See `[switch]`.
 
+### [casing type]
+
+Converts the casing of content to the selected type. Possible types:
+
+- uppercase
+- lowercase
+- camelcase
+- pascalcase
+- snakecase
+- constcase
+- kebabcase
+- upperkebabcase
+- separatorcase
+- sentencecase
+- titlecase
+- alphanumcase
+
+For more information on these types, consult the [casefy docs](https://github.com/dmlls/python-casefy), the library on which this shortcode depends.
+
+```
+[casing uppercase]why am i screaming[/casing]
+```
+```
+Result: WHY AM I SCREAMING
+```
+
 ### [chance int {_sides}]
 
 Returns the content if the integer you passed is greater than or equal to a randomly generated number between 1 and 100.
@@ -290,7 +334,9 @@ Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) 
 
 ### [eval]
 
-Parses the content using Python's `eval()` statement, returning the result. Particularly useful for arithmetic. **Not safe over the network! Do not provide end users access to this shortcode with --share environments. Unprompted is intended for local use.**
+Parses the content using the simpleeval library, returning the result. Particularly useful for arithmetic.
+
+simpleeval is designed to prevent the security risks of Python's stock `eval` function, however I make no assurances in this regard. If you wish to use Unprompted in a networked environment, do so at your own risk.
 
 ```
 [eval]5 + 5[/eval]
@@ -312,6 +358,22 @@ Supports optional keyword arguments that are passed to `[set]` for your convenie
 
 ```
 [file my_template/common/adjective]
+```
+
+### [for var "test var" "update var"]
+
+Returns the content an arbitrary number of times until the `test` condition returns false.
+
+Importantly, the `test` and `update` arguments must be enclosed in quotes because they are parsed as advanced expressions.
+
+`var` is initialized as a user variable and can be accessed as normal, e.g. `[get var]` is valid.
+
+The result of the `update` argument is set as the value of `var` at the end of each loop step.
+
+```
+[for i=0 "i<10" "i+1"]
+Print me
+[/for]
 ```
 
 ### [get variable]
@@ -338,7 +400,7 @@ The optional `_any` argument allows you to return the content if one of many var
 
 The optional `_not` argument allows you to test for false instead of true, e.g. `[if _not my_variable=1]` will return the content if `my_variable` does *not* equal 1.
 
-The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _is="<="]`
+The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `!=`, `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _is="<="]`
 
 ```
 [if subject="man"]wearing a business suit[/if]
@@ -477,7 +539,7 @@ The optional `_any` argument will continue the loop if any of the provided condi
 
 The optional `_not` argument allows you to test for false instead of true, e.g. `[while _not my_variable=1]` will continue the loop so long as `my_variable` does *not* equal 1.
 
-The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `>`, `>=`, `<` and `<=`. Example: `[while my_var="5" _is="<="]`
+The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `!=`, `>`, `>=`, `<` and `<=`. Example: `[while my_var="5" _is="<="]`
 
 ```
 [set my_var]3[/set]

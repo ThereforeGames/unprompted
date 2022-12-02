@@ -9,7 +9,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v0.10.0 by Therefore Games)")
+		print("(Unprompted v1.1.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -71,7 +71,6 @@ class Unprompted:
 		# First, sanitize contents
 		for k,v in self.Config.syntax.sanitize_before.__dict__.items():
 			string = string.replace(k,v)
-
 		string = self.shortcode_parser.parse(string,context)
 
 		# Final sanitization routine
@@ -149,6 +148,9 @@ class Unprompted:
 		if (self.is_float(var_b)): var_b = float(var_b)
 		if (str(var_a) == str(var_b)): return True
 		else: return False
+	
+	def is_not_equal(self,var_a,var_b):
+		return not self.is_equal(var_a,var_b)
 
 	def is_float(self,value):
 		try:
