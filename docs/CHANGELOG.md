@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.2.0 - 2 December 2022
+## Added
+- New `[sets]` atomic shortcode for setting multiple variables at once
+
+## Changed
+- `[eval]` can now read user variables
+
 ## 1.1.0 - 2 December 2022
 ## Added
 - New `[for]` shortcode, as in for loops

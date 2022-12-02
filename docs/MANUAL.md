@@ -152,6 +152,10 @@ However, with advanced expressions, you definitely can! Simply put quotes around
 
 `[if "var_a>=10 and var_a!=5"]Print me[/if]`
 
+If you wish to compare strings, use `is` and single quotes as shown below:
+
+`[if "var_a is 'man' or var_a is 'woman'"]My variable is either man or woman[/if]`
+
 For more information on constructing advanced expressions, check the docs linked above.
 
 ## The config file
@@ -402,8 +406,15 @@ The optional `_not` argument allows you to test for false instead of true, e.g. 
 
 The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `!=`, `>`, `>=`, `<` and `<=`. Example: `[if my_var="5" _is="<="]`
 
+Supports [advanced expressions](#advanced-expressions) - useful for testing complex conditions.
+
 ```
 [if subject="man"]wearing a business suit[/if]
+```
+
+```
+(Advanced expression demo)
+[if "subject is 'man' or subject is 'woman'"]wearing a shirt[/if]
 ```
 
 ### [info]
@@ -491,6 +502,14 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 
 ```
 [set my_var]This is the value of my_var[/set]
+```
+
+### [sets]
+
+The atomic version of `[set]` that allows you to set multiple variables at once.
+
+```
+[sets var_a=10 var_b=something var_c=500]
 ```
 
 ### [substring {start} {end} {step} {unit}]
