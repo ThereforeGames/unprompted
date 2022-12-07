@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file. For more details on new features, please check the Manual.
 
+## 2.0.1 - 7 December 2022
+## Changed
+- The `[file]` shortcode will throw a soft error if the provided filepath is not valid, rather than completely aborting Unprompted (Issue #23)
+- Fixed a string truncation issue related to the sanitization filter (Issue #26)
+
 ## 2.0.0 - 7 December 2022
 ## Added
 - Implemented advanced expression support for nearly all shortcodes

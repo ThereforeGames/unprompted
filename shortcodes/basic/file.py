@@ -16,9 +16,16 @@ class Shortcode():
 		else: path = self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string + self.Unprompted.Config.txt_format
 		
 		files = glob.glob(path)
+		if (len(files) == 0):
+			self.Unprompted.log(f"No files found at this location: {path}",True,"ERROR")
+			return("")
 		file = random.choice(files)
 
 		self.Unprompted.log(f"Loading file: {file}")
+
+		if not os.path.exists(file):
+			self.Unprompted.log(f"File does not exist: {file}",True,"ERROR")
+			return("")
 
 		file_contents = open(file).read()
 
