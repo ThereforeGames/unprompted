@@ -43,6 +43,7 @@ There are too many features to include on one page!
 To learn more about what Unprompted is (and isn't) capable of, please check out the following resources:
 
 - [Starter Guide](./docs/GUIDE.md)
+- [Announcements](./docs/ANNOUNCEMENTS.md)
 - [Manual](./docs/MANUAL.md)
 - [Changelog](./docs/CHANGELOG.md)
 
