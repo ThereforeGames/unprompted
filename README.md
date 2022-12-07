@@ -19,6 +19,7 @@ You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as 
 - Simple creation of `.txt` templates that can be organized according to your preferences
 - Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
 - Supports **numerous Stable Diffusion variables** such as `negative_prompt` and `cfg_scale`
+- Includes a growing list of examples that demonstrate advanced functionality, such as **customizing the weight of a choice list** and **applying emphasis to a random part of your prompt**
 - Comprehensive documentation that is always up-to-date
 - Free
 - Developed by a human
