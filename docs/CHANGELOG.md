@@ -9,8 +9,8 @@ All notable changes to this project will be documented in this file. For more de
 - New shortcode `[max]` for returning the value of the greatest variable among the arguments
 - New shortcode `[unset]` that removes one or more variables from memory
 - New function `parse_advanced` that consolidates calls to simpleeval
-- The `[choose]` function can now return multiple options
-- The `[choose]` function now supports the optional `_sep` argument, which is a string delimeter used when returning multiple options
+- The `[choose]` shortcode can now return multiple options
+- The `[choose]` shortcode now supports the optional `_sep` argument, which is a string delimeter used when returning multiple options
 - The `[info]` shortcode now supports the `string_count` argument, which returns the number of matching strings in the content
 - The `[replace]` shortcode now supports the `_count` variable, which defines the number of occurances to replace
 - The `[set]` and `[sets]` shortcodes now support the `_new` argument, which will bypass the shortcode if the variable(s) already exist
