@@ -6,12 +6,12 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		
 	def run_block(self, pargs, kwargs, context, content):
-		if ("_probability" in kwargs): this_number = self.Unprompted.parse_alt_tags(kwargs["_probability"],context)
+		if ("_probability" in kwargs): this_number = self.Unprompted.parse_advanced(kwargs["_probability"],context)
 		else: this_number = pargs[0]
 		
-		_sides = kwargs["_sides"] if "_sides" in kwargs else 100
+		_sides = self.Unprompted.parse_advanced(kwargs["_sides"],context) if "_sides" in kwargs else 100
 
-		if (int(float(this_number)) >= random.randint(1, _sides)):
+		if (int(float(this_number)) >= random.randint(1, int(_sides))):
 			self.Unprompted.shortcode_objects["else"].do_else = False
 			return(self.Unprompted.parse_alt_tags(content,context))
 		else:

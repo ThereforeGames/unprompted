@@ -9,8 +9,7 @@ class Shortcode():
 		final_string = ""
 		_sep = kwargs["_sep"] if "_sep" in kwargs else ""
 
-		if ("_times" in kwargs): _times = self.Unprompted.parse_alt_tags(kwargs["_times"],context)
-		else: _times = pargs[0]
+		_times = self.Unprompted.parse_advanced(pargs[0],context)
 
 		# Support floats
 		_times = self.Unprompted.autocast(_times)

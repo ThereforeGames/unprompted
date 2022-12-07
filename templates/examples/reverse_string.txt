@@ -1,0 +1,5 @@
+[##]
+You can reverse a string with 'substring' as shown below.
+[/##]
+
+[substring start=-1 end=-1 step=-1]Hello world[/substring]

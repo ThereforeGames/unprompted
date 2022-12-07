@@ -1,5 +1,4 @@
 import operator
-from lib.simpleeval import simple_eval
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
@@ -15,7 +14,7 @@ class Shortcode():
 		for key, value in kwargs.items():
 			if (key[0] == "_"): continue # Skips system arguments
 
-			this_value = self.Unprompted.parse_alt_tags(value,context)
+			this_value = self.Unprompted.parse_advanced(value,context)
 			
 			# Fix data type
 			if (_is != "==" and _is != "!="):
@@ -33,13 +32,13 @@ class Shortcode():
 		# Support advanced expressions
 		for key in pargs:
 			if (key[0] == "_"): continue # Skips system arguments
-			if (simple_eval(key,names=self.Unprompted.shortcode_user_vars)):
+			if (self.Unprompted.parse_advanced(key,context) == 1):
 				if _any:
 					is_true = True
 					break
-				elif not _any:
-					is_true = False
-					break
+			elif not _any:
+				is_true = False
+				break
 
 		if ((is_true and not _not) or (_not and not is_true)):
 			self.Unprompted.shortcode_objects["else"].do_else = False

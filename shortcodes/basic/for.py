@@ -1,4 +1,3 @@
-from lib.simpleeval import simple_eval
 class Shortcode():
 	"""It's a for loop."""
 	def __init__(self,Unprompted):
@@ -11,10 +10,10 @@ class Shortcode():
 		for key, value in kwargs.items():
 			if (key[0] == "_"): continue # Skips system arguments
 			this_var = key
-			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value) # run [set]
+			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value)
 
 		while True:
-			if (simple_eval(pargs[0],names=self.Unprompted.shortcode_user_vars)):
+			if (self.Unprompted.parse_advanced(pargs[0],context)):
 				final_string += self.Unprompted.parse_alt_tags(content,context)
-				self.Unprompted.shortcode_user_vars[this_var] = simple_eval(pargs[1],names=self.Unprompted.shortcode_user_vars)
+				self.Unprompted.shortcode_user_vars[this_var] = self.Unprompted.parse_advanced(pargs[1],context)
 			else: return(final_string)

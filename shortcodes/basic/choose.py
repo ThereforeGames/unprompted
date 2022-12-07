@@ -6,13 +6,26 @@ class Shortcode():
 		self.Unprompted = Unprompted
 
 	def run_block(self, pargs, kwargs, context, content):
+		final_string = ""
 		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.shortcodes.choose_delimiter).split(self.Unprompted.Config.shortcodes.choose_delimiter)
 		# Remove empty lines
 		parts = list(filter(None, parts))
 
-		if ("_case" in kwargs):
-			part_idx = max(min(len(parts)-1, int(self.Unprompted.parse_alt_tags(kwargs["_case"],context))), 0)
-			selected = self.Unprompted.parse_alt_tags(parts[part_idx],context)
-		else: selected = self.Unprompted.parse_alt_tags(random.choice(parts),context)
+		times = self.Unprompted.parse_advanced(pargs[0],context) if len(pargs)>0 else 1
 
-		return selected
+		_sep = self.Unprompted.parse_advanced(kwargs["_sep"],context) if "_sep" in kwargs else ", "
+		_case = max(min(len(parts)-1, int(self.Unprompted.parse_advanced(kwargs["_case"],context))), 0) if "_case" in kwargs else -1
+
+		for x in range(0, times):
+			if (_case == -1):
+				part_index = random.choice(range(len(parts)))
+				final_string += self.Unprompted.parse_alt_tags(parts[part_index],context)
+			else:
+				part_index = _case
+				final_string += self.Unprompted.parse_alt_tags(parts[part_index],context)
+			
+			if (times > 1 and x != times - 1):
+				del parts[part_index]
+				final_string += _sep
+
+		return final_string

@@ -1,4 +1,15 @@
 [##]
+You can update the value of a variable with 'sets'.
+[/##]
+
+[set my_var]5[/set]
+[sets my_var="my_var + 100"]
+Value of my_var: [get my_var]
+
+
+[##]
+Old method:
+
 You can add or subtract from an existing variable with 'set'.
 
 This is made possible with the '_append' argument.

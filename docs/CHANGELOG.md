@@ -1,5 +1,38 @@
 # Changelog
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. For more details on new features, please check the Manual.
+
+## 2.0.0 - 7 December 2022
+## Added
+- Implemented advanced expression support for nearly all shortcodes
+- New shortcode `[do]` for "do until" style loops
+- New shortcode `[min]` for returning the value of the smallest variable among the arguments
+- New shortcode `[max]` for returning the value of the greatest variable among the arguments
+- New shortcode `[unset]` that removes one or more variables from memory
+- New function `parse_advanced` that consolidates calls to simpleeval
+- The `[choose]` function can now return multiple options
+- The `[choose]` function now supports the optional `_sep` argument, which is a string delimeter used when returning multiple options
+- The `[info]` shortcode now supports the `string_count` argument, which returns the number of matching strings in the content
+- The `[replace]` shortcode now supports the `_count` variable, which defines the number of occurances to replace
+- The `[set]` and `[sets]` shortcodes now support the `_new` argument, which will bypass the shortcode if the variable(s) already exist
+- Advanced expression support can be toggled in config.json
+- New example `reverse_string.txt`
+
+## Changed
+- Secondary shortcode tags have been changed from `<>` to `{}` for compatibility with advanced expression statements
+- Updated example `update_variable.txt`
+- Fixed potential crash related to `autocast` function
+- Fixed a bug in the `[sets]` shortcode
+- Fixed a couple bugs related to advanced expressions
+
+## Removed
+- The `[repeat]` shortcode no longer supports `_times` as the first argument now automatically accepts expressions and secondary shortcode tags
+- The `[switch]` shortcode no longer supports `_var` as the first argument now automatically accepts expressions and secondary shortcode tags
+
+```
+Important Note: the change to secondary shortcode tags will unfortunately break some existing templates. In general, I try to avoid making such changes, but in this case it was the best way to get secondary tags to interact well with advanced expressions - the <> characters conflicted with less-than, greater-than conditional checks. On the plus side, we can now do stuff like this: [if "{file some_script} < 2"]print me[/if]". Should be quite powerful!
+
+If you wish to revert this behavior (not recommended) you can do so by creating a file called config_user.json, setting advanced_expressions to true, tag_start_alt to <, and tag_start_end to >. Refer to config.json for exact formatting. Be aware that these changes will break advanced expressions.
+```
 
 ## 1.2.0 - 2 December 2022
 ## Added

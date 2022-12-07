@@ -1,5 +1,4 @@
 import operator
-from lib.simpleeval import simple_eval
 class Shortcode():
 	"""Loops content until the condition returns false."""
 	def __init__(self,Unprompted):
@@ -22,7 +21,7 @@ class Shortcode():
 			for key in pargs:
 				if (key[0] == "_"): continue # Skips system arguments
 				do_advanced_expression = True
-				if (simple_eval(key,names=self.Unprompted.shortcode_user_vars)):
+				if (self.Unprompted.parse_advanced(key,context)):
 					if _any:
 						is_true = True
 						break
@@ -34,7 +33,7 @@ class Shortcode():
 				for key, value in kwargs.items():
 					if (key[0] == "_"): continue # Skips system arguments
 
-					this_value = self.Unprompted.parse_alt_tags(value,context)
+					this_value = self.Unprompted.parse_advanced(value,context)
 
 					# Fix data type
 					if (_is != "=="):

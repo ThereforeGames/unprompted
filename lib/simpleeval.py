@@ -424,6 +424,7 @@ class SimpleEval(object):  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def _eval_str(node):
+        print("Call me")
         if len(node.s) > MAX_STRING_LENGTH:
             raise IterableTooLong(
                 "String Literal in statement is too long!"

@@ -7,7 +7,7 @@ class Shortcode():
 		self.Unprompted = Unprompted
 
 	def run_atomic(self, pargs, kwargs, context):
-		file_string = pargs[0]
+		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
 		
 		# Relative path
 		if (file_string[0] == "."):

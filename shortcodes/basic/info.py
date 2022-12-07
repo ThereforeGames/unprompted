@@ -8,5 +8,6 @@ class Shortcode():
 
 		if "character_count" in pargs: return_string += str(len(content)) + delimiter
 		if "word_count" in pargs: return_string += str(len(content.split())) + delimiter
+		if "string_count" in kwargs: return_string += str(content.count(kwargs["string_count"])) + delimiter
 
 		return(return_string[:-1])

@@ -7,13 +7,14 @@ class Shortcode():
 
 		for key, value in kwargs.items():
 			if (key == "_from"):
-				from_value = self.Unprompted.parse_alt_tags(value,context)
-				to_value = self.Unprompted.parse_alt_tags(kwargs["_to"],context)
+				from_value = self.Unprompted.parse_advanced(value,context)
+				to_value = self.Unprompted.parse_advanced(kwargs["_to"],context)
 			elif (key[0] != "_"):
 				from_value = key
-				to_value = self.Unprompted.parse_alt_tags(value,context)
+				to_value = self.Unprompted.parse_advanced(value,context)
 			else: continue
 
-			content = content.replace(from_value,to_value)
+			if ("_count" in kwargs): content = content.replace(from_value,to_value,self.Unprompted.parse_advanced(kwargs["_count"]))
+			else: content = content.replace(from_value,to_value)
 
 		return(content)

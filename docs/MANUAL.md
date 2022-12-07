@@ -138,13 +138,9 @@ Photo of a `[cat|dog]
 
 ## Advanced expressions
 
-The following shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval):
+Many shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval).
 
-- `[if]`
-- `[for]`
-- `[while]`
-
-This allows you to test complex conditions in ways that would not be possible with standard shortcode arguments. For example, the `[if]` shortcode expects unique variable keys and a single type of comparison logic, which means you **cannot** do something like this:
+This allows you to enter complex expressions in ways that would not be possible with standard shortcode arguments. For example, the `[if]` shortcode expects unique variable keys and a single type of comparison logic, which means you **cannot** do something like this:
 
 `[if var_a>=1 var_a!=5]`
 
@@ -293,6 +289,8 @@ Supports secondary shortcode tags with the optional `_probability` argument, e.g
 Randomly returns one of multiple options, as delimited by the vertical pipe or newline character.
 
 Supports `_case` which overrides the random nature of this shortcode with a pre-determined index (starting at 0.) Example: `[choose _case=1]red|yellow|green[/choose]` will always return `yellow`. You can also pass a variable into this argument.
+
+Supports an optional positional argument that tells the shortcode how many times to execute (default 1). For example: `[choose 2]Artist One|Artist Two|Artist Three|Artist Four[/choose]` will return two random artists.
 
 ```
 [choose]red|yellow|blue|green[/choose]
@@ -460,8 +458,6 @@ If you pass `_float` into this shortcode, it will support decimal numbers instea
 
 Processes and returns the content a number of `times`.
 
-Supports secondary shortcode tags with the optional `_times` argument, e.g. `[repeat _times="<get my_var>"]`.
-
 Supports the optional `_sep` argument which is a string delimiter inserted after each output, excluding the final output. Example: `[repeat 3 _sep="|"]content[/repeat]` will return `content|content|content`.
 
 Supports float values as well. For example, `[repeat 4.2]content[/repeat]` will have a 20% chance to return `content` 5 times instead of 4.
@@ -534,8 +530,6 @@ Result: photo of a
 ### [switch var(str)]
 
 Allows you to run different logic blocks with inner case statements that match the value of the given `var`.
-
-Supports secondary shortcode tags with the optional `_var` argument, e.g. `[switch _var="<file my_file>"]`.
 
 ```
 [set my_var]100[/set]

@@ -7,8 +7,8 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		_min = 0
 		if ("_min" in kwargs):
-			_min = self.Unprompted.parse_alt_tags(kwargs["_min"],context)
-			_max = self.Unprompted.parse_alt_tags(kwargs["_max"],context)
+			_min = self.Unprompted.parse_advanced(kwargs["_min"],context)
+			_max = self.Unprompted.parse_advanced(kwargs["_max"],context)
 		else:
 			_max = pargs[0]
 

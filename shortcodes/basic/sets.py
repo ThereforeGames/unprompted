@@ -4,6 +4,7 @@ class Shortcode():
 		self.Unprompted = Unprompted
 	def run_atomic(self, pargs, kwargs, context):
 		for key,value in kwargs.items():
-			self.Unprompted.shortcode_user_vars[key] = value
-			self.Unprompted.log(f"Setting {key} to {value}")
+			if key not in self.Unprompted.shortcode_user_vars or "_new" not in pargs:
+				self.Unprompted.shortcode_user_vars[key] = self.Unprompted.parse_advanced(value,context)
+				self.Unprompted.log(f"Setting {key} to {value}")
 		return("")

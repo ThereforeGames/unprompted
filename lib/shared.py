@@ -1,6 +1,7 @@
 import json
 from types import SimpleNamespace
 import lib.shortcodes as shortcodes
+from lib.simpleeval import simple_eval
 import os
 import glob
 import importlib
@@ -9,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v1.2.0 by Therefore Games)")
+		print("(Unprompted v2.0.0 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -89,6 +90,13 @@ class Unprompted:
 		# Absolute path
 		else: string = self.base_dir + "/" + self.Config.template_directory + "/" + string
 		return(string)
+
+	def parse_advanced(self,string,context=None):
+		"""First runs the string through parse_alt_tags, the result of which then goes through simpleeval"""
+		string = self.parse_alt_tags(string,context)
+		if self.Config.advanced_expressions: return(self.autocast(simple_eval(string,names=self.shortcode_user_vars)))
+		else: return(string)
+		
 
 	def parse_alt_tags(self,string,context=None):
 		"""Converts any alt tags and then parses the resulting shortcodes"""
@@ -171,6 +179,6 @@ class Unprompted:
 		original_var = var
 		if (self.is_float(var)):
 			var = float(var)
-			if int(var) == var and "." not in original_var: var = int(var)
+			if int(var) == var and "." not in str(original_var): var = int(var)
 		elif (self.is_int(var)): var = int(var)
 		return(var)

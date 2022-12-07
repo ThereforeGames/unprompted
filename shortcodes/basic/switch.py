@@ -5,8 +5,7 @@ class Shortcode():
 		self.switch_var = ""
 
 	def run_block(self, pargs, kwargs, context,content):
-		if ("_var" in kwargs): self.switch_var = self.Unprompted.parse_alt_tags(kwargs["_var"],context)
-		else: self.switch_var = pargs[0]
+		self.switch_var = self.Unprompted.parse_advanced(pargs[0],context)
 		return(self.Unprompted.parse_alt_tags(content,context))
 
 	def cleanup(self):
