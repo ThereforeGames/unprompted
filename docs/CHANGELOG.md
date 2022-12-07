@@ -30,7 +30,7 @@ All notable changes to this project will be documented in this file. For more de
 
 > **Important Note:** the change to secondary shortcode tags will unfortunately break some existing templates. In general, I try to avoid making such changes, but in this case it was the best way to get secondary tags to interact well with advanced expressions - the <> characters conflicted with less-than, greater-than conditional checks. On the plus side, we can now do stuff like this: [if "{file some_script} < 2"]print me[/if]". Should be quite powerful!
 
-> If you wish to revert this behavior (not recommended) you can do so by creating a file called config_user.json, setting advanced_expressions to true, tag_start_alt to <, and tag_start_end to >. Refer to config.json for exact formatting. Be aware that these changes will break advanced expressions.
+> If you wish to revert this behavior (not recommended) you can do so by creating a file called config_user.json, setting advanced_expressions to false, tag_start_alt to <, and tag_start_end to >. Refer to config.json for exact formatting. Be aware that these changes will break advanced expressions.
 
 ## 1.2.0 - 2 December 2022
 ## Added
