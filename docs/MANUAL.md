@@ -81,12 +81,12 @@ The next section offers a solution.
 
 ## Secondary Shortcode Tags
 
-Unprompted allows you to write tags using `<>` instead of `[]` to defer processing.
+Unprompted allows you to write tags using `{}` instead of `[]` to defer processing.
 
 For example, if you want to set `another_var` to 0 when `my_var` equals 1, you should do it like this:
 
 ```
-[if my_var=1]<set another_var>0</set>[/if]
+[if my_var=1]{set another_var}0{/set}[/if]
 ```
 
 This way, the inner shortcode is not processed until *after* it is returned by the outer `[if]` statement.
@@ -94,19 +94,19 @@ This way, the inner shortcode is not processed until *after* it is returned by t
 Secondary shortcode tags give us a couple additional benefits:
 
 - If your shortcode is computationally expensive, you can avoid running it unless the outer shortcode succeeds. This is good for performance.
-- **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance _probability="<get my_var>"]content[/chance]`
+- **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance _probability="{get my_var}"]content[/chance]`
 
-Secondary shortcode tags can have infinite nested depth. The number of `<>` around a shortcode indicates its nested level. Consider this example:
+Secondary shortcode tags can have infinite nested depth. The number of `{}` around a shortcode indicates its nested level. Consider this example:
 
 ```
 [if my_var=1]
-<if another_var=1>
-<<if third_var=1>>
-<<<if fourth_var=1>>>
+{if another_var=1}
+{{if third_var=1}}
+{{{if fourth_var=1}}}
 wow
-<<</if>>>
-<</if>>
-</if>
+{{{/if}}}
+{{/if}}
+{/if}
 [/if]
 ```
 
@@ -114,15 +114,39 @@ Whenever the `[]` statement succeeds, it will decrease the nested level of the r
 
 ```
 [if another_var=1]
-<if third_var=1>
-<<if fourth_var=1>>
+{if third_var=1}
+{{if fourth_var=1}}
 wow
-<</if>>
-</if>
+{{/if}}
+{/if}
 [/if]
 ```
 
-Rinse and repeat until no `<>` remain.
+Rinse and repeat until no `{}` remain.
+
+## Advanced expressions
+
+Most shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval).
+
+This allows you to enter complex expressions in ways that would not be possible with standard shortcode arguments. For example, the `[if]` shortcode expects unique variable keys and a singular type of comparison logic, which means you **cannot** do something like this:
+
+`[if var_a>=1 var_a!=5]`
+
+However, with advanced expressions, you definitely can! Simply put quotes around your expression and Unprompted will parse it with simpleeval. Check it out:
+
+`[if "var_a>=10 and var_a!=5"]Print me[/if]`
+
+If you wish to compare strings, use `is` and single quotes as shown below:
+
+`[if "var_a is 'man' or var_a is 'woman'"]My variable is either man or woman[/if]`
+
+You can even mix advanced expressions with shortcodes. Check this out:
+
+`[if "var_a is {file test_one} or var_a is {choose}1|2|3{/choose}"]`
+
+**The secondary shortcode tags are processed first** and then the resulting string is processed by simpleeval.
+
+For more information on constructing advanced expressions, check the documentation linked above.
 
 ## Escaping characters
 
@@ -136,24 +160,6 @@ Also note: if a shortcode is undefined, Unprompted will print it as a literal as
 Photo of a `[cat|dog]
 ```
 
-## Advanced expressions
-
-Many shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval).
-
-This allows you to enter complex expressions in ways that would not be possible with standard shortcode arguments. For example, the `[if]` shortcode expects unique variable keys and a single type of comparison logic, which means you **cannot** do something like this:
-
-`[if var_a>=1 var_a!=5]`
-
-However, with advanced expressions, you definitely can! Simply put quotes around your expression and Unprompted will parse it with simpleeval. Check it out:
-
-`[if "var_a>=10 and var_a!=5"]Print me[/if]`
-
-If you wish to compare strings, use `is` and single quotes as shown below:
-
-`[if "var_a is 'man' or var_a is 'woman'"]My variable is either man or woman[/if]`
-
-For more information on constructing advanced expressions, check the docs linked above.
-
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
@@ -165,6 +171,10 @@ Here are some of the settings you can modify:
 ### debug (bool)
 
 When `True`, you will see a lot more diagnostic information printed to the console during a run. You should use this when creating your own shortcode, template, or when filing a bug report.
+
+### advanced_expressions (bool)
+
+This determines whether expressions will be processed by simpleeval. Disable for slightly better performance at the cost of breaking some templates.
 
 ### template_directory (str)
 
@@ -292,6 +302,8 @@ Supports `_case` which overrides the random nature of this shortcode with a pre-
 
 Supports an optional positional argument that tells the shortcode how many times to execute (default 1). For example: `[choose 2]Artist One|Artist Two|Artist Three|Artist Four[/choose]` will return two random artists.
 
+Supports the optional `_sep` argument which is a string delimeter that separates multiple options to be returned (defaults to `, `). In the example above, you might get `Artist One, Artist Three` as a result. When only returning one option, `_sep` is irrelevant.
+
 ```
 [choose]red|yellow|blue|green[/choose]
 ```
@@ -312,6 +324,18 @@ Do not enter a file extension, `.json` is assumed.
 
 ```
 [config]./my_custom_settings[/config]
+```
+
+### [do until(str)]
+
+Do-until style loop. The content is processed, then the `until` expression is evaluated - if it's true, the content is processed again. Repeat until `until` is false.
+
+```
+[sets my_var=0]
+[do until="my_var > 5"]
+	Print me
+	[sets my_var="my_var + 1"]
+[/do]
 ```
 
 ### [elif]
@@ -423,11 +447,37 @@ Supports `character_count` for retrieving the number of individual characters in
 
 Supports `word_count` for retrieving the number of words in the content, using space as a delimiter.
 
+Supports `string_count` for retrieving the number of a custom substring in the content. For example, `[info string_count="the"]the frog and the dog and the log[/info]` will return 3.
+
 ```
 [info word_count]A photo of Emma Watson.[/info]
 ```
 ```
 Result: 5
+```
+
+### [max]
+
+Returns the greatest value among the arguments. Supports advanced expressions.
+
+```
+[sets var_a=2 var_b=500]
+[max var_b var_a "100+2" "37"]
+```
+```
+Result: 500
+```
+
+### [min]
+
+Returns the smallest value among the arguments. Supports advanced expressions.
+
+```
+[sets var_a=2 var_b=500]
+[min var_b var_a "100+2" "37"]
+```
+```
+Result: 2
 ```
 
 ### [override variable]
@@ -477,6 +527,8 @@ Arguments are case-sensitive.
 
 Supports the optional `_from` and `_to` arguments, which can process secondary shortcode tags as replacement targets, e.g. `[replace _from="<get var_a>" _to="<get var_b>"]`.
 
+Supports the optional `_count` argument which limits the number of occurances to replace. For example, `[replace the="a" _count=1]the frog and the dog and the log[/replace]` will return `a frog and the dog and the log`.
+
 ```
 [replace red="purple" flowers="marbles"]
 A photo of red flowers.
@@ -494,6 +546,8 @@ Sets a variable to the given content.
 
 `_prepend` will instead add the content to the beginning of the variable's current value.
 
+Supports the optional `_new` argument which will bypass the shortcode if the variable already exists.
+
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.
 
 ```
@@ -503,6 +557,8 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 ### [sets]
 
 The atomic version of `[set]` that allows you to set multiple variables at once.
+
+Supports the optional `_new` argument which will bypass the shortcode if the variable already exists.
 
 ```
 [sets var_a=10 var_b=something var_c=500]
@@ -560,4 +616,15 @@ The optional `_is` argument allows you to specify the comparison logic for your 
 	Output
 	<set my_var _append>1</set>
 [/while]
+```
+
+### [unset variable]
+
+Removes one or more variables from memory.
+
+Note that variables are automatically deleted at the end of each run - you do **not** need to manually clean memory in most cases. The `[unset]` shortcode is for advanced use.
+
+```
+[set var_a=10 var_b="something"]
+[unset var_a var_b]
 ```
