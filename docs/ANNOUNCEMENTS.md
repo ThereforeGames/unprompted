@@ -17,6 +17,6 @@ There is one fairly significant drawback to this new feature: I had to change se
 
 Now that Unprompted has a fairly robust feature set, I plan on turning my attention to bug reports. There are a few kinks I'd like to address soon. In particular, [Unprompted does not work well with the Dynamic Prompts extension](https://github.com/ThereforeGames/unprompted/issues/16), possibly due to a limitation in the A1111 WebUI. I am considering a few different solutions to this - feel free to weigh in with your own input.
 
-Additionally, I would like to overhaul the extension UI as well as the github docs. Both of these were hastily thrown together and could a lot of polish. You can expect improvements in these areas over the next few updates!
+Additionally, I would like to overhaul the extension UI as well as the github docs. Both of these were hastily thrown together and could benefit from a lot of polish. You can expect improvements in these areas over the next few updates!
 
 That's all for now - thank you for reading, and good luck with your prompts!
