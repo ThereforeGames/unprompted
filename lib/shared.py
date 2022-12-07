@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v2.0.1 by Therefore Games)")
+		print("(Unprompted v2.0.2 by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}

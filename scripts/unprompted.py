@@ -44,9 +44,11 @@ class Scripts(scripts.Script):
 			temp_debug = Unprompted.Config.debug
 			Unprompted.Config.debug = True
 
+		print(f"what is all prompts? {p.all_prompts[0]}")
+
 		# Reset vars
-		original_prompt = p.prompt
-		original_negative_prompt = p.negative_prompt
+		original_prompt = p.all_prompts[0]
+		original_negative_prompt = p.all_negative_prompts[0]
 		Unprompted.shortcode_user_vars = {}
 
 		# Extra vars
@@ -104,6 +106,7 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 		
 		# Extensions do not need to return anything, gg no re
+		return p
 
 	# After routines
 	def run(self, p):
