@@ -515,7 +515,7 @@ Supports float values as well. For example, `[repeat 4.2]content[/repeat]` will 
 ```
 [set my_var]0[/set]
 [repeat 5]
-Variable is currently: <set my_var _out _append>1</set>
+Variable is currently: {set my_var _out _append}1</set>
 [/repeat]
 ```
 
@@ -590,11 +590,11 @@ Allows you to run different logic blocks with inner case statements that match t
 ```
 [set my_var]100[/set]
 [switch my_var]
-<case 1>Does not match</case>
-<case 2>Does not match</case>
-<case 100>Matches! This content will be returned</case>
-<case 4>Does not match</case>
-<case>If no other case matches, this content will be returned by default</case>
+	{case 1}Does not match{/case}
+	{case 2}Does not match{/case}
+	{case 100}Matches! This content will be returned{/case}
+	{case 4}Does not match{/case}
+	{case}If no other case matches, this content will be returned by default{/case}
 [/switch]
 ```
 
