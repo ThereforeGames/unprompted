@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file. For more details on new features, please check the Manual.
 
+## 3.0.0 - 10 December 2022
+### Added
+- The `[info]` shortcode now supports `clip_count`
+
+### Changed
+- Fixed an issue with the negative prompt in batch sizes greater than 2
+
+### Removed
+- The `[chance]` shortcode no longer supports `_probability` as the first argument now automatically accepts expressions and secondary shortcode tags
+
 ## 2.0.2 - 7 December 2022
 ### Changed
 - Overhauled Github README.md

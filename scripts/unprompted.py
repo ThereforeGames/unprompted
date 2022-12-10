@@ -44,8 +44,6 @@ class Scripts(scripts.Script):
 			temp_debug = Unprompted.Config.debug
 			Unprompted.Config.debug = True
 
-		print(f"what is all prompts? {p.all_prompts[0]}")
-
 		# Reset vars
 		original_prompt = p.all_prompts[0]
 		original_negative_prompt = p.all_negative_prompts[0]
@@ -60,7 +58,7 @@ class Scripts(scripts.Script):
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
 		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(original_prompt)
-		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if Unprompted.shortcode_user_vars["negative_prompt"] else original_negative_prompt)
+		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt)
 
 		# Apply any updates to system vars
 		for att in dir(p):
@@ -85,7 +83,7 @@ class Scripts(scripts.Script):
 					Unprompted.shortcode_user_vars = {}
 					Unprompted.shortcode_user_vars["batch_index"] = i
 					p.all_prompts[i] = Unprompted.process_string(original_prompt)
-					p.all_negative_prompts[i] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"])
+					p.all_negative_prompts[i] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt)
 
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False)
 		# Keep the same prompt between runs
@@ -104,9 +102,6 @@ class Scripts(scripts.Script):
 		Unprompted.log("Entering Cleanup routine...",False)
 		for i in Unprompted.cleanup_routines:
 			Unprompted.shortcode_objects[i].cleanup()
-		
-		# Extensions do not need to return anything, gg no re
-		return p
 
 	# After routines
 	def run(self, p):
