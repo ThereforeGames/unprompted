@@ -288,8 +288,6 @@ Returns the content if the integer you passed is greater than or equal to a rand
 
 You can change the upper boundary by specifying the optional `_sides` argument.
 
-Supports secondary shortcode tags with the optional `_probability` argument, e.g. `[chance _probability="<get my_var>"]content[/chance]`
-
 ```
 [chance 25]I will show up in your prompt 25% of the time.[/chance]
 ```
@@ -448,6 +446,8 @@ Supports `character_count` for retrieving the number of individual characters in
 Supports `word_count` for retrieving the number of words in the content, using space as a delimiter.
 
 Supports `string_count` for retrieving the number of a custom substring in the content. For example, `[info string_count="the"]the frog and the dog and the log[/info]` will return 3.
+
+Supports `clip_count` for retrieving the number of CLIP tokens in the content (i.e. a metric for prompt complexity.) This argument is only supported within the A1111 WebUI environment.
 
 ```
 [info word_count]A photo of Emma Watson.[/info]
