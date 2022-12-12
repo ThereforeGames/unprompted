@@ -6,8 +6,7 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		
 	def run_block(self, pargs, kwargs, context, content):
-		if ("_probability" in kwargs): this_number = self.Unprompted.parse_advanced(kwargs["_probability"],context)
-		else: this_number = pargs[0]
+		this_number = self.Unprompted.parse_advanced(pargs[0],context)
 		
 		_sides = self.Unprompted.parse_advanced(kwargs["_sides"],context) if "_sides" in kwargs else 100
 

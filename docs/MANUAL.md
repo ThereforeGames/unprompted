@@ -1,6 +1,6 @@
 # Unprompted Manual
 
-**Note:** This file is a work-in-progress and might be better suited to a Wiki if there's enough interest. Shortcode syntax is subject to change based on community feedback.
+Shortcode syntax is subject to change based on community feedback.
 
 ## Adding New Shortcodes
 
@@ -338,7 +338,7 @@ Do-until style loop. The content is processed, then the `until` expression is ev
 
 ### [elif]
 
-Shorthand "else if." Equivalent to `[else]<if my_var="something">content</if>[/else]`.
+Shorthand "else if." Equivalent to `[else]{if my_var="something"}content{/if}[/else]`.
 
 ```
 [set my_var]5[/set]
@@ -396,7 +396,7 @@ The result of the `update` argument is set as the value of `var` at the end of e
 
 ```
 [for i=0 "i<10" "i+1"]
-Print me
+Current value of i: {get i}
 [/for]
 ```
 

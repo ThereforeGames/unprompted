@@ -9,14 +9,37 @@ import gradio as gr
 import modules.scripts as scripts
 from modules.processing import process_images,fix_seed,Processed
 from modules.shared import opts, cmd_opts, state, Options
+from pathlib import Path
 
 import sys
 import os
+
 base_dir = scripts.basedir()
 sys.path.append(base_dir)
 # Main object
 from lib.shared import Unprompted
 Unprompted = Unprompted(base_dir)
+
+def do_dry_run(string):
+	Unprompted.log(string)
+	# Reset vars
+	Unprompted.shortcode_user_vars = {}
+	unp_result = Unprompted.process_string(string)
+	# Cleanup routines
+	Unprompted.log("Entering cleanup routine...",False)
+	for i in Unprompted.cleanup_routines:
+		Unprompted.shortcode_objects[i].cleanup()
+	return f"<strong>RESULT:</strong> {unp_result}"
+
+
+def get_markdown(file):
+	file = Path(base_dir) / file
+	lines = file.open(mode='r', encoding='utf-8').readlines()
+	final_string = ""
+	for line in lines:
+		# Skip h1 elements
+		if not line.startswith("# "): final_string += line
+	return final_string
 
 class Scripts(scripts.Script):
 	def title(self):
@@ -26,24 +49,44 @@ class Scripts(scripts.Script):
 		return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
-		lbl = gr.HTML(label="umprompted_title",value='<span style="margin-left:13px;" class="text-gray-500 text-[0.855rem] mb-2 block dark:text-gray-200 relative z-40">Unprompted</span>')
-		dry_run = gr.Checkbox(label="Dry Run",value=False)
-		with gr.Box():
-			notice = gr.HTML(label="unprompted_notice",value="<strong>Important:</strong> Secondary shortcode tag syntax has changed from <> to {} in v2.0.0. Please see the <strong><a href='https://github.com/ThereforeGames/unprompted/blob/main/docs/CHANGELOG.md' target=_blank>Changelog</a></strong> for more info.")
-		if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/fantasy_card/main{Unprompted.Config.txt_format}")):
-			active_class = ""
-			txt = "Show Ad"
-		else:
-			active_class = "active"
-			txt = "Dismiss"
-		plug = gr.HTML(label="plug",value=f'<div id="unprompted"><div id="ad" class="{active_class} gr-box border-solid border border-gray-200" style="border-radius:0 0 8px 8px"><a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! <strong>Premium Fantasy Card Template</strong> is now available.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p></div><a id="toggle-ad" href="#" style="float:right;display: inline;position:absolute;right:20px;bottom:20px;">{txt}</a></div>')
-		return [lbl, dry_run, notice, plug]
+		with gr.Group():
+			with gr.Accordion("Unprompted", open=False):
+				is_enabled = gr.Checkbox(label="Enabled", value=True)
 
-	def process(self, p, lbl, dry_run, notice, plug):
-		if (dry_run):
-			temp_debug = Unprompted.Config.debug
-			Unprompted.Config.debug = True
+				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/fantasy_card/main{Unprompted.Config.txt_format}")): is_open = False
+				else: is_open = True
+				
+				with gr.Accordion("Promo", open=is_open):
+					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! <strong>Premium Fantasy Card Template</strong> is now available.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p>')
 
+				with gr.Accordion("Dry Run", open=True):
+					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False)
+					dry_run = gr.Button(value="Process Text")
+					dry_run_result = gr.HTML(label="dry_run_result",value="")
+					dry_run.click(fn=do_dry_run,inputs=dry_run_prompt,outputs=dry_run_result)
+
+
+				with gr.Tab("💡 About"):
+					about = gr.Markdown(value=get_markdown("docs/ABOUT.md").replace("$VERSION",Unprompted.VERSION))
+
+				with gr.Tab("📣 Announcements"):
+					announcements = gr.Markdown(value=get_markdown("docs/ANNOUNCEMENTS.md"))
+
+				with gr.Tab("⏱ Changelog"):
+					changelog = gr.Markdown(value=get_markdown("docs/CHANGELOG.md"))
+				
+				with gr.Tab("📘 Manual"):
+					manual = gr.Markdown(value=get_markdown("docs/MANUAL.md"))
+
+				with gr.Tab("🎓 Starter Guide"):
+					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
+
+		return [is_enabled]
+
+	def process(self, p, is_enabled):
+		if not is_enabled:
+			return p
+		
 		# Reset vars
 		original_prompt = p.all_prompts[0]
 		original_negative_prompt = p.all_negative_prompts[0]
@@ -91,12 +134,6 @@ class Scripts(scripts.Script):
 			for i, val in enumerate(p.all_prompts):
 				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 				p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
-
-		# Skips the bulk of inference (note: still produces a blank image)
-		if (dry_run):
-			p.batch_size = 1
-			p.steps = 0
-			Unprompted.Config.debug = temp_debug
 
 		# Cleanup routines
 		Unprompted.log("Entering Cleanup routine...",False)

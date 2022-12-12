@@ -1,7 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file. For more details on new features, please check the Manual.
 
-## 3.0.0 - 10 December 2022
+<details><summary>4.0.0 - 11 December 2022</summary>
+
+### Added
+- New shortcode `[txt2mask]` which is a port of my script by the same name
+- Collapsible menus to docs
+- "Enabled" checkbox in the extension UI as a convenient way of bypassing Unprompted
+- The extension now features inline resources, including the announcements, changelog, manual and starter guide
+
+### Changed
+- Redesigned the extension interface
+- The Dry Run feature has been decoupled from the WebUI's "Generate" button, meaning it no longer generates a dummy image
+- The `[choose]` delimiter is now specified in the config as `syntax.delimiter`
+
+### Removed
+- Custom CSS and Javascript for handling the collapsible advertisement in favor of native Gradio elements
+</details>
+
+<details><summary>3.0.0 - 10 December 2022</summary>
+
 ### Added
 - The `[info]` shortcode now supports `clip_count`
 
@@ -10,18 +28,24 @@ All notable changes to this project will be documented in this file. For more de
 
 ### Removed
 - The `[chance]` shortcode no longer supports `_probability` as the first argument now automatically accepts expressions and secondary shortcode tags
+</details>
 
-## 2.0.2 - 7 December 2022
+<details><summary>2.0.2 - 7 December 2022</summary>
+
 ### Changed
 - Overhauled Github README.md
 - Possibly fixed compatibility issue with Dynamic Prompts
+</details>
 
-## 2.0.1 - 7 December 2022
+<details><summary>2.0.1 - 7 December 2022</summary>
+
 ### Changed
 - The `[file]` shortcode will throw a soft error if the provided filepath is not valid, rather than completely aborting Unprompted (Issue #23)
 - Fixed a string truncation issue related to the sanitization filter (Issue #26)
+</details>
 
-## 2.0.0 - 7 December 2022
+<details><summary>2.0.0 - 7 December 2022</summary>
+
 ### Added
 - Implemented advanced expression support for nearly all shortcodes
 - New shortcode `[do]` for "do until" style loops
@@ -51,22 +75,28 @@ All notable changes to this project will be documented in this file. For more de
 > **Important Note:** the change to secondary shortcode tags will unfortunately break some existing templates. In general, I try to avoid making such changes, but in this case it was the best way to get secondary tags to interact well with advanced expressions - the <> characters conflicted with less-than, greater-than conditional checks. On the plus side, we can now do stuff like this: [if "{file some_script} < 2"]print me[/if]. Should be quite powerful!
 
 > If you wish to revert this behavior (not recommended) you can do so by creating a file called config_user.json, setting advanced_expressions to false, tag_start_alt to <, and tag_start_end to >. Refer to config.json for exact formatting. Be aware that these changes will break advanced expressions.
+</details>
 
-## 1.2.0 - 2 December 2022
+<details><summary>1.2.0 - 2 December 2022</summary>
+
 ### Added
 - New `[sets]` atomic shortcode for setting multiple variables at once
 
 ### Changed
 - `[eval]` can now read user variables
+</details>
 
-## 1.1.0 - 2 December 2022
+<details><summary>1.1.0 - 2 December 2022</summary>
+
 ### Added
 - New `[for]` shortcode, as in for loops
 - New `[casing]` shortcode powered by @dmlls casefy library
 - The `[if]` and `[while]` shortcodes now support advanced expressions via simpleeval, e.g. `[if "var_a==10 and var_b<=50"]`
 - The `[if]` and `[while]` shortcodes now support `!=` as an operator type for `_is`
+</details>
 
-## 1.0.0 - 1 December 2022
+<details><summary>1.0.0 - 1 December 2022</summary>
+
 ### Added
 - New `[info]` shortcode that prints metadata about the content (either `character_count` or `word_count` at the moment)
 - New `[substring]` shortcode for slicing content
@@ -79,8 +109,10 @@ All notable changes to this project will be documented in this file. For more de
 - The `[eval]` shortcode now utilizes the simpleeval library by @danthedeckie, which should be safe for networked environments (no gurantees though - use Unprompted at your own risk)
 - Check `shortcodes/basic/eval.py` for instructions on reverting the shortcode to its old, strictly-for-local-use behavior
 - The tab character is now replaced with a blank string instead of space
+</details>
 
-## 0.10.0 - 30 November 2022
+<details><summary>0.10.0 - 30 November 2022</summary>
+
 ### Added
 - New `[replace]` shortcode
 
@@ -89,24 +121,32 @@ All notable changes to this project will be documented in this file. For more de
 - Tab character (`\t`) is now ignored by default, which will hopefully make it easier to format complex templates for readability
 - All string sanitization logic has been moved into the `process_string()` function
 - Fixed an issue with `negative_prompt` logic
+</details>
 
-## 0.9.0 - 29 November 2022
+<details><summary>0.9.0 - 29 November 2022</summary>
+
 ### Added
 - Updated `negative_prompt` to support the latest version of Automatic1111's WebUI, which permits batch support for negative prompts
+</details>
 
-## 0.8.0 - 13 November 2022
+<details><summary>0.8.0 - 13 November 2022</summary>
+
 ### Added
 - New system variable `batch_index` for making decisions based on the progress into a batch run
 - The `[choose]` shortcode now accepts `_case` which bypasses the random selection with a given number or variable
+</details>
 
-## 0.7.0 - 11 November 2022
+<details><summary>0.7.0 - 11 November 2022</summary>
+
 ### Added
 - New `[config]` shortcode
 - The `[choose]` delimiter is now specified in config.json (defaults to `|`)
 - New `parse_filepath(string, context)` function in shared.py that supports both relative and absolute path handling
 - Merged `.gitignore` PR (thank you @MaikoTan!)
+</details>
 
-## 0.6.0 - 6 November 2022
+<details><summary>0.6.0 - 6 November 2022</summary>
+
 ### Added
 - New `[elif]` shortcode
 - The `[repeat]` shortcode now accepts floats, e.g. 4.6 has a 60% chance of repeating 5 times instead of 4
@@ -116,21 +156,29 @@ All notable changes to this project will be documented in this file. For more de
 
 ### Changed
 - Fixed an issue with `[repeat]` outputting its content once more than intended
+</details>
 
-## 0.5.1 - 5 November 2022
+<details><summary>0.5.1 - 5 November 2022</summary>
+
 ### Changed
 - Fixed an issue with `[set]` converting to float in situations where int is preferred
+</details>
 
-## 0.5.0 - 5 November 2022
+<details><summary>0.5.0 - 5 November 2022</summary>
+
 ### Added
 - Button for dismissing the ad
 - The ad will be dismissed automatically if you purchase the Fantasy Template Pack
+</details>
 
-## 0.4.0 - 4 November 2022
+<details><summary>0.4.0 - 4 November 2022</summary>
+
 ### Added
 - Config option `batch_support` which, if enabled, will generate random prompts for every image in a batch as opposed to using the same prompt for the entire batch
+</details>
 
-## 0.3.0 - 4 November 2022
+<details><summary>0.3.0 - 4 November 2022</summary>
+
 ### Added
 - Support for infinite nesting of secondary shortcode tags
 - New shortcode `[while]` for looping content until the condition returns false
@@ -138,8 +186,10 @@ All notable changes to this project will be documented in this file. For more de
 
 ### Changed
 - The `[if]` `_operator` argument has been renamed to `_is` for readability
+</details>
 
-## 0.2.0 - 4 November 2022
+<details><summary>0.2.0 - 4 November 2022</summary>
+
 ### Added
 - New shortcode `[##]` for multiline comments
 - Documentation for `config.json`
@@ -149,16 +199,20 @@ All notable changes to this project will be documented in this file. For more de
 ### Changed
 - Overhauled codebase in order to load as an A1111 extension rather than a script, please re-review the installation instructions!
 - Renamed `DOCUMENTATION.md` to `MANUAL.md`
+</details>
 
-## 0.1.1 - 2 November 2022
+<details><summary>0.1.1 - 2 November 2022</summary>
+
 ### Added
 - `[get]` now supports `_before` and `_after` arguments
 - `[set]` now supports secondary shortcode tags
 
 ### Changed
 - `[file]` now strips leading and trailing newline characters
+</details>
 
-## 0.1.0 - 1 November 2022
+<details><summary>0.1.0 - 1 November 2022</summary>
+
 ### Added
 - Added `[switch]` and `[case]` shortcodes
 - Added `[repeat]` shortcode
@@ -166,7 +220,10 @@ All notable changes to this project will be documented in this file. For more de
 
 ### Changed
 - Fixed `_append` and `_prepend` behavior of `[set]` when used with int values
+</details>
 
-## 0.0.1 - 31 October 2022
+<details><summary>0.0.1 - 31 October 2022</summary>
+
 ### Added
 - Initial release
+</details>

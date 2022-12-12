@@ -19,11 +19,8 @@
 		"tag_start_alt":"{",
 		"tag_end_alt":"}",
 		"tag_close":"/",
-		"tag_escape":"`"
-	},
-	"shortcodes":
-	{
-		"choose_delimiter":"|"
+		"tag_escape":"`",
+		"delimiter":"|"
 	},
 	"stable_diffusion":
 	{

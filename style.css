@@ -1,5 +1,2 @@
-#unprompted #toggle-ad {opacity:0.5}
-#unprompted #toggle-ad:hover {opacity:1;}
-#unprompted {margin-bottom:2em}
-#unprompted #ad.active {opacity:1;max-height:500px;padding:20px 20px;transition:1s cubic-bezier(0, 1, 0, 1);}
-#unprompted #ad {transition:0.5s cubic-bezier(0, 1, 0, 1);max-height:0;overflow:hidden;opacity:0;padding:3px 20px;}
+details summary {font-size:20px;font-weight:bold;cursor:pointer;}
+details > *:not(summary) {padding:0 20px;}

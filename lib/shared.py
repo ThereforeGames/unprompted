@@ -10,7 +10,9 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		print("(Unprompted v3.0.0 by Therefore Games)")
+		self.VERSION = "4.0.0"
+
+		print(f"(Unprompted v{self.VERSION} by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -183,3 +185,12 @@ class Unprompted:
 			if int(var) == var and "." not in str(original_var): var = int(var)
 		elif (self.is_int(var)): var = int(var)
 		return(var)
+	
+	def download_file(self,filename, url):
+		import requests
+		with open(filename,'wb') as fout:
+			response = requests.get(url, stream=True)
+			response.raise_for_status()
+			# Write response data to file
+			for block in response.iter_content(4096):
+				fout.write(block)

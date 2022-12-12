@@ -7,7 +7,7 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context, content):
 		final_string = ""
-		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.shortcodes.choose_delimiter).split(self.Unprompted.Config.shortcodes.choose_delimiter)
+		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.syntax.delimiter).split(self.Unprompted.Config.syntax.delimiter)
 		# Remove empty lines
 		parts = list(filter(None, parts))
 
