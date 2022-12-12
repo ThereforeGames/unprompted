@@ -598,6 +598,31 @@ Allows you to run different logic blocks with inner case statements that match t
 [/switch]
 ```
 
+### [txt2mask]
+
+A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
+
+Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will ignore the brush mask entirely.
+- `subtract` will remove the brush mask region from the text mask region.
+
+Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+
+Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
+
+Supports the optional `negative_mask` argument which will subtract areas from the content mask.
+
+Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
+
+Does not currently support rendering the mask to A1111's generated output.
+
+The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
+
+```
+[txt2mask]head and shoulders[/txt2mask]Walter White
+```
+
 ### [while variable {_not} {_any} {_is}]
 
 Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
