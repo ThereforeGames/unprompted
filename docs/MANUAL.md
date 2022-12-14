@@ -219,6 +219,16 @@ This is the string that allows you to print a shortcode as a literal string, byp
 
 Note that you only have to include this string once, before the shortcode, as opposed to in front of every bracket.
 
+### templates/default (str)
+
+This is the final string that will be processed by Unprompted, where `*` is the user input.
+
+The main purpose of this setting is for hardcoding shortcodes you want to run every time. For example: `[img2img_autosize]*`
+
+### templates/default_negative (str)
+
+Same as above, but for the negative prompt.
+
 ## System Variables
 
 In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
@@ -227,6 +237,78 @@ In addition to all of the Stable Diffusion variables exposed by Automatic1111's 
 
 An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
 
+## Stable Diffusion Shortcodes
+
+This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
+
+### [img2img]
+
+Used within the `[after]` block to append an img2img task to your generation.
+
+The image resulting from your main prompt (e.g. the txt2img result) will be used as the initial image for `[img2img]`.
+
+While this shortcode does not take any arguments, most img2img settings can be set in advance. **Does not currently support batch_size or batch_count** - coming soon!
+
+```
+Photo of a cat
+[after]
+	{sets prompt="Photo of a dog" denoising_strength=0.75}
+	{img2img}
+[/after]
+```
+
+### [img2img_autosize]
+
+Automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image.
+
+Stable Diffuion generates images in sizes divisible by 64 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
+
+Supports `target_size` which is the minimum possible size of either dimension. Defaults to 512.
+
+Supports `only_full_res` which, if true, will bypass this shortcode unless the "full resolution inpainting" setting is enabled. Defaults to false.
+
+```
+[img2img_autosize] Photo of a cat
+```
+
+### [init_image path(str)]
+
+Loads an image from the given `path` and sets it as the initial image for use with img2img.
+
+Note that `path` must be an absolute path, including the file extension.
+
+If the given `path` ends with the `*` wildcard, `[init_image]` will choose a random file in that directory.
+
+**Important:** At the moment, you still have to select an image in the WebUI before pressing Generate, or this shortcode will throw an error. You can select any image - it doesn't matter what it is, just as long as the field isn't empty.
+
+```
+[init_image "C:/pictures/my_image.png"]
+```
+
+### [txt2mask]
+
+A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
+
+Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will ignore the brush mask entirely.
+- `subtract` will remove the brush mask region from the text mask region.
+
+Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+
+Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
+
+Supports the optional `negative_mask` argument which will subtract areas from the content mask.
+
+Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
+
+Supports the optional `show` positional argument which will append the final mask to your generation output window.
+
+The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
+
+```
+[txt2mask]head and shoulders[/txt2mask]Walter White
+```
 
 ## Basic Shortcodes
 
@@ -250,6 +332,22 @@ This is my multiline comment.
 We're still commenting.
 I can't believe it, we're doing 3 lines of text!
 [/##]
+```
+
+### [after step(int)]
+
+Processes the content after the main task is complete.
+
+This is particularly useful with the A1111 WebUI, as it gives you the ability to queue up additional tasks. For example, you can run img2img after txt2img from the same template.
+
+Supports optional `step` argument which lets you control the order of multiple `[after]` blocks. Defaults to 0. For example, the `[after 2]` block will execute before the `[after 3]` block.
+
+```
+Photo of a cat
+[after]
+	{sets prompt="Photo of a dog" denoising_strength=0.75}
+	{img2img}
+[/after]
 ```
 
 ### [case]
@@ -598,31 +696,6 @@ Allows you to run different logic blocks with inner case statements that match t
 [/switch]
 ```
 
-### [txt2mask]
-
-A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
-
-Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
-- `add` will overlay the two masks. This is the default value.
-- `discard` will ignore the brush mask entirely.
-- `subtract` will remove the brush mask region from the text mask region.
-
-Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
-
-Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
-
-Supports the optional `negative_mask` argument which will subtract areas from the content mask.
-
-Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
-
-Does not currently support rendering the mask to A1111's generated output.
-
-The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
-
-```
-[txt2mask]head and shoulders[/txt2mask]Walter White
-```
-
 ### [while variable {_not} {_any} {_is}]
 
 Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
@@ -639,7 +712,7 @@ The optional `_is` argument allows you to specify the comparison logic for your 
 [set my_var]3[/set]
 [while my_var="10" _is="<"]
 	Output
-	<set my_var _append>1</set>
+	<sets my_var="my_var + 1">
 [/while]
 ```
 

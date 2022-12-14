@@ -22,6 +22,11 @@
 		"tag_escape":"`",
 		"delimiter":"|"
 	},
+	"templates":
+	{
+		"default":"*",
+		"default_negative":"*"
+	},
 	"stable_diffusion":
 	{
 		"batch_support":true

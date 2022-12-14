@@ -2,6 +2,8 @@ class Shortcode():
 	"""Creates an image mask from the content for use with inpainting."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.image_mask = None
+		self.show = False
 	def run_block(self, pargs, kwargs, context, content):
 		from lib.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
@@ -13,18 +15,19 @@ class Shortcode():
 		import cv2
 		import numpy
 
-		brush_mask_mode = kwargs["mode"] if "mode" in kwargs else "add"
-		
+		brush_mask_mode = self.Unprompted.parse_advanced(kwargs["mode"],context) if "mode" in kwargs else "add"
+		self.show = True if "show" in pargs else False
+
 		prompts = content.split(self.Unprompted.Config.syntax.delimiter)
 		prompt_parts = len(prompts)
 
 		if "negative_mask" in kwargs:
-			negative_prompts = (kwargs["negative_mask"]).split(self.Unprompted.Config.syntax.delimiter)
+			negative_prompts = (self.Unprompted.parse_advanced(kwargs["negative_mask"],context)).split(self.Unprompted.Config.syntax.delimiter)
 			negative_prompt_parts = len(negative_prompts)
 		else: negative_prompts = None
 
-		mask_precision = min(255,int(kwargs["precision"] if "precision" in kwargs else 100))
-		mask_padding = int(kwargs["padding"] if "padding" in kwargs else 0)
+		mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 100))
+		mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
 
 		def overlay_mask_part(img_a,img_b,mode):
 			if (mode == "discard"): img_a = ImageChops.darker(img_a, img_b)
@@ -92,6 +95,8 @@ class Shortcode():
 				preds = model(img.repeat(prompt_parts,1,1,1), prompts)[0]
 				if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1), negative_prompts)[0]
 
+			if "image_mask" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["image_mask"] = None
+			
 			if (brush_mask_mode == "add" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
 				final_img = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((512,512))
 			else: final_img = None
@@ -117,13 +122,20 @@ class Shortcode():
 			return final_img
 
 		# Set up processor parameters correctly
-		image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
+		self.image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
 		self.Unprompted.shortcode_user_vars["mode"] = 1
 		self.Unprompted.shortcode_user_vars["mask_mode"] = 1
-		self.Unprompted.shortcode_user_vars["image_mask"] = image_mask
-		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = image_mask
+		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
+		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["latent_mask"] = None # fixes inpainting full resolution
 
-		if "save" in kwargs: image_mask.save(f"{kwargs['save']}.png")
+		if "save" in kwargs: self.image_mask.save(f"{self.Unprompted.parse_advanced(kwargs['save'],context)}.png")
 
 		return ""
+	
+	def after(self,p=None,processed=None):
+		if self.image_mask and self.show:
+			processed.images.append(self.image_mask)
+			self.image_mask = None
+			self.show = False
+			return processed

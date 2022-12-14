@@ -1,5 +1,23 @@
 # Changelog
-All notable changes to this project will be documented in this file. For more details on new features, please check the Manual.
+All notable changes to this project will be documented in this file.
+
+For more details on new features, please check the [Manual](./MANUAL.md).
+
+<details><summary>4.1.0 - 14 December 2022</summary>
+
+### Added
+- New `after()` routine that allows Unprompted to modify the outcome of a generation
+- New shortcode `[after]` that allows you to process text post-generation
+- New shortcode `[img2img]`, which is used inside of `[after]` for appending an img2img task to the output, effectively replacing my old txt2img2img script
+- New shortcode `[img2img_autosize]` that automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image
+- New shortcode `[init_image]` that loads an image from the given filepath for use with img2img
+- New config options `templates.default` and `templates.default_negative` that let you apply certain shortcodes to every run
+- The `[txt2mask]` shortcode now supports `show` which will append the final image mask to your generation output
+- The `[txt2mask]` shortcode now supports advanced expressions
+
+### Changed
+- Fixed an issue with advanced expressions and multi-word string values
+</details>
 
 <details><summary>4.0.0 - 11 December 2022</summary>
 

@@ -14,7 +14,7 @@ You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as 
 
 ## Features
 
-- **30 shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
+- **Dozens of shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
 - Easily extendable with **custom shortcodes**
 - Simple creation of `.txt` templates that can be organized according to your preferences
 - Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language

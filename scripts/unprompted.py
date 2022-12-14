@@ -31,7 +31,6 @@ def do_dry_run(string):
 		Unprompted.shortcode_objects[i].cleanup()
 	return f"<strong>RESULT:</strong> {unp_result}"
 
-
 def get_markdown(file):
 	file = Path(base_dir) / file
 	lines = file.open(mode='r', encoding='utf-8').readlines()
@@ -82,11 +81,14 @@ class Scripts(scripts.Script):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
 		return [is_enabled]
-
+	
 	def process(self, p, is_enabled):
 		if not is_enabled:
 			return p
 		
+		def apply_prompt_template(string,template):
+			return template.replace("*",string)
+
 		# Reset vars
 		original_prompt = p.all_prompts[0]
 		original_negative_prompt = p.all_negative_prompts[0]
@@ -100,8 +102,8 @@ class Scripts(scripts.Script):
 			if not att.startswith("__"):
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
-		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(original_prompt)
-		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt)
+		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
+		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 		# Apply any updates to system vars
 		for att in dir(p):
@@ -125,8 +127,8 @@ class Scripts(scripts.Script):
 				else:
 					Unprompted.shortcode_user_vars = {}
 					Unprompted.shortcode_user_vars["batch_index"] = i
-					p.all_prompts[i] = Unprompted.process_string(original_prompt)
-					p.all_negative_prompts[i] = Unprompted.process_string(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt)
+					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
+					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False)
 		# Keep the same prompt between runs
@@ -141,8 +143,8 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 
 	# After routines
-	def run(self, p):
+	def postprocess(self, p, processed, is_enabled):
 		# After routines
 		Unprompted.log("Entering After routine...")
 		for i in Unprompted.after_routines:
-			Unprompted.shortcode_objects[i].after()
+			Unprompted.shortcode_objects[i].after(p,processed)

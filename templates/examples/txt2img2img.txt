@@ -1,0 +1,12 @@
+[##]
+Using the 'after' block, you can append an img2img task and even create text masks for inpainting.
+
+The txt2img result from "Photo of a cat" is the initial image used with img2img.
+[/##]
+
+Photo of a cat
+[after]
+	{sets prompt="Walter White" denoising_strength=0.75}
+	{txt2mask}head{/txt2mask}
+	{img2img}
+[/after]
