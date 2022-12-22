@@ -18,6 +18,13 @@ class Shortcode():
 		brush_mask_mode = self.Unprompted.parse_advanced(kwargs["mode"],context) if "mode" in kwargs else "add"
 		self.show = True if "show" in pargs else False
 
+		self.legacy_weights = True if "legacy_weights" in pargs else False
+
+		smoothing_kernel = None
+		if "smoothing" in kwargs:
+			radius = int(kwargs["smoothing"])
+			smoothing_kernel = numpy.ones((radius,radius),numpy.float32)/(radius*radius)
+
 		prompts = content.split(self.Unprompted.Config.syntax.delimiter)
 		prompt_parts = len(prompts)
 
@@ -27,7 +34,6 @@ class Shortcode():
 		else: negative_prompts = None
 
 		mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 100))
-		mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
 
 		def overlay_mask_part(img_a,img_b,mode):
 			if (mode == "discard"): img_a = ImageChops.darker(img_a, img_b)
@@ -53,6 +59,9 @@ class Shortcode():
 
 				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
 				img = cv2.imread(filename)
+
+				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
+
 				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
 
@@ -67,21 +76,23 @@ class Shortcode():
 
 		def get_mask():
 			# load model
-			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64)
+			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
 			model.eval()
 			model_dir = f"{self.Unprompted.base_dir}/lib/stable_diffusion/clipseg/weights"
 			os.makedirs(model_dir, exist_ok=True)
-			d64_file = f"{model_dir}/rd64-uni.pth"
+
+			d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
+			d64_file = f"{model_dir}/{d64_filename}"
 			d16_file = f"{model_dir}/rd16-uni.pth"
 
 			# Download model weights if we don't have them yet
 			if not os.path.exists(d64_file):
 				print("Downloading clipseg model weights...")
-				self.Unprompted.download_file(d64_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd64-uni.pth")
+				self.Unprompted.download_file(d64_file,f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
 				self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
 
 			# non-strict, because we only stored decoder weights (not CLIP weights)
-			model.load_state_dict(torch.load(d64_file, map_location=torch.device('cuda')), strict=False);	
+			model.load_state_dict(torch.load(d64_file), strict=False);	
 
 			transform = transforms.Compose([
 				transforms.ToTensor(),
@@ -111,7 +122,20 @@ class Shortcode():
 				final_img = overlay_mask_part(final_img,self.Unprompted.shortcode_user_vars["image_mask"],"discard")
 			if (negative_prompts): final_img = process_mask_parts(negative_preds,negative_prompt_parts,"discard",final_img)
 
+			if "size_var" in kwargs:
+				img_data = final_img.load()
+				# Count number of transparent pixels
+				black_pixels = 0
+				total_pixels = 512 * 512
+				for y in range(512):
+					for x in range(512):
+						pixel_data = img_data[x,y]
+						if (pixel_data[0] == 0 and pixel_data[1] == 0 and pixel_data[2] == 0): black_pixels += 1
+				subject_size = 1 - black_pixels / total_pixels
+				self.Unprompted.shortcode_user_vars[kwargs["size_var"]] = subject_size
+
 			# Increase mask size with padding
+			mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
 			if (mask_padding > 0):
 				aspect_ratio = self.Unprompted.shortcode_user_vars["init_images"][0].width / self.Unprompted.shortcode_user_vars["init_images"][0].height
 				new_width = self.Unprompted.shortcode_user_vars["init_images"][0].width+mask_padding*2

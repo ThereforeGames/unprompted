@@ -6,32 +6,6 @@ from torch.nn import functional as nnf
 from torch.nn.modules.activation import ReLU
 
 
-def precompute_clip_vectors():
-
-    from trails.initialization import init_dataset
-    lvis = init_dataset('LVIS_OneShot3', split='train', mask='text_label', image_size=224, aug=1, normalize=True, 
-                                       reduce_factor=None, add_bar=False, negative_prob=0.5)
-
-    all_names = list(lvis.category_names.values())
-
-    import clip
-    from models.clip_prompts import imagenet_templates
-    clip_model = clip.load("ViT-B/32", device='cuda', jit=False)[0]
-    prompt_vectors = {}
-    for name in all_names[:100]:
-        with torch.no_grad():
-            conditionals = [t.format(name).replace('_', ' ') for t in imagenet_templates]
-            text_tokens = clip.tokenize(conditionals).cuda()
-            cond = clip_model.encode_text(text_tokens).cpu()
-            
-            for cond, vec in zip(conditionals, cond):
-                prompt_vectors[cond] = vec.cpu()
-
-    import pickle
-
-    pickle.dump(prompt_vectors, open('precomputed_prompt_vectors.pickle', 'wb'))
-
-
 def get_prompt_list(prompt):
     if prompt == 'plain':
         return ['{}']    
@@ -43,9 +17,6 @@ def get_prompt_list(prompt):
         return ['a photo of a {}.', 'a photograph of a {}.', 'an image of a {}.', '{}.',
                             'a cropped photo of a {}.', 'a good photo of a {}.', 'a photo of one {}.',
                             'a bad photo of a {}.', 'a photo of the {}.']
-    elif prompt == 'shuffle_clip':
-        from models.clip_prompts import imagenet_templates
-        return imagenet_templates
     else:
         raise ValueError('Invalid value for prompt')        
 
@@ -300,7 +271,7 @@ class CLIPDensePredT(CLIPDenseBase):
     def __init__(self, version='ViT-B/32', extract_layers=(3, 6, 9), cond_layer=0, reduce_dim=128, n_heads=4, prompt='fixed', 
                  extra_blocks=0, reduce_cond=None, fix_shift=False,
                  learn_trans_conv_only=False,  limit_to_clip_only=False, upsample=False, 
-                 add_calibration=False, rev_activations=False, trans_conv=None, n_tokens=None):
+                 add_calibration=False, rev_activations=False, trans_conv=None, n_tokens=None, complex_trans_conv=False):
         
         super().__init__(version, reduce_cond, reduce_dim, prompt, n_tokens)
         # device = 'cpu'
@@ -337,7 +308,22 @@ class CLIPDensePredT(CLIPDenseBase):
             # explicitly define transposed conv kernel size
             trans_conv_ks = (trans_conv, trans_conv)
 
-        self.trans_conv = nn.ConvTranspose2d(reduce_dim, 1, trans_conv_ks, stride=trans_conv_ks)
+        if not complex_trans_conv:
+            self.trans_conv = nn.ConvTranspose2d(reduce_dim, 1, trans_conv_ks, stride=trans_conv_ks)
+        else:
+            assert trans_conv_ks[0] == trans_conv_ks[1]
+
+            tp_kernels = (trans_conv_ks[0] // 4, trans_conv_ks[0] // 4)
+
+            self.trans_conv = nn.Sequential(
+                nn.Conv2d(reduce_dim, reduce_dim, kernel_size=3, padding=1),
+                nn.ReLU(),
+                nn.ConvTranspose2d(reduce_dim, reduce_dim // 2, kernel_size=tp_kernels[0], stride=tp_kernels[0]),
+                nn.ReLU(),
+                nn.ConvTranspose2d(reduce_dim // 2, 1, kernel_size=tp_kernels[1], stride=tp_kernels[1]),               
+            )
+
+#        self.trans_conv = nn.ConvTranspose2d(reduce_dim, 1, trans_conv_ks, stride=trans_conv_ks)
         
         assert len(self.extract_layers) == depth
 

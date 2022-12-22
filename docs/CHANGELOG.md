@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>4.2.0 - 22 December 2022</summary>
+
+### Added
+- New shortcode `[file2mask]` that allows you to modify or replace your img2img mask with arbitrary files
+- New shortcode `[filelist]` that returns a delimited string containing the full paths of all files in a given path
+- New shortcode `[length]` that returns the number of items in a delimited string
+- The `[txt2mask]` shortcode utilizes the new refined CLIPseg weights
+- The `[txt2mask]` shortcode now supports `legacy_weights` which will fallback to the old weights
+- The `[txt2mask]` shortcode now supports `smoothing` which lets you define the sharpness of your mask selection
+- The `[txt2mask]` shortcode now supports `size_var` which lets you store the percentage of the canvas that your text selection occupies
+- The `[get]` shortcode can now return multiple variables
+- The `[get]` shortcode allows you to specify a separator when returning multiple variables via `_sep`
+- The `[file]` shortcode now supports `_encoding` which lets you change the expected encoding type
+
+### Changed
+- Improved error handling for the `[file]` shortcode
+- Minor improvements to the Manual and Readme
+</details>
+
 <details><summary>4.1.0 - 14 December 2022</summary>
 
 ### Added

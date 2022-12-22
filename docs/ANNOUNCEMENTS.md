@@ -1,6 +1,26 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Happy Holidays from Unprompted — 22 December 2022</summary>
+
+Yep, it's time for some gifts. 🎅
+
+In the newly released Unprompted v4.2.0, the `[txt2mask]` shortcode has received a massive upgrade.
+
+It is now compatible with [the new refined CLIPseg weights](https://github.com/timojl/clipseg#new-fine-grained-weights) which will help you create higher fidelity masks.
+
+If your masks are still looking a bit "blocky," give the new `smoothing` argument a try. Set it to a value around 20 and you should get nice, rounded shapes:
+
+<img src="https://user-images.githubusercontent.com/95403634/209241225-28d5937e-549b-4eae-a719-e055222809e5.png" height=250>
+
+Additionally, you can now specify `size_var` which will cause the shortcode to calculate the amount of space that your mask occupies in the canvas. You can use this to intelligently adjust other parameters, such as CFG scale. For example, if you mask out the "face" of a subject, but it represents a very small percentage of the canvas, you may decide to lower your img2img CFG.
+
+This update also introduces a few new shortcodes for file handling as well as enhancements for `[get]`. Check out the Changelog for more details.
+
+Have a Merry Christmas!
+
+</details>
+
 <details><summary>Housekeeping Update along with txt2mask Support! — 11 December 2022</summary>
 
 Welcome to Unprompted v4.0.0!

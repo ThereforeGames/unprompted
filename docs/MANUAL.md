@@ -241,6 +241,21 @@ An integer that correponds to your progress in a batch run. For example, if your
 
 This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
 
+### [file2mask]
+
+Allows you to modify or replace your img2img mask with arbitrary files.
+
+Supports the `mode` argument which determines how the file mask will behave alongside the existing mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will scrap the existing mask entirely.
+- `subtract` will remove the file mask region from the existing mask region.
+
+Supports the optional `_show` positional argument which will append the final mask to your generation output window.
+
+```
+Walter White[file2mask "C:/pictures/my_mask.png"]
+```
+
 ### [img2img]
 
 Used within the `[after]` block to append an img2img task to your generation.
@@ -298,11 +313,17 @@ Supports the optional `precision` argument which determines the confidence of th
 
 Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
 
+Supports the optional `smoothing` argument which refines the boundaries of the mask, allowing you to create a smoother selection. Default is 0. Try a value of 20 or greater if you find that your masks are blocky.
+
+Supports the optional `size_var` argument which will cause the shortcode to calculate the region occupied by your mask selection as a percentage of the total canvas. That value is stored into the variable you specify. For example: `[txt2mask size_var=test]face[/txt2mask]` if "face" takes up 40% of the canvas, then the `test` variable will become 0.4.
+
 Supports the optional `negative_mask` argument which will subtract areas from the content mask.
 
 Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
 
 Supports the optional `show` positional argument which will append the final mask to your generation output window.
+
+Supports the optional `legacy_weights` positional argument which will utilize the original CLIPseg weights. By default, `[txt2mask]` will use the [refined weights](https://github.com/timojl/clipseg#new-fine-grained-weights).
 
 The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
 
@@ -478,8 +499,22 @@ If the given `path` is a directory as opposed to a file, `[file]` will return th
 
 Supports optional keyword arguments that are passed to `[set]` for your convenience. This effectively allows you to use `[file]` like a function in programming, e.g. `[file convert_to_roman_numeral number=7]`.
 
+The file is expected to be `utf-8` encoding. You can change this with the optional `_encoding` argument.
+
 ```
 [file my_template/common/adjective]
+```
+
+### [filelist path(str)]
+
+Returns a delimited string containing the full paths of all files in a given path.
+
+This shortcode is powered by Python's glob module, which means it supports wildcards and other powerful syntax expressions.
+
+Supports the optional `_delimiter` argument which lets you specify the separator between each filepath. It defaults to your config's `syntax.delimiter` value (`|`).
+
+```
+[filelist "C:/my_pictures/*.*"]
 ```
 
 ### [for var "test var" "update var"]
@@ -507,6 +542,10 @@ Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get 
 You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`.
 
 Supports the optional `_default` argument, the value of which is returned if your variable does not exist e.g. `[get car_color _default="red"]`.
+
+Supports returning multiple variables, e.g. `[get var_a var_b]` will return the values of two variables separated by a comma and space.
+
+You can change the default separator with `_sep`.
 
 ```
 My name is [get name]
@@ -552,6 +591,21 @@ Supports `clip_count` for retrieving the number of CLIP tokens in the content (i
 ```
 ```
 Result: 5
+```
+
+### [length]
+
+Returns the number of items in a delimited string.
+
+Supports the optional `_delimiter` argument which lets you specify the separator between each item. It defaults to your config's `syntax.delimiter` value (`|`).
+
+Supports the optional `_max` argument which caps the value returned by this shortcode. Defaults to -1, which is "no cap."
+
+```
+[length "item one|item two|item three"]
+```
+```
+Result: 3
 ```
 
 ### [max]
@@ -700,6 +754,8 @@ Allows you to run different logic blocks with inner case statements that match t
 
 Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
 
+This shortcode also supports advanced expression syntax, e.g. `[while "some_var >= 5 and another_var < 2"]`. The following arguments are only relevant if you **don't** want to use advanced expressions:
+
 Supports the testing of multiple variables, e.g. `[while var_a=1 var_b=50 var_c="something"]`. If one or more variables return false, the loop ends.
 
 The optional `_any` argument will continue the loop if any of the provided conditions returns true.
@@ -707,6 +763,15 @@ The optional `_any` argument will continue the loop if any of the provided condi
 The optional `_not` argument allows you to test for false instead of true, e.g. `[while _not my_variable=1]` will continue the loop so long as `my_variable` does *not* equal 1.
 
 The optional `_is` argument allows you to specify the comparison logic for your arguments. Defaults to `==`, which simply checks for equality. Other options include `!=`, `>`, `>=`, `<` and `<=`. Example: `[while my_var="5" _is="<="]`
+
+```
+Advanced expression demo:
+[set my_var]3[/set]
+[while "my_var < 10"]
+	Output
+	<sets my_var="my_var + 1">
+[/while]
+```
 
 ```
 [set my_var]3[/set]

@@ -8,6 +8,7 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
+		this_encoding = self.Unprompted.parse_advanced(kwargs["_encoding"],context) if "_encoding" in kwargs else "utf-8"
 		
 		# Relative path
 		if (file_string[0] == "."):
@@ -27,10 +28,12 @@ class Shortcode():
 			self.Unprompted.log(f"File does not exist: {file}",True,"ERROR")
 			return("")
 
-		file_contents = open(file).read()
+		with open(file, "r", encoding=this_encoding) as f: file_contents = f.read()
+		f.close()
 
 		# Use [set] with keyword arguments
 		for key, value in kwargs.items():
+			if (key[0] == "_"): continue # Skips system arguments
 			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value)
 
 		self.Unprompted.shortcode_objects["else"].do_else = False

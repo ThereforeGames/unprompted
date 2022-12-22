@@ -54,7 +54,7 @@ Once you have verified that Unprompted is installed and running correctly, you h
 
 ## Premium Templates
 
-While Unprompted is completely free to use, we do offer **Premium Template add-ons** that demonstrate what the software is truly capable of.
+While Unprompted is completely free to use, we do offer **Premium Template add-ons** that demonstrate some of the software's more advanced functionality.
 
 <img align="left" src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" width=150>
 
@@ -77,6 +77,7 @@ A big "thank you" to the authors of the following libraries that Unprompted depe
 - [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) by Darren Mulholland
 - [Simple Eval](https://github.com/danthedeckie/simpleeval) by @danthedeckie
 - [Casefy](https://github.com/dmlls/python-casefy) by @dmlls
+- [CLIPseg](https://github.com/timojl/clipseg) by uddecke, Timo and Ecker, Alexander
 
 
 ## 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
