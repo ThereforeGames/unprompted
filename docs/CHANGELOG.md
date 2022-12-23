@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>4.2.1 - 23 December 2023</summary>
+
+### Changed
+- Fixed an issue related to `[switch]`
+
+</details>
+
 <details><summary>4.2.0 - 22 December 2022</summary>
 
 ### Added
