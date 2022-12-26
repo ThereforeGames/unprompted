@@ -101,7 +101,7 @@ class Shortcode():
 				transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 				transforms.Resize((512, 512)),
 			])
-			flattened_input = flattened(self.Unprompted.shortcode_user_vars["init_images"][0], opts.img2img_background_color)
+			flattened_input = flatten(self.Unprompted.shortcode_user_vars["init_images"][0], opts.img2img_background_color)
 			img = transform(flattened_input).unsqueeze(0)
 
 			# predict
