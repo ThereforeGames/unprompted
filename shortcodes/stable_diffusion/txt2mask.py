@@ -70,8 +70,8 @@ class Shortcode():
 				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
 				img = cv2.imread(filename)
 
-				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
 				if padding_dilation_kernel is not None: img = cv2.dilate(img,padding_dilation_kernel,iterations=1)
+				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
 
 				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
