@@ -26,6 +26,14 @@ class Shortcode():
 		if "smoothing" in kwargs:
 			radius = int(kwargs["smoothing"])
 			smoothing_kernel = numpy.ones((radius,radius),numpy.float32)/(radius*radius)
+			
+		
+
+		# Pad the mask by applying a dilation
+		mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
+		padding_dilation_kernel = None
+		if (mask_padding > 0):
+			padding_dilation_kernel = numpy.ones((mask_padding, mask_padding), numpy.uint8)
 
 		prompts = content.split(self.Unprompted.Config.syntax.delimiter)
 		prompt_parts = len(prompts)
@@ -63,6 +71,7 @@ class Shortcode():
 				img = cv2.imread(filename)
 
 				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
+				if padding_dilation_kernel is not None: img = cv2.dilate(img,padding_dilation_kernel,iterations=1)
 
 				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
@@ -136,16 +145,7 @@ class Shortcode():
 						if (pixel_data[0] == 0 and pixel_data[1] == 0 and pixel_data[2] == 0): black_pixels += 1
 				subject_size = 1 - black_pixels / total_pixels
 				self.Unprompted.shortcode_user_vars[kwargs["size_var"]] = subject_size
-
-			# Increase mask size with padding
-			mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
-			if (mask_padding > 0):
-				aspect_ratio = self.Unprompted.shortcode_user_vars["init_images"][0].width / self.Unprompted.shortcode_user_vars["init_images"][0].height
-				new_width = self.Unprompted.shortcode_user_vars["init_images"][0].width+mask_padding*2
-				new_height = round(new_width / aspect_ratio)
-				final_img = final_img.resize((new_width,new_height))
-				final_img = center_crop(final_img,self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height)
-
+				
 			return final_img
 
 		# Set up processor parameters correctly
