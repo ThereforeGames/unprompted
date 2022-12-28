@@ -3,9 +3,9 @@ import random
 import os
 
 class Shortcode():
-	'''Loads an image from the given path and sets it as the initial image for use with img2img.'''
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Loads an image from the given path and sets it as the initial image for use with img2img."
 
 	def run_atomic(self, pargs, kwargs, context):
 		from PIL import Image
@@ -27,3 +27,6 @@ class Shortcode():
 		self.Unprompted.shortcode_user_vars["init_images"] = [Image.open(file)]
 
 		return ""
+
+	def ui(self,gr):
+		gr.File(label="Image path",file_type="image")

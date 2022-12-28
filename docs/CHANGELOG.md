@@ -3,7 +3,21 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details><summary>4.2.1 - 23 December 2023</summary>
+<details><summary>4.3.0 - 27 December 2022</summary>
+
+### Added
+- New Wizard panel, an experimental GUI shortcode builder
+- New config section `ui` for adjusting the default appearance of the extension
+- The `[choose]` shortcode now supports `_weighted` for a more convenient approach to weighing the list of options
+
+### Changed
+- Minor interface improvements
+- Fixed an issue related to txt2mask in the new version of A1111 WebUI
+- Fixed an issue related to the postprocess() routine in the new version of A1111 WebUI
+
+</details>
+
+<details><summary>4.2.1 - 23 December 2022</summary>
 
 ### Changed
 - Fixed an issue related to `[switch]`

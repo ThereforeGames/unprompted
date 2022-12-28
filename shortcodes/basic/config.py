@@ -5,6 +5,7 @@ class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.temp_config = self.Unprompted.Config
+		self.description = "Updates your settings with the content for the duration of a run."
 	def run_block(self, pargs, kwargs, context, content):
 		content = self.Unprompted.parse_alt_tags(content,context)
 
@@ -26,3 +27,6 @@ class Shortcode():
 	def cleanup(self):
 		# Revert settings
 		self.Unprompted.Config = self.temp_config
+
+	def ui(self,gr):
+		pass

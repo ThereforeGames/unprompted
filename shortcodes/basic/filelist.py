@@ -5,6 +5,7 @@ import os
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Returns a list of files at a given location using glob."
 
 	def run_atomic(self, pargs, kwargs, context):
 		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
@@ -22,3 +23,7 @@ class Shortcode():
 		files = _delimiter.join(files)
 
 		return(files)
+	
+	def ui(self,gr):
+		gr.Textbox(label="Filepath 🡢 str",max_lines=1)
+		gr.Textbox(label="Result delimiter 🡢 _delimiter",max_lines=1,value=self.Unprompted.Config.syntax.delimiter)

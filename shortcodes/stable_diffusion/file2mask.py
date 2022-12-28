@@ -1,9 +1,9 @@
 class Shortcode():
-	"""Modify or replace your img2img mask with arbitrary files."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.image_mask = None
 		self.show = False
+		self.description = "Modify or replace your img2img mask with arbitrary files."
 	def run_atomic(self, pargs, kwargs, context):
 		import os.path
 		from PIL import ImageChops, Image, ImageOps
@@ -73,3 +73,8 @@ class Shortcode():
 			self.image_mask = None
 			self.show = False
 			return processed
+
+	def ui(self,gr):
+		gr.Textbox(label="Path to image file 🡢 str",max_lines=1)
+		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
+		gr.Checkbox(label="Show mask in output 🡢 show")

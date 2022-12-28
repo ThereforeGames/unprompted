@@ -1,6 +1,7 @@
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Stores a value into a given variable."
 	def run_block(self, pargs, kwargs, context, content):
 		overrides = self.Unprompted.shortcode_objects["override"]
 
@@ -20,3 +21,10 @@ class Shortcode():
 
 		if ("_out" in pargs): return(self.Unprompted.shortcode_user_vars[pargs[0]])
 		else: return("")
+
+	def ui(self,gr):
+		gr.Textbox(label="Variable name 🡢 verbatim",max_lines=1)
+		gr.Checkbox(label="Only set this variable if it doesn't already exist 🡢 _new")
+		gr.Checkbox(label="Append the content to the variable's current value 🡢 _append")
+		gr.Checkbox(label="Prepend the content to the variable's current value 🡢 _prepend")
+		gr.Checkbox(label="Print the variable's value 🡢 _out")

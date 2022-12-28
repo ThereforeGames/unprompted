@@ -1,10 +1,10 @@
 import operator
 class Shortcode():
-	"""Loops content until the condition returns false."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.ops = {"==":self.Unprompted.is_equal,"!=":self.Unprompted.is_not_equal,"<":operator.lt,"<=":operator.le,">":operator.gt,">=":operator.ge}
-	
+		self.description = "Loops content until the condition returns false."
+
 	def run_block(self, pargs, kwargs, context,content):
 		final_string = ""
 
@@ -53,4 +53,10 @@ class Shortcode():
 			else:
 				break
 			
-		return(final_string)				
+		return(final_string)
+
+	def ui(self,gr):
+		gr.Textbox(label="Arbitrary conditional statement(s) to test against 🡢 verbatim",max_lines=1)
+		gr.Dropdown(label="Evaluation method 🡢 _is",choices=["==","!=","<","<=",">",">="],value="==")
+		gr.Checkbox(label="Invert evaluation such that a false condition will end the loop 🡢 _not")
+		gr.Checkbox(label="Return true if any one of multiple conditions are true 🡢 _any")

@@ -1,7 +1,7 @@
 class Shortcode():
-	'''Runs an img2img task inside of an [after] block'''
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Runs an img2img task inside of an [after] block."
 	def run_atomic(self, pargs, kwargs, context):
 		import modules.img2img
 		from modules import sd_samplers
@@ -64,3 +64,6 @@ class Shortcode():
 		self.Unprompted.after_processed.images.append(img2img_images[0])
 
 		return("")
+
+	def ui(self,gr):
+		pass

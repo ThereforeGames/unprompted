@@ -3,6 +3,7 @@ class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.ops = {"==":self.Unprompted.is_equal,"!=":self.Unprompted.is_not_equal,"<":operator.lt,"<=":operator.le,">":operator.gt,">=":operator.ge}
+		self.description = "Checks whether a variable is equal to a given value."
 	def run_block(self, pargs, kwargs, context, content):
 		_not = "_not" in pargs
 		_any = "_any" in pargs
@@ -46,3 +47,9 @@ class Shortcode():
 		else:
 			self.Unprompted.shortcode_objects["else"].do_else = True
 			return("")
+
+	def ui(self,gr):
+		gr.Textbox(label="Conditional statement 🡢 my_var",max_lines=1)
+		gr.Dropdown(label="Evaluation method 🡢 _is",choices=["==","!=","<","<=",">",">="],value="==")
+		gr.Checkbox(label="Invert evaluation such that a true statement will return false 🡢 _not")
+		gr.Checkbox(label="Return true if any one of multiple conditions are true 🡢 _any")

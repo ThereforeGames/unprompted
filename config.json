@@ -30,5 +30,12 @@
 	"stable_diffusion":
 	{
 		"batch_support":true
+	},
+	"ui":
+	{
+		"enabled":true,
+		"wizard_enabled":true,
+		"wizard_default_shortcode":"txt2mask",
+		"wizard_autoinclude":false
 	}
 }

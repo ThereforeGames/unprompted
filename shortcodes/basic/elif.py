@@ -1,6 +1,7 @@
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Shorthand 'else-if.'"
 
 	def run_block(self, pargs, kwargs, context, content):
 		if (self.Unprompted.shortcode_objects["else"].do_else):
@@ -9,3 +10,6 @@ class Shortcode():
 			return(if_result) # alt tags were already processed by 'if'
 		else:
 			return("")
+
+	def ui(self,gr):
+		pass

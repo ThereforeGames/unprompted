@@ -5,6 +5,7 @@ import os
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Processes the file content of 'path.'"
 
 	def run_atomic(self, pargs, kwargs, context):
 		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
@@ -38,3 +39,8 @@ class Shortcode():
 
 		self.Unprompted.shortcode_objects["else"].do_else = False
 		return(self.Unprompted.process_string(file_contents,path))
+
+	def ui(self,gr):
+		gr.Textbox(label="Filepath 🡢 str",max_lines=1)
+		gr.Textbox(label="Expected encoding 🡢 _encoding",max_lines=1,value="utf-8")
+		pass

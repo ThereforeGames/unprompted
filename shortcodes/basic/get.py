@@ -1,6 +1,7 @@
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Returns the value of a variable."
 	def run_atomic(self, pargs, kwargs, context):
 		_default = self.Unprompted.parse_advanced(kwargs["_default"],context) if "_default" in kwargs else ""
 		_sep = str(self.Unprompted.parse_advanced(kwargs["_sep"],context)) if "_sep" in kwargs else " "
@@ -18,3 +19,10 @@ class Shortcode():
 			else: return_string += _default
 
 		return(return_string)
+
+	def ui(self,gr):
+		gr.Textbox(label="Variable to get 🡢 str",max_lines=1,placeholder="my_var")
+		gr.Textbox(label="Default value if the variable doesn't exist 🡢 _default",max_lines=1)
+		gr.Textbox(label="Separator string when returning multiple variables 🡢 _sep",max_lines=1)
+		gr.Textbox(label="String to prepend to the variable 🡢 _before",max_lines=1)
+		gr.Textbox(label="String to append to the variable 🡢 _after",max_lines=1)

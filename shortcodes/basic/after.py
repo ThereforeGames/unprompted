@@ -1,8 +1,8 @@
 class Shortcode():
-	'''Processes arbitrary text following the main output.'''
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.after_content = []
+		self.description = "Processes arbitrary text following the main output."
 
 	def run_block(self, pargs, kwargs, context, content):
 		index = pargs[0] if len(pargs) > 0 else 0
@@ -27,3 +27,6 @@ class Shortcode():
 
 			self.after_content = []
 			return(self.Unprompted.after_processed)
+
+	def ui(self,gr):
+		gr.Number(label="Order compared to other [after] blocks 🡢 int",value=0,interactive=True)

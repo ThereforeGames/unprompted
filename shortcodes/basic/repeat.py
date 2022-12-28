@@ -1,10 +1,9 @@
 import random
 
 class Shortcode():
-	"""Returns the content an arbitrary number of times."""
-	
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Returns the content an arbitrary number of times."
 	def run_block(self, pargs, kwargs, context, content):
 		final_string = ""
 		_sep = kwargs["_sep"] if "_sep" in kwargs else ""
@@ -22,3 +21,7 @@ class Shortcode():
 			final_string += self.Unprompted.parse_alt_tags(content,context) + _sep
 
 		return(final_string.rstrip(_sep))
+
+	def ui(self,gr):
+		gr.Number(label="Number of times to repeat the content 🡢 int",max_lines=1,value=2)
+		gr.Textbox(label="Delimiter string between outputs 🡢 _sep",max_lines=1)

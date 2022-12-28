@@ -1,9 +1,9 @@
 class Shortcode():
-	"""Creates an image mask from the content for use with inpainting."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.image_mask = None
 		self.show = False
+		self.description = "Creates an image mask from the content for use with inpainting."
 	def run_block(self, pargs, kwargs, context, content):
 		from lib.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
@@ -99,7 +99,7 @@ class Shortcode():
 				transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 				transforms.Resize((512, 512)),
 			])
-			img = transform(self.Unprompted.shortcode_user_vars["init_images"][0]).unsqueeze(0)
+			img = transform(self.Unprompted.shortcode_user_vars["init_images"][0].convert("RGB")).unsqueeze(0)
 
 			# predict
 			with torch.no_grad():
@@ -140,7 +140,8 @@ class Shortcode():
 				aspect_ratio = self.Unprompted.shortcode_user_vars["init_images"][0].width / self.Unprompted.shortcode_user_vars["init_images"][0].height
 				new_width = self.Unprompted.shortcode_user_vars["init_images"][0].width+mask_padding*2
 				new_height = round(new_width / aspect_ratio)
-				final_img = final_img.resize((new_width,new_height))
+				print(f"test {new_width} {new_height}")
+				final_img = final_img.resize((new_width,new_height), Image.ANTIALIAS)
 				final_img = center_crop(final_img,self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height)
 
 			return final_img
@@ -163,3 +164,13 @@ class Shortcode():
 			self.image_mask = None
 			self.show = False
 			return processed
+	
+	def ui(self,gr):
+		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
+		gr.Checkbox(label="Show mask in output 🡢 show")
+		gr.Checkbox(label="Use legacy weights 🡢 legacy_weights")
+		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
+		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
+		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
+		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
+		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)

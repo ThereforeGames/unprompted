@@ -1,7 +1,7 @@
 class Shortcode():
-	"""Returns various types of metadata about the content."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Returns various types of metadata about the content."
 	def run_block(self, pargs, kwargs, context, content):
 		return_string = ""
 		delimiter = ","
@@ -22,3 +22,9 @@ class Shortcode():
 			except ImportError: self.Unprompted.log(f"Could not import FrozenCLIPEmbedder",True,"ERROR")
 			
 		return(return_string[:-1])
+
+	def ui(self,gr):
+		gr.Checkbox(label="Return the character count 🡢 character_count")
+		gr.Checkbox(label="Return the word count 🡢 word_count")
+		gr.Checkbox(label="Return the CLIP token count (prompt complexity) 🡢 clip_count")
+		gr.Textbox(label="Return the count of a custom substring 🡢 string_count",max_lines=1)

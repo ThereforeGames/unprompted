@@ -1,8 +1,8 @@
 import lib.casefy as casefy
 class Shortcode():
-	"""Converts the casing of content."""
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
+		self.description = "Converts the casing of content."
 
 	def run_block(self, pargs, kwargs, context, content):
 		if (pargs[0] == "camelcase"): return casefy.camelcase(content)
@@ -20,3 +20,6 @@ class Shortcode():
 		
 		# No matching conversion found
 		return content
+
+	def ui(self,gr):
+		gr.Dropdown(label="Casing method 🡢 str",choices=["camelcase","uppercase","lowercase","pascalcase","snakecase","constcase","kebabcase","upperkebabcase","separatorcase","sentencecase","titlecase","alphanumcase"])
