@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>4.3.1 - 29 December 2022</summary>
+
+### Changed
+- Fixed issue with `[choose]`
+
+### Removed
+- Unnecessary Javascript file
+</details>
+
 <details><summary>4.3.0 - 27 December 2022</summary>
 
 ### Added

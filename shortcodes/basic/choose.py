@@ -33,6 +33,7 @@ class Shortcode():
 			
 			parts = weighted_list
 
+		times = 1
 		for parg in pargs:
 			if (parg[0] == "_"): continue # Skips system arguments
 			times = self.Unprompted.parse_advanced(parg,context) if len(pargs)>0 else 1
