@@ -160,6 +160,40 @@ Also note: if a shortcode is undefined, Unprompted will print it as a literal as
 Photo of a `[cat|dog]
 ```
 
+## The Wizard
+
+In the WebUI extension, Unprompted has a dedicated panel called the Wizard. It is a GUI-based shortcode builder.
+
+At the top of the panel, you select the shortcode you wish to create. It defaults to `[txt2mask]`, although you can change this in `config_user.json`.
+
+Pressing **"Generate Shortcode"** will assemble a ready-to-use block of code that you can add to your prompts.
+
+Alternatively, you can enable `Auto-include in prompt` which will add the shortcode to your prompts behind the scenes. This essentially lets you use Unprompted shortcodes as if they were standalone scripts.
+
+You can add Wizard UI support to your own custom shortcodes by declaring a `ui()` function as shown below:
+
+```
+	def ui(self,gr):
+		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
+		gr.Checkbox(label="Show mask in output 🡢 show")
+		gr.Checkbox(label="Use legacy weights 🡢 legacy_weights")
+		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
+		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
+		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
+		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
+		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)
+```
+
+The above code is the entirety of txt2mask's UI at the time of writing. We recommend examining the .py files of other shortcodes if you want to see additional examples of how to construct your UI.
+
+Every possible shortcode argument is exposed in the UI, labeled in the form of `Natural description 🡢 technical_argument_name`. The Wizard uses the last part of the string when constructing the final shortcode.
+
+There are a few reserved argument names that will alter the Wizard's behavior:
+
+- `verbatim`: This will inject the field's value directly into the shortcode. Useful for shortcodes that can accept multiple, optional arguments that do not have pre-determined names.
+- `str`: This will inject the field's value into the shortcode, enclosing it in quotation marks.
+- `int`: This will inject the field's value into the shortcode, casting it as an integer. 
+
 ## The config file
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
