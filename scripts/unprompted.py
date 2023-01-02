@@ -102,6 +102,10 @@ def get_markdown(file):
 		if not line.startswith("# "): final_string += line
 	return final_string
 
+# Workaround for Gradio checkbox label+value bug https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/6109
+def gradio_enabled_checkbox_workaround():
+	return(Unprompted.Config.ui.enabled)
+
 class Scripts(scripts.Script):
 	def title(self):
 		return "Unprompted"
@@ -111,8 +115,8 @@ class Scripts(scripts.Script):
 
 	def ui(self, is_img2img):
 		with gr.Group():
-			with gr.Accordion("Unprompted", open=False):
-				is_enabled = gr.Checkbox(label="Enabled", value=Unprompted.Config.ui.enabled)
+			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
+				is_enabled = gr.Checkbox(label="Enabled",value=gradio_enabled_checkbox_workaround)
 
 				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/fantasy_card/main{Unprompted.Config.txt_format}")): is_open = False
 				else: is_open = True
@@ -120,7 +124,7 @@ class Scripts(scripts.Script):
 				with gr.Accordion("🎉 Promo", open=is_open):
 					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! <strong>Premium Fantasy Card Template</strong> is now available.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p>')
 
-				with gr.Accordion("🧙 Wizard", open=False):
+				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
 						shortcode_list = list(Unprompted.shortcode_objects.keys())
 						Unprompted.wizard_dropdown = gr.Dropdown(choices=shortcode_list,label="Shortcode",value=Unprompted.Config.ui.wizard_default_shortcode)
@@ -145,7 +149,7 @@ class Scripts(scripts.Script):
 
 					wizard_autoinclude = gr.Checkbox(label="Auto-include in prompt",value=Unprompted.Config.ui.wizard_autoinclude)
 					
-				with gr.Accordion("📝 Dry Run", open=False):
+				with gr.Accordion("📝 Dry Run", open=Unprompted.Config.ui.dry_run_open):
 					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False)
 					dry_run = gr.Button(value="Process Text")
 					dry_run_result = gr.HTML(label="dry_run_result",value="")
@@ -153,6 +157,18 @@ class Scripts(scripts.Script):
 				
 				with gr.Tab("💡 About"):
 					about = gr.Markdown(value=get_markdown("docs/ABOUT.md").replace("$VERSION",Unprompted.VERSION))
+					def open_folder(path):
+						import platform
+						import subprocess as sp
+						path = os.path.normpath(path)
+						if platform.system() == "Windows":
+							os.startfile(path)
+						elif platform.system() == "Darwin":
+							sp.Popen(["open", path])
+						else:
+							sp.Popen(["xdg-open", path])						
+					open_templates = gr.Button(value="📂 Open templates folder")
+					open_templates.click(fn=lambda: open_folder(f"{base_dir}/{Unprompted.Config.template_directory}"),inputs=[],outputs=[])
 
 				with gr.Tab("📣 Announcements"):
 					announcements = gr.Markdown(value=get_markdown("docs/ANNOUNCEMENTS.md"))
@@ -166,6 +182,7 @@ class Scripts(scripts.Script):
 				with gr.Tab("🎓 Starter Guide"):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
+				
 		return [is_enabled,wizard_autoinclude]
 	
 	def process(self, p, is_enabled, wizard_autoinclude):

@@ -34,8 +34,11 @@
 	"ui":
 	{
 		"enabled":true,
+		"open":false,
 		"wizard_enabled":true,
+		"wizard_open":false,
 		"wizard_default_shortcode":"txt2mask",
-		"wizard_autoinclude":false
+		"wizard_autoinclude":false,
+		"dry_run_open":false
 	}
 }

@@ -3,6 +3,27 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>5.0.0 - 2 January 2023</summary>
+
+### Added
+- New shortcode `[array]` which can be used to manage groups or lists of values
+- The `[txt2mask]` `padding` argument now supports negative values
+- The `[txt2mask]` `smoothing` argument now supports advanced expressions
+- The `[choose]` `_weighted` argument now supports floats
+- The `[get]` function can return formatted lists, including those created by `[array]`
+- New config `ui` settings for customizing the open state of accordion menus
+- New button in the About tab to quickly open your templates folder
+- The `[eval]` shortcode now supports a `sigmoid()` distribution curve function
+- New function `is_system_arg()` to simplify the skipping of certain shortcode arguments
+
+### Changed
+- Rewrote the `[txt2mask]` `padding` implementation (PR #38 - thank you, @credman0!)
+- The `[txt2mask]` default value of `smoothing` has changed from 0 to 20
+- No longer need to specify entire sub-dictionary blocks in `config_user.json` to apply partial changes, thanks to flatdict library
+- The `[config]` shortcode also supports the flatdict library mentioned above
+- Workaround for Gradio checkbox value being overwritten by A1111 stock config
+</details>
+
 <details><summary>4.3.1 - 29 December 2022</summary>
 
 ### Changed

@@ -257,6 +257,10 @@ def safe_lshift(a, b):  # pylint: disable=invalid-name
         raise NumberTooHigh("Sorry! I don't want to evaluate {0} << {1}".format(a, b))
     return a << b
 
+def sigmoid(x):
+	import math
+	return 1 / (1 + math.exp(-x))
+
 
 ########################################
 # Defaults for the evaluator:
@@ -287,6 +291,7 @@ DEFAULT_OPERATORS = {
 }
 
 DEFAULT_FUNCTIONS = {
+	"sigmoid": sigmoid,
     "rand": random,
     "randint": random_int,
     "int": int,

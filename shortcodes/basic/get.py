@@ -15,7 +15,10 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars[parg] = kwargs["_before"] + str(self.Unprompted.shortcode_user_vars[parg])
 			if ("_after" in kwargs):
 				self.Unprompted.shortcode_user_vars[parg] = str(self.Unprompted.shortcode_user_vars[parg] + kwargs["_after"])
-			if (parg in self.Unprompted.shortcode_user_vars): return_string += str(self.Unprompted.shortcode_user_vars[parg])
+			if (parg in self.Unprompted.shortcode_user_vars):
+				this_var = self.Unprompted.shortcode_user_vars[parg]
+				if (isinstance(this_var,list)): return_string += _sep.join(str(x) for x in this_var)
+				else: return_string += str(this_var)
 			else: return_string += _default
 
 		return(return_string)

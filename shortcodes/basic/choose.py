@@ -20,11 +20,15 @@ class Shortcode():
 
 			for idx,part in enumerate(parts):
 				if checking_weight:
-					if (self.Unprompted.is_int(part)):
-						this_weight = int(part)
-					else:
+					this_weight = self.Unprompted.autocast(part)
+					
+					if (isinstance(this_weight,str)):
 						this_weight = 1
 						checking_weight = False
+					elif isinstance(this_weight,float):
+						probability = (this_weight % 1)
+						this_weight = int(this_weight)
+						if (probability >= random.uniform(0,1)): this_weight += 1
 				
 				if not checking_weight:
 					for x in range(0, this_weight): weighted_list.append(part)
@@ -36,7 +40,7 @@ class Shortcode():
 		times = 1
 		for parg in pargs:
 			if (parg[0] == "_"): continue # Skips system arguments
-			times = self.Unprompted.parse_advanced(parg,context) if len(pargs)>0 else 1
+			times = self.Unprompted.parse_advanced(parg,context)
 			break
 
 		_sep = self.Unprompted.parse_advanced(kwargs["_sep"],context) if "_sep" in kwargs else ", "

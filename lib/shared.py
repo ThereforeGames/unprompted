@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "4.3.1"
+		self.VERSION = "5.0.0"
 
 		print(f"(Unprompted v{self.VERSION} by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -26,8 +26,16 @@ class Unprompted:
 
 		self.cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
 		user_config = f"{base_dir}/config_user.json"
-		if (os.path.isfile(user_config)): self.cfg_dict.update(json.load(open(user_config,"r",encoding="utf8")))
-		
+		if (os.path.isfile(user_config)):
+			import lib.flatdict as flatdict
+			flat_user_cfg =  flatdict.FlatDict(json.load(open(user_config,"r",encoding="utf8")))
+			flat_cfg = flatdict.FlatDict(self.cfg_dict)
+			
+			# Write differences to flattened dictionary
+			flat_cfg.update(flat_user_cfg)
+
+			# Unflatten
+			self.cfg_dict = flat_cfg.as_dict()
 		self.Config = json.loads(json.dumps(self.cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
 
 		self.log(f"Debug mode is {self.Config.debug}",False,"SETUP")
@@ -155,6 +163,10 @@ class Unprompted:
 				string = string[len(chop):]
 			else: break
 		return string
+
+	def is_system_arg(self,string):
+		if (string[0] == "_"): return(True)
+		return(False)
 
 	def is_equal(self,var_a,var_b):
 		"""Checks if two variables equal each other, taking care to account for datatypes."""

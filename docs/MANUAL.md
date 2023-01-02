@@ -405,6 +405,59 @@ Photo of a cat
 [/after]
 ```
 
+### [array name(str)]
+
+Manages a group or list of values.
+
+The first positional argument, `name`, must be a string that corresponds to a variable name for the array. You can later use the same identifier with `[get]` to retrieve every value in the array as a delimited string.
+
+If you want to **retrieve** values at specific indexes, supply the indexes as positional arguments as shown below:
+
+```
+[array my_array 2 4 3]
+```
+
+If you want to **set** values at specific indexes, supply the indexes as keyword arguments as shown below:
+
+```
+[array my_array 2="something" 4=500 3="something else"]
+```
+
+Supports the optional `_delimiter` argument that defines the separator string when retrieving multiple values from the array. Defaults to your `Config.syntax.delimiter` setting.
+
+Supports `_append` which allows you to add values to the end of the array. You can pass multiple values into `_append` with your `_delimiter` string, e.g. `[array my_array _append="something|another thing|third thing"]`.
+
+Similarly, supports `_prepend` which allows you to insert values to the beginning of the array.
+
+Supports `_del` which will remove a value from the array at the specified index, e.g.
+
+```
+BEFORE: my_array = 5,7,9,6
+```
+```
+[my_array _del=1]
+```
+```
+AFTER: my_array = 5,9,6
+```
+
+Supports `_remove` which will remove the first matching value from the array, e.g.
+
+```
+BEFORE: my_array = 5,7,9,6
+```
+```
+[my_array _remove=9]
+```
+```
+AFTER: my_array = 5,7,6
+```
+
+Supports `_find` which will return the index of the first matching value in the array.
+
+Supports `_shuffle` which will randomize the order of the array.
+
+
 ### [case]
 
 See `[switch]`.

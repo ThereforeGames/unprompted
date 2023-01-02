@@ -19,7 +19,15 @@ class Shortcode():
 			json_obj = json.load(open(f"{filepath}", "r", encoding="utf8"))
 
 		# Write new settings
-		self.Unprompted.cfg_dict.update(json_obj)
+		# self.Unprompted.cfg_dict.update(json_obj)
+		import lib.flatdict as flatdict
+		flat_user_cfg = flatdict.FlatDict(json_obj)
+		flat_cfg = flatdict.FlatDict(self.Unprompted.cfg_dict)
+		# Write differences to flattened dictionary
+		flat_cfg.update(flat_user_cfg)
+		# Unflatten
+		self.Unprompted.cfg_dict = flat_cfg.as_dict()
+
 		self.Unprompted.Config = json.loads(json.dumps(self.Unprompted.cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
 		self.Unprompted.log(f"New config: {self.Unprompted.Config}")
 		return("")
