@@ -237,6 +237,9 @@ class Scripts(scripts.Script):
 					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
 					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
 
+					if "init_images" in Unprompted.shortcode_user_vars:
+						p.init_images += Unprompted.shortcode_user_vars["init_images"]
+
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False)
 		# Keep the same prompt between runs
 		else:
