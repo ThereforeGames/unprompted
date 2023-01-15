@@ -9,8 +9,7 @@ import torch
 from torchvision import transforms
 from modules.images import flatten
 from modules.shared import opts
-import debugpy
-debugpy.listen(5678)
+
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
