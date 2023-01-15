@@ -1,10 +1,8 @@
-from cProfile import label
-from smtplib import SMTPNotSupportedError
 from torchvision.transforms.functional import to_pil_image, to_tensor
 from torchvision.utils import draw_segmentation_masks
 import torch
 from torchvision.transforms.functional import to_pil_image, pil_to_tensor
-from modules.processing import process_images,fix_seed,Processed, StableDiffusionProcessingImg2Img
+from modules.processing import process_images,Processed, StableDiffusionProcessingImg2Img
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -19,14 +17,8 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context, content):
 		from torchvision.models.detection import maskrcnn_resnet50_fpn_v2, MaskRCNN_ResNet50_FPN_V2_Weights
-		from PIL import ImageChops, Image, ImageOps
-		import os.path
-		from matplotlib import pyplot as plt
 		from kornia.morphology import dilation, erosion
-		from kornia.filters.filter import filter2d
-		import numpy
-		from modules.images import flatten
-		from modules.shared import opts
+		from kornia.filters import box_blur
 
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
@@ -63,10 +55,9 @@ class Shortcode():
 
 		masks = self.Unprompted.shortcode_user_vars.setdefault("image_mask", None)
 		if masks is not None:
-			masks = numpy.array(self.Unprompted.shortcode_user_vars["image_mask"].convert('L').resize((512, 512)))
+			masks = pil_to_tensor(self.Unprompted.shortcode_user_vars["image_mask"].convert('L').resize((512, 512))) > 0
 		else:
-			masks = numpy.zeros((512, 512), numpy.uint8)
-		masks = torch.tensor(masks) > 0
+			masks = torch.zeros(512, 512, dtype=torch.bool)
 		
 		weights = MaskRCNN_ResNet50_FPN_V2_Weights.DEFAULT
 		transforms = weights.transforms()
@@ -82,7 +73,6 @@ class Shortcode():
 		wanted_masks = torch.tensor([label in target_labels for label in pred["labels"]], device=device)
 		likely_masks = (pred["scores"] > instance_precision)
 		instance_masks:torch.Tensor = pred["masks"][likely_masks & wanted_masks]
-		instance_masks = instance_masks > mask_precision
 
 		instance_masks = instance_masks.float()
 
@@ -93,7 +83,9 @@ class Shortcode():
 				instance_masks = erosion(instance_masks, kernel=padding_dilation_kernel)
 		
 		if smoothing != 0:
-			instance_masks = filter2d(instance_masks, kernel=smoothing_kernel)
+			instance_masks = box_blur(instance_masks, (smoothing, smoothing))
+
+		instance_masks = instance_masks > mask_precision
 		instance_masks = instance_masks > 0
 		instance_masks = instance_masks.cpu()
 
@@ -163,59 +155,48 @@ class Shortcode():
 		return ""
 	
 	def after(self, p:StableDiffusionProcessingImg2Img, processed:Processed):
-		if self.image_masks is not None and self.per_instance:
+		if self.per_instance:
 			# prevent recursion
-			script = [x for x in p.scripts.scripts if 'unprompted' in x.__module__]
-			for i in script:
-				p.scripts.scripts.remove(i)
-			script = [x for x in p.scripts.alwayson_scripts if 'unprompted' in x.__module__]
-			for i in script:
-				p.scripts.alwayson_scripts.remove(i)
+			self.per_instance = False
 
-			try:
-				imgs = torch.stack([pil_to_tensor(img) for img in processed.images])
-				sub_processed = processed
-				grid_img = None
-				# process each batch individually
-				for i in range(p.n_iter):
-					p.n_iter = 1
-					current_imgs = imgs[i*p.batch_size:(i+1)*p.batch_size]
-					for idx, mask in enumerate(self.image_masks[1:]):
-						p.image_mask = mask
-						p.init_images = [to_pil_image(img) for img in current_imgs]
+			imgs = torch.stack([pil_to_tensor(img) for img in processed.images])
+			sub_processed = processed
+			grid_img = None
+			# process each batch individually
+			for i in range(p.n_iter):
+				p.n_iter = 1
+				current_imgs = imgs[i*p.batch_size:(i+1)*p.batch_size]
+				for idx, mask in enumerate(self.image_masks[1:]):
+					p.image_mask = mask
+					p.init_images = [to_pil_image(img) for img in current_imgs]
 
-						if idx == len(self.image_masks) - 2:
-							p.do_not_save_grid = self.original_do_not_save_grid
-							p.do_not_save_samples = self.original_do_not_save_samples
+					if idx == len(self.image_masks) - 2:
+						p.do_not_save_grid = self.original_do_not_save_grid
+						p.do_not_save_samples = self.original_do_not_save_samples
 
-						sub_processed = process_images(p)
+					sub_processed = process_images(p)
 
-						if not p.do_not_save_grid and len(sub_processed.images) != 1:
-							grid_img = sub_processed.images[0]
-							sub_processed.images = sub_processed.images[1:]
-						
-						mask = mask.resize((imgs.shape[-1], imgs.shape[-2]))
-						mask = pil_to_tensor(mask)
-						mask = mask.broadcast_to(current_imgs.shape)
+					if not p.do_not_save_grid and len(sub_processed.images) != 1:
+						grid_img = sub_processed.images[0]
+						sub_processed.images = sub_processed.images[1:]
+					
+					mask = mask.resize((imgs.shape[-1], imgs.shape[-2]))
+					mask = pil_to_tensor(mask)
+					mask = mask.broadcast_to(current_imgs.shape)
 
-						sub_imgs = [pil_to_tensor(image) for image in sub_processed.images[:len(current_imgs)]]
-						sub_imgs = torch.stack(sub_imgs)
+					sub_imgs = [pil_to_tensor(image) for image in sub_processed.images[:len(current_imgs)]]
+					sub_imgs = torch.stack(sub_imgs)
 
-						current_imgs[mask > 0] = sub_imgs[mask > 0]
+					current_imgs[mask > 0] = sub_imgs[mask > 0]
 
-				processed.images = [to_pil_image(img) for img in imgs]
-				if grid_img is not None:
-					processed.images.insert(0, grid_img)
-			finally:
-				for i in script:
-					p.scripts.alwayson_scripts.append(i)
+			processed.images = [to_pil_image(img) for img in imgs]
+			if grid_img is not None:
+				processed.images.insert(0, grid_img)
 
 		if self.image_masks and self.show:
-			image = to_tensor(p.init_images[0])
-			image *= 255
-			image = image.to(torch.uint8)
+			image = pil_to_tensor(p.init_images[0])
 			
-			masks = torch.stack([to_tensor(m) for m in self.image_masks]).squeeze(dim=1)
+			masks = torch.stack([pil_to_tensor(m) for m in self.image_masks]).squeeze(dim=1)
 			image = draw_segmentation_masks(image, masks > 0, alpha=0.75)
 			processed.images += self.image_masks + [to_pil_image(image)]
 
