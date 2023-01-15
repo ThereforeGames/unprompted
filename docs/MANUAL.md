@@ -466,11 +466,17 @@ Supports the `mode` argument which determines how the text mask will behave alon
 - `discard` will ignore the brush mask entirely.
 - `subtract` will remove the brush mask region from the text mask region.
 
-Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+Supports the optional `precision` argument which determines the confidence of the mask. Default is 0.4, max value is 1.0. Lowering this value means you may select more than you intend.
+
+Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 0.4, max value is 1.0. Lowering this value means you may select more than you intend.
 
 Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
 
+Supports the optional `neg_padding` which is the same as `padding` but for the negative prompts.
+
 Supports the optional `smoothing` argument which refines the boundaries of the mask, allowing you to create a smoother selection. Default is 0. Try a value of 20 or greater if you find that your masks are blocky.
+
+Supports the optional `neg_smoothing` which is the same as `smoothing` but for the negative prompts.
 
 Supports the optional `size_var` argument which will cause the shortcode to calculate the region occupied by your mask selection as a percentage of the total canvas. That value is stored into the variable you specify. For example: `[txt2mask size_var=test]face[/txt2mask]` if "face" takes up 40% of the canvas, then the `test` variable will become 0.4.
 
