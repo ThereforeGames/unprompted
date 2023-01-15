@@ -31,6 +31,8 @@ class Shortcode():
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
 
+		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 		self.show = True if "show" in pargs else False
 		self.per_instance = True if "per_instance" in pargs else False
@@ -42,14 +44,13 @@ class Shortcode():
 		smoothing = int(self.Unprompted.parse_advanced(kwargs["smoothing"],context)) if "smoothing" in kwargs else 20
 
 		if smoothing > 0:
-			smoothing_kernel = torch.ones(1, smoothing,smoothing)/(smoothing**2)
-			smoothing_kernel = smoothing_kernel.cuda()
+			smoothing_kernel = torch.ones(1, smoothing, smoothing, device=device)/(smoothing**2)
 
 		# Pad the mask by applying a dilation or erosion
 		mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
 		padding_dilation_kernel = None
 		if (mask_padding != 0):
-			padding_dilation_kernel = torch.ones(abs(mask_padding), abs(mask_padding)).cuda()
+			padding_dilation_kernel = torch.ones(abs(mask_padding), abs(mask_padding), device=device)
 
 		prompts = content.split(self.Unprompted.Config.syntax.delimiter)
 		prompt_parts = len(prompts)
@@ -69,16 +70,16 @@ class Shortcode():
 		
 		weights = MaskRCNN_ResNet50_FPN_V2_Weights.DEFAULT
 		transforms = weights.transforms()
-		model = maskrcnn_resnet50_fpn_v2(weights=weights, progress=False).eval().cuda()
+		model = maskrcnn_resnet50_fpn_v2(weights=weights, progress=False).eval().to(device=device)
 
 		image = init_image
 		image = init_image.resize((512, 512))
 		image = transforms(image)
 
-		pred = model(image[None].cuda())[0]
+		pred = model(image[None].to(device=device))[0]
 
 		target_labels = [weights.meta["categories"].index(i) for i in prompts]
-		wanted_masks = torch.tensor([label in target_labels for label in pred["labels"]]).cuda()
+		wanted_masks = torch.tensor([label in target_labels for label in pred["labels"]], device=device)
 		likely_masks = (pred["scores"] > instance_precision)
 		instance_masks:torch.Tensor = pred["masks"][likely_masks & wanted_masks]
 		instance_masks = instance_masks > mask_precision
