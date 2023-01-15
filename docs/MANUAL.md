@@ -328,10 +328,12 @@ Note that `path` must be an absolute path, including the file extension.
 
 If the given `path` ends with the `*` wildcard, `[init_image]` will choose a random file in that directory.
 
+If `support_multiple` is present, multipe init_images are used. Note that `support_multiple` has to be written after `path`
+
 **Important:** At the moment, you still have to select an image in the WebUI before pressing Generate, or this shortcode will throw an error. You can select any image - it doesn't matter what it is, just as long as the field isn't empty.
 
 ```
-[init_image "C:/pictures/my_image.png"]
+[init_image "C:/pictures/my_image.png" support_multiple]
 ```
 
 ### [invert_mask]
