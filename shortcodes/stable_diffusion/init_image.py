@@ -3,7 +3,7 @@ import random
 import os
 from modules.processing import process_images,fix_seed,Processed, StableDiffusionProcessingImg2Img
 from modules import images
-from modules.shared import opts
+from modules.shared import opts, state
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -31,6 +31,7 @@ class Shortcode():
 
 		self.Unprompted.shortcode_user_vars["init_images"] = [Image.open(file)]
 
+		self.support_multiple = "support_multiple" in pargs
 		if self.support_multiple:
 			self.init_images += self.Unprompted.shortcode_user_vars["init_images"]
 			self.Unprompted.shortcode_user_vars["n_iter"] = 0
@@ -42,13 +43,14 @@ class Shortcode():
 		if self.support_multiple:
 			# block recursion
 			self.support_multiple = False
-
+			
 			p.n_iter = 1
 			create_grid = not p.do_not_save_grid
 			p.do_not_save_grid = True
 
 			batched_init_imgs = [self.init_images[idx:idx+p.batch_size] for idx in range(0, len(self.init_images), p.batch_size)]
 			batched_prompts = [p.all_prompts[idx:idx + p.batch_size] for idx in range(0, len(p.all_prompts), p.batch_size)]
+			state.job_count = len(batched_prompts)
 			for init_imgs, batched_prompts in zip(batched_init_imgs, batched_prompts):
 				p.init_images = init_imgs
 				p.all_prompts = batched_prompts
@@ -56,7 +58,7 @@ class Shortcode():
 				sub_processed = process_images(p)
 				processed.images += sub_processed.images
 
-			if create_grid:
+			if create_grid and len(processed.images) != 1:
 				grid = images.image_grid(processed.images, p.batch_size * len(batched_init_imgs))
 				if opts.return_grid:
 					processed.images.insert(0, grid)
