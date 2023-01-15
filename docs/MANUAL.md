@@ -334,6 +334,8 @@ If the given `path` ends with the `*` wildcard, `[init_image]` will choose a ran
 [init_image "C:/pictures/my_image.png"]
 ```
 
+### [invert_mask]
+Inverts the mask. Great in combination with `[txt2mask]` and `[instance2mask]`.
 
 ### [instance2mask]
 Uses Mask R-CNN (an instance segmentation model) to predict instances. The found instances are mask. Different from `[txt2mask]` as it allows to run the inpainting for each found instance individually. This is useful, when using high resolution inpainting. This shortcode only works in the img2img tab of the A1111 WebUI.
