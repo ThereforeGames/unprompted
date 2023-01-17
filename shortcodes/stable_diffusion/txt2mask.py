@@ -1,16 +1,5 @@
-from lib.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
-from kornia.morphology import dilation, erosion
-from kornia.filters import box_blur
-from PIL import ImageOps
 from torchvision.utils import draw_segmentation_masks
 from torchvision.transforms.functional import pil_to_tensor, to_pil_image
-import os.path
-import torch
-from torchvision import transforms
-from modules.images import flatten
-from modules.shared import opts
-from matplotlib.cm import ScalarMappable
-import cv2
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -20,6 +9,18 @@ class Shortcode():
 		self.description = "Creates an image mask from the content for use with inpainting."
 
 	def run_block(self, pargs, kwargs, context, content):
+		from lib.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
+		from PIL import ImageChops, Image, ImageOps
+		import os.path
+		import torch
+		from torchvision import transforms
+		from matplotlib import pyplot as plt
+		import cv2
+		import numpy
+		from modules.images import flatten
+		from modules.shared import opts
+
+
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
 
@@ -30,18 +31,25 @@ class Shortcode():
 
 		self.legacy_weights = True if "legacy_weights" in pargs else False
 		smoothing = int(self.Unprompted.parse_advanced(kwargs["smoothing"],context)) if "smoothing" in kwargs else 20
+		smoothing_kernel = None
+		if smoothing > 0:
+			smoothing_kernel = numpy.ones((smoothing,smoothing),numpy.float32)/(smoothing*smoothing)
+
 		neg_smoothing = int(self.Unprompted.parse_advanced(kwargs["neg_smoothing"],context)) if "neg_smoothing" in kwargs else 20
+		neg_smoothing_kernel = None
+		if neg_smoothing > 0:
+			neg_smoothing_kernel = numpy.ones((neg_smoothing,neg_smoothing),numpy.float32)/(neg_smoothing*neg_smoothing)
 
 		# Pad the mask by applying a dilation or erosion
 		mask_padding = int(self.Unprompted.parse_advanced(kwargs["padding"],context) if "padding" in kwargs else 0)
 		neg_mask_padding = int(self.Unprompted.parse_advanced(kwargs["neg_padding"],context) if "neg_padding" in kwargs else 0)
 		padding_dilation_kernel = None
 		if (mask_padding != 0):
-			padding_dilation_kernel = torch.ones(abs(mask_padding), abs(mask_padding), device=device)
+			padding_dilation_kernel = numpy.ones((abs(mask_padding), abs(mask_padding)), numpy.uint8)
 
 		neg_padding_dilation_kernel = None
 		if (neg_mask_padding != 0):
-			neg_padding_dilation_kernel = torch.ones(abs(neg_mask_padding), abs(neg_mask_padding), device=device)
+			neg_padding_dilation_kernel = numpy.ones((abs(neg_mask_padding), abs(neg_mask_padding)), numpy.uint8)
 
 		prompts = content.split(self.Unprompted.Config.syntax.delimiter)
 		prompt_parts = len(prompts)
@@ -54,41 +62,39 @@ class Shortcode():
 		mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 100))
 		neg_mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["neg_precision"],context) if "neg_precision" in kwargs else 100))
 
-		def overlay_mask_part(img, final_img, mode):
-			if mode == "discard": 
-				return torch.logical_and(img, final_img)
-			else: 
-				return torch.logical_or(img, final_img)
+		def overlay_mask_part(img_a,img_b,mode):
+			if (mode == "discard"): img_a = ImageChops.darker(img_a, img_b)
+			else: img_a = ImageChops.lighter(img_a, img_b)
+			return(img_a)
 
-		def process_mask_parts(these_preds, mode, final_img = None, mask_precision=100, mask_padding=0, padding_dilation_kernel=None, smoothing=None):
-			masks = torch.sigmoid(these_preds)
-			
-			# original imsave uses ScalarMappable to normalize colors 
-			normalizer = ScalarMappable()
-			masks = torch.stack([torch.tensor(cv2.cvtColor(normalizer.to_rgba(mask[0], bytes=True), cv2.COLOR_BGR2GRAY))[None] for mask in masks.cpu()]).to(device=device)
-			masks = masks / 255.
-			
-			if padding_dilation_kernel is not None:
-				if mask_padding > 0: 
-					masks = dilation(masks, kernel=padding_dilation_kernel)
-				else: 
-					masks = erosion(masks, kernel=padding_dilation_kernel)
-			if smoothing is not None:
-				masks = box_blur(masks, (smoothing,smoothing))
+		def gray_to_pil(img):
+			return (Image.fromarray(cv2.cvtColor(img,cv2.COLOR_GRAY2RGBA)))
 
-			masks = masks.squeeze(1)
-			masks = masks > mask_precision / 255. # original compared in range of 0-255
-
-			if mode == "discard": 
-				masks = ~masks
-
+		def process_mask_parts(masks, mode, final_img = None, mask_precision=100, mask_padding=0, padding_dilation_kernel=None, smoothing_kernel=None):
 			for i, mask in enumerate(masks):
+				filename = f"mask_{mode}_{i}.png"
+				plt.imsave(filename,torch.sigmoid(mask[0]))
+
+				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
+				img = cv2.imread(filename)
+
+				if padding_dilation_kernel is not None:
+					if (mask_padding > 0): img = cv2.dilate(img,padding_dilation_kernel,iterations=1)
+					else: img = cv2.erode(img,padding_dilation_kernel,iterations=1)
+				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
+
+				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
+
+				if (mode == "discard"): bw_image = numpy.invert(bw_image)
+
 				# overlay mask parts
-				if (i > 0 or final_img is not None): mask = overlay_mask_part(mask, final_img, mode)
+				bw_image = gray_to_pil(bw_image)
+				if (i > 0 or final_img is not None): bw_image = overlay_mask_part(bw_image,final_img,mode)
 
-				final_img = mask
-			return final_img
-
+				final_img = bw_image
+			return(final_img)
+			
 		def get_mask():
 			# load model
 			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
@@ -119,35 +125,37 @@ class Shortcode():
 
 			# predict
 			with torch.no_grad():
-				preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0]
-				if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0]
+				preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0].cpu()
+				if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0].cpu()
 
 			if "image_mask" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["image_mask"] = None
 			
 			if (brush_mask_mode == "add" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
-				final_img = self.Unprompted.shortcode_user_vars["image_mask"].convert("L").resize((512,512))
-				final_img = pil_to_tensor(final_img).to(device=device) > 0
+				final_img = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((512,512))
 			else: final_img = None
 
 			# process masking
-			final_img = process_mask_parts(preds,"add",final_img,mask_precision, mask_padding, padding_dilation_kernel, smoothing)
+			final_img = process_mask_parts(preds,"add",final_img, mask_precision, mask_padding, padding_dilation_kernel, smoothing_kernel)
 
 			# process negative masking
-			if brush_mask_mode == "subtract" and self.Unprompted.shortcode_user_vars["image_mask"] is not None:
-				mask = pil_to_tensor(self.Unprompted.shortcode_user_vars["image_mask"].convert("L").resize((512, 512)))
-				mask = mask.to(device=device)
-				mask = mask > 0
-				mask = ~mask
-				final_img = overlay_mask_part(final_img, mask, "discard")
-			if negative_prompts: 
-				final_img = process_mask_parts(negative_preds,"discard",final_img,neg_mask_precision, neg_mask_padding, neg_padding_dilation_kernel, neg_smoothing)
+			if (brush_mask_mode == "subtract" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
+				self.Unprompted.shortcode_user_vars["image_mask"] = ImageOps.invert(self.Unprompted.shortcode_user_vars["image_mask"])
+				self.Unprompted.shortcode_user_vars["image_mask"] = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((512,512))
+				final_img = overlay_mask_part(final_img,self.Unprompted.shortcode_user_vars["image_mask"],"discard")
+			if (negative_prompts): final_img = process_mask_parts(negative_preds,"discard",final_img, neg_mask_precision,neg_mask_padding, neg_padding_dilation_kernel, neg_smoothing_kernel)
 
 			if "size_var" in kwargs:
-				subject_size = final_img.sum() / torch.prod(torch.tensor(final_img.shape))
+				img_data = final_img.load()
+				# Count number of transparent pixels
+				black_pixels = 0
+				total_pixels = 512 * 512
+				for y in range(512):
+					for x in range(512):
+						pixel_data = img_data[x,y]
+						if (pixel_data[0] == 0 and pixel_data[1] == 0 and pixel_data[2] == 0): black_pixels += 1
+				subject_size = 1 - black_pixels / total_pixels
 				self.Unprompted.shortcode_user_vars[kwargs["size_var"]] = subject_size
 
-			final_img = to_pil_image(final_img.cpu().float())
-			
 			return final_img
 
 		# Set up processor parameters correctly
@@ -166,7 +174,7 @@ class Shortcode():
 		if self.image_mask and self.show:
 			processed.images.append(self.image_mask)
 			
-			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(p.init_images[0]), pil_to_tensor(self.image_mask) > 0)
+			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(p.init_images[0]), pil_to_tensor(self.image_mask.convert("L")) > 0)
 			processed.images.append(to_pil_image(overlayed_init_img))
 			self.image_mask = None
 			self.show = False
