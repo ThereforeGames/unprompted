@@ -456,6 +456,9 @@ Supports the optional `per_instance` positional argument which will render and a
 [instance2mask]clock[/txt2mask]
 ```
 
+### [support_multiple]
+is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
+
 
 ### [txt2mask]
 

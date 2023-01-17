@@ -11,8 +11,6 @@ class Shortcode():
 		self.image_masks = None
 		self.show = False
 		self.per_instance = False
-		self.original_do_not_save_grid = False
-		self.original_do_not_save_samples = False
 		self.description = "Creates an image mask from instances of types specified by the content for use with inpainting."
 
 	def run_block(self, pargs, kwargs, context, content):
@@ -132,18 +130,19 @@ class Shortcode():
 		masks = masks[masks.count_nonzero(dim=[1,2]) != 0]
 
 		if self.per_instance:
-			self.original_do_not_save_grid = self.Unprompted.shortcode_user_vars.get("do_not_save_grid", self.original_do_not_save_grid)
-			self.original_do_not_save_samples = self.Unprompted.shortcode_user_vars.get("do_not_save_samples", self.original_do_not_save_samples)
-			self.Unprompted.shortcode_user_vars["do_not_save_grid"] = True
-			self.Unprompted.shortcode_user_vars["do_not_save_samples"] = True
-			
+			# support multiple will draw the other instances
 			self.image_mask = to_pil_image(masks[0].float()).resize((init_image.width, init_image.height))
+			
+			# save instance masks for support_multiple to pick it up
+			self.Unprompted.shortcode_user_vars["image_masks"] = [to_pil_image(m.float()).resize((init_image.width, init_image.height)) for m in masks]
+			self.image_masks = self.Unprompted.shortcode_user_vars["image_masks"]
 		else:
 			combined_mask = masks.sum(dim=0, keepdim=True) > 0
 			self.image_mask = to_pil_image(combined_mask.float()).resize((init_image.width, init_image.height))
-		
-		# Set up processor parameters correctly
-		self.image_masks = self.Unprompted.shortcode_user_vars["image_masks"] = [to_pil_image(m.float()).resize((init_image.width, init_image.height)) for m in masks]
+			# store instance masks for later segmentation drawing
+			self.image_masks = [to_pil_image(m.float()).resize((init_image.width, init_image.height)) for m in masks]
+			self.Unprompted.shortcode_user_vars["image_masks"] = [self.image_mask]	
+
 		self.Unprompted.shortcode_user_vars["mode"] = 1
 		self.Unprompted.shortcode_user_vars["mask_mode"] = 1
 		self.Unprompted.shortcode_user_vars["image_mask"] = self.image_mask
@@ -155,50 +154,13 @@ class Shortcode():
 		return ""
 	
 	def after(self, p:StableDiffusionProcessingImg2Img, processed:Processed):
-		if self.per_instance:
-			# prevent recursion
-			self.per_instance = False
-
-			imgs = torch.stack([pil_to_tensor(img) for img in processed.images])
-			sub_processed = processed
-			grid_img = None
-			# process each batch individually
-			for i in range(p.n_iter):
-				p.n_iter = 1
-				current_imgs = imgs[i*p.batch_size:(i+1)*p.batch_size]
-				for idx, mask in enumerate(self.image_masks[1:]):
-					p.image_mask = mask
-					p.init_images = [to_pil_image(img) for img in current_imgs]
-
-					if idx == len(self.image_masks) - 2:
-						p.do_not_save_grid = self.original_do_not_save_grid
-						p.do_not_save_samples = self.original_do_not_save_samples
-
-					sub_processed = process_images(p)
-
-					if not p.do_not_save_grid and len(sub_processed.images) != 1:
-						grid_img = sub_processed.images[0]
-						sub_processed.images = sub_processed.images[1:]
-					
-					mask = mask.resize((imgs.shape[-1], imgs.shape[-2]))
-					mask = pil_to_tensor(mask)
-					mask = mask.broadcast_to(current_imgs.shape)
-
-					sub_imgs = [pil_to_tensor(image) for image in sub_processed.images[:len(current_imgs)]]
-					sub_imgs = torch.stack(sub_imgs)
-
-					current_imgs[mask > 0] = sub_imgs[mask > 0]
-
-			processed.images = [to_pil_image(img) for img in imgs]
-			if grid_img is not None:
-				processed.images.insert(0, grid_img)
-
 		if self.image_masks and self.show:
-			image = pil_to_tensor(p.init_images[0])
+			image = pil_to_tensor(p.init_images[-1])
 			
 			masks = torch.stack([pil_to_tensor(m) for m in self.image_masks]).squeeze(dim=1)
 			image = draw_segmentation_masks(image, masks > 0, alpha=0.75)
 			processed.images += self.image_masks + [to_pil_image(image)]
+			self.image_masks = None
 
 		return processed
 	
