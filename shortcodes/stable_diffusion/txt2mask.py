@@ -49,8 +49,8 @@ class Shortcode():
 			negative_prompt_parts = len(negative_prompts)
 		else: negative_prompts = None
 
-		mask_precision = min(1.0,float(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 0.4))
-		neg_mask_precision = min(1.0,float(self.Unprompted.parse_advanced(kwargs["neg_precision"],context) if "neg_precision" in kwargs else 0.4))
+		mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 100))
+		neg_mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["neg_precision"],context) if "neg_precision" in kwargs else 100))
 
 		def overlay_mask_part(img, final_img, mode):
 			if mode == "discard": 
@@ -58,20 +58,20 @@ class Shortcode():
 			else: 
 				return torch.logical_or(img, final_img)
 
-		def process_mask_parts(these_preds, mode, final_img = None, mask_precision=0.4, mask_padding=0, padding_dilation_kernel=None, smoothing=None):
+		def process_mask_parts(these_preds, mode, final_img = None, mask_precision=100, mask_padding=0, padding_dilation_kernel=None, smoothing=None):
 			masks = torch.sigmoid(these_preds)
+			masks /= masks.amax(dim=[1,2,3])[:, None, None, None] # orginal txt2mask normalized values
 			
 			if padding_dilation_kernel is not None:
 				if mask_padding > 0: 
-					img = dilation(masks, kernel=padding_dilation_kernel)
+					masks = dilation(masks, kernel=padding_dilation_kernel)
 				else: 
 					masks = erosion(masks, kernel=padding_dilation_kernel)
 			if smoothing is not None:
 				masks = box_blur(masks, (smoothing,smoothing))
 
 			masks = masks.squeeze(1)
-			masks = masks > mask_precision
-			masks = masks > 0
+			masks = masks > mask_precision / 255. # original compared in range of 0-255
 
 			if mode == "discard": 
 				masks = ~masks
@@ -128,7 +128,8 @@ class Shortcode():
 
 			# process negative masking
 			if brush_mask_mode == "subtract" and self.Unprompted.shortcode_user_vars["image_mask"] is not None:
-				mask = pil_to_tensor(self.Unprompted.shortcode_user_vars["image_mask"].convert("L").resize(512, 512))
+				mask = pil_to_tensor(self.Unprompted.shortcode_user_vars["image_mask"].convert("L").resize((512, 512)))
+				mask = mask.to(device=device)
 				mask = mask > 0
 				mask = ~mask
 				final_img = overlay_mask_part(final_img, mask, "discard")
@@ -170,7 +171,10 @@ class Shortcode():
 		gr.Checkbox(label="Show mask in output 🡢 show")
 		gr.Checkbox(label="Use legacy weights 🡢 legacy_weights")
 		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
+		gr.Number(label="Precision of negative selected area 🡢 neg_precision",value=100,interactive=True)
 		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
+		gr.Number(label="Padding radius in pixels for negative mask 🡢 neg_padding",value=0,interactive=True)
 		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
+		gr.Number(label="Smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
 		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
 		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)

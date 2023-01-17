@@ -466,9 +466,9 @@ Supports the `mode` argument which determines how the text mask will behave alon
 - `discard` will ignore the brush mask entirely.
 - `subtract` will remove the brush mask region from the text mask region.
 
-Supports the optional `precision` argument which determines the confidence of the mask. Default is 0.4, max value is 1.0. Lowering this value means you may select more than you intend.
+Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
 
-Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 0.4, max value is 1.0. Lowering this value means you may select more than you intend.
+Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
 
 Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
 
