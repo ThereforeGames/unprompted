@@ -4,8 +4,6 @@ from modules import images
 from torchvision.transforms.functional import to_pil_image, pil_to_tensor
 import torch
 from modules.shared import opts, state
-import debugpy
-debugpy.listen(5678)
 
 class Shortcode():
     def __init__(self,Unprompted):
