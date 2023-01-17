@@ -9,6 +9,8 @@ import torch
 from torchvision import transforms
 from modules.images import flatten
 from modules.shared import opts
+from matplotlib.cm import ScalarMappable
+import cv2
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -60,7 +62,11 @@ class Shortcode():
 
 		def process_mask_parts(these_preds, mode, final_img = None, mask_precision=100, mask_padding=0, padding_dilation_kernel=None, smoothing=None):
 			masks = torch.sigmoid(these_preds)
-			masks /= masks.amax(dim=[1,2,3])[:, None, None, None] # orginal txt2mask normalized values
+			
+			# original imsave uses ScalarMappable to normalize colors 
+			normalizer = ScalarMappable()
+			masks = torch.stack([torch.tensor(cv2.cvtColor(normalizer.to_rgba(mask[0], bytes=True), cv2.COLOR_BGR2GRAY))[None] for mask in masks.cpu()]).to(device=device)
+			masks = masks / 255.
 			
 			if padding_dilation_kernel is not None:
 				if mask_padding > 0: 
