@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>5.1.0 - 23 January 2023</summary>
+
+### Added
+- The Wizard now includes Function mode, which houses custom UIs for your `[file]` templates
+- New `example_function.txt` to demonstrate the basics of the Wizard Function mode
+- The Wizard auto-include option is now determined on a per-shortcode or function basis
+
+### Changed
+- Several fixes and workarounds to ensure compatibility with latest version of A1111 WebUI
+
+### Removed
+- `Config.ui.wizard_autoinclude` temporarily removed for logistical reasons
+- CLIPSeg weights no longer included with this repo (the txt2mask shortcode will automatically download the weights if necessary)
+
+</details>
+
 <details><summary>5.0.0 - 2 January 2023</summary>
 
 ### Added

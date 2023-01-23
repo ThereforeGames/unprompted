@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "5.0.0"
+		self.VERSION = "5.1.0"
 
 		print(f"(Unprompted v{self.VERSION} by Therefore Games)")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -73,7 +73,6 @@ class Unprompted:
 			self.log(f"Loaded shortcode: {shortcode_name}",False)
 
 		self.shortcode_parser = shortcodes.Parser(start=self.Config.syntax.tag_start, end=self.Config.syntax.tag_end, esc=self.Config.syntax.tag_escape, ignore_unknown=True)
-
 	
 	def shortcode_string_log(self):
 		return("["+os.path.basename(inspect.stack()[1].filename)+"]")

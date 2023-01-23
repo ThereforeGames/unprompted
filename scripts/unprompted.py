@@ -9,7 +9,9 @@ import gradio as gr
 import modules.scripts as scripts
 from modules.processing import process_images,fix_seed,Processed
 from modules.shared import opts, cmd_opts, state, Options
+import lib.shortcodes as shortcodes
 from pathlib import Path
+from enum import IntEnum,auto
 
 import sys
 import os
@@ -20,8 +22,14 @@ sys.path.append(base_dir)
 from lib.shared import Unprompted
 
 Unprompted = Unprompted(base_dir)
-Unprompted.wizard_shortcodes = [{}, {}]
+
+WizardModes = IntEnum("WizardModes", ["FUNCTIONS","SHORTCODES"], start=0)
+
+Unprompted.wizard_groups = [[{},{}] for _ in range(len(WizardModes))] # Two subdictionaries for txt2img and img2img
 Unprompted.wizard_dropdown = None
+
+Unprompted.wizard_function_files = []
+Unprompted.wizard_function_names = []
 
 def do_dry_run(string):
 	Unprompted.log(string)
@@ -34,11 +42,15 @@ def do_dry_run(string):
 		Unprompted.shortcode_objects[i].cleanup()
 	return f"<strong>RESULT:</strong> {unp_result}"
 
-def wizard_select_shortcode(option,is_img2img):
-	# Unprompted.wizard_dropdown.update(value=option)
+def wizard_select_item(option,is_img2img,mode=WizardModes.SHORTCODES):
 	Unprompted.wizard_dropdown.value = option
-	filtered_shortcodes = Unprompted.wizard_shortcodes[int(is_img2img)]
-	results = [gr.update(visible=(option == key)) for key in filtered_shortcodes.keys()]
+
+	this_list = Unprompted.wizard_groups[mode][int(is_img2img)]
+
+	# Retrieve corresponding function filepath
+	if (mode == WizardModes.FUNCTIONS): option = Unprompted.wizard_function_files[option]
+
+	results = [gr.update(visible=(option == key)) for key in this_list.keys()]
 	return results
 
 def wizard_set_event_listener(obj):
@@ -47,15 +59,36 @@ def wizard_set_event_listener(obj):
 def wizard_update_value(obj,val):
 	obj.value = val # TODO: Rewrite this with Gradio update function if possible
 
-def wizard_generate_shortcode(option,is_img2img,original_content=""):
-	result = Unprompted.Config.syntax.tag_start + option
-	filtered_shortcodes = Unprompted.wizard_shortcodes[int(is_img2img)]
-	group = filtered_shortcodes[option]
-	block_content=""
-	prepend="<strong>RESULT:</strong> "
+def wizard_generate_function(option,is_img2img,prepend="",append=""):
+	filepath = os.path.relpath(Unprompted.wizard_function_files[option],f"{base_dir}/{Unprompted.Config.template_directory}")
+	# Remove file extension
+	filepath = os.path.splitext(filepath)[0]
+	result = f"{Unprompted.Config.syntax.tag_start}file \"{filepath}\""
+	filtered_functions = Unprompted.wizard_groups[WizardModes.FUNCTIONS][int(is_img2img)]
+	group = filtered_functions[Unprompted.wizard_function_files[option]]
 
 	try:
-		for gr_obj in group.children[1].children:
+		for gr_obj in group.children[1].children[:-1]:
+			if (not gr_obj.value): continue # Skip empty fields
+			arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
+			this_val = str(Unprompted.autocast(gr_obj.value))
+			if " " in this_val: this_val = f"\"{this_val}\"" # Enclose in quotes if necessary
+			result += f" {arg_name}={this_val}"
+	except: pass
+
+	# Closing bracket
+	result += Unprompted.Config.syntax.tag_end
+
+	return(prepend+result+append)
+
+def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
+	result = Unprompted.Config.syntax.tag_start + option
+	filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
+	group = filtered_shortcodes[option]
+	block_content=""
+
+	try:
+		for gr_obj in group.children[1].children[:-1]:
 			if gr_obj.label=="Content":
 				block_content = gr_obj.value
 			else:
@@ -82,16 +115,13 @@ def wizard_generate_shortcode(option,is_img2img,original_content=""):
 	result += Unprompted.Config.syntax.tag_end
 
 	if hasattr(Unprompted.shortcode_objects[option],"run_block"):
-		if (original_content and not block_content):
-			block_content = original_content
-			original_content = ""
+		if (append and not block_content):
+			block_content = append
+			append = ""
 			prepend = ""
 		result += block_content + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + option + Unprompted.Config.syntax.tag_end
-	
-	if (original_content): result += original_content
-	else: result = prepend + result
 
-	return result
+	return (prepend+result+append)
 
 def get_markdown(file):
 	file = Path(base_dir) / file
@@ -126,28 +156,110 @@ class Scripts(scripts.Script):
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
-						shortcode_list = list(Unprompted.shortcode_objects.keys())
-						Unprompted.wizard_dropdown = gr.Dropdown(choices=shortcode_list,label="Shortcode",value=Unprompted.Config.ui.wizard_default_shortcode)
-						filtered_shortcodes = Unprompted.wizard_shortcodes[int(is_img2img)]
-						for key in shortcode_list:
-							if (hasattr(Unprompted.shortcode_objects[key],"ui")):
-								with gr.Group(visible = (key == Unprompted.wizard_dropdown.value)) as filtered_shortcodes[key]:
-									gr.Label(label="Options",value=f"{key}: {Unprompted.shortcode_objects[key].description}")
-									if hasattr(Unprompted.shortcode_objects[key],"run_block"): gr.Textbox(label="Content",max_lines=2,min_lines=2)
-									Unprompted.shortcode_objects[key].ui(gr)
+						
+						self.wizard_function_template = ""
+						self.wizard_function_elements = []
+
+						# Wizard UI shortcode parser for functions
+						wizard_shortcode_parser = shortcodes.Parser(start=Unprompted.Config.syntax.tag_start, end=Unprompted.Config.syntax.tag_end, esc=Unprompted.Config.syntax.tag_escape, ignore_unknown=True, inherit_globals=False)
+
+						def handler(keyword, pargs, kwargs, context, content):
+							if "_new" in pargs:
+								friendly_name = kwargs["_label"] if "_label" in kwargs else "Setting"
+								block_name = kwargs["_ui"] if "_ui" in kwargs else "textbox"
+
+								this_label = f"{friendly_name} {Unprompted.Config.syntax.wizard_delimiter} {pargs[0]}"
+								if (block_name == "textbox"): gr.Textbox(label=this_label,max_lines=1)
+								elif (block_name == "checkbox"): gr.Checkbox(label=this_label,value=bool(content))
+								elif (block_name == "number"): gr.Number(label=this_label,value=int(content),interactive=True)
+							return("")
+						wizard_shortcode_parser.register(handler,"set",f"{Unprompted.Config.syntax.tag_close}set")
+
+						def handler(keyword, pargs, kwargs, context, content):
+							if "name" in kwargs: self.dropdown_item_name = kwargs["name"]
+							# Fix content formatting for markdown
+							content = content.replace("\\r\\n", "<br>") + "<br><br>"
+							gr.Markdown(value=content)
+							return("")
+						wizard_shortcode_parser.register(handler,"template",f"{Unprompted.Config.syntax.tag_close}template")	
+
+						with gr.Tabs():
+							filtered_functions = Unprompted.wizard_groups[WizardModes.FUNCTIONS][int(is_img2img)]
+							filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
+
+							def wizard_add_function(show_me=False):
+								self.dropdown_item_name = filename
+								with gr.Group(visible = show_me) as filtered_functions[filename]:
+									# Render the text file's UI with special parser object
+									wizard_shortcode_parser.parse(file.read())
+									# Auto-include is always the last element
+									gr.Checkbox(label="Auto-include this in prompt",value=False)
 									# Add event listeners
-									for child in filtered_shortcodes[key].children:
+									for child in filtered_functions[filename].children:
 										if ("change" in dir(child) and child.get_block_name() != "label"):
 											# use function to pass obj by reference
 											wizard_set_event_listener(child)
 
-						Unprompted.wizard_dropdown.change(fn=wizard_select_shortcode,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img)],outputs=list(filtered_shortcodes.values()))
-						wizard_btn = gr.Button(value="Generate Shortcode")
-						wizard_result = gr.HTML(label="wizard_result",value="")
-						wizard_btn.click(fn=wizard_generate_shortcode,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img)],outputs=wizard_result)
+							with gr.Tab("Functions"):
+								import glob
+								txt_files = glob.glob(f"{base_dir}/{Unprompted.Config.template_directory}/**/*.txt",recursive=True) if not is_img2img else Unprompted.wizard_function_files
+								is_first = True
+								
+								functions_dropdown = gr.Dropdown(choices=[],label="Select function:",type="index")
+
+								for filename in txt_files:
+									with open(filename) as file:
+										if is_img2img: wizard_add_function()
+										else:
+											first_line = file.readline()
+											# Make sure this text file starts with the [template] tag - this identifies it as a valid function
+											if first_line.startswith(f"{Unprompted.Config.syntax.tag_start}template"):
+												file.seek(0) # Go back to start of file
+												wizard_add_function(is_first)
+												Unprompted.wizard_function_names.append(self.dropdown_item_name)
+												Unprompted.wizard_function_files.append(filename)
+												if (is_first):
+													functions_dropdown.value = self.dropdown_item_name
+													is_first = False
+								
+								# Refresh dropdown list
+								functions_dropdown.choices = Unprompted.wizard_function_names
+
+								if (len(filtered_functions) > 1):
+									functions_dropdown.change(fn=wizard_select_item,inputs=[functions_dropdown,gr.Variable(value=is_img2img),gr.Variable(value=WizardModes.FUNCTIONS)],outputs=list(filtered_functions.values()))
+								
+								wizard_function_btn = gr.Button(value="Generate Shortcode")
+
+							with gr.Tab("Shortcodes"):
+								shortcode_list = list(Unprompted.shortcode_objects.keys())
+								Unprompted.wizard_dropdown = gr.Dropdown(choices=shortcode_list,label="Select shortcode:",value=Unprompted.Config.ui.wizard_default_shortcode)
+								
+								for key in shortcode_list:
+									if (hasattr(Unprompted.shortcode_objects[key],"ui")):
+										with gr.Group(visible = (key == Unprompted.wizard_dropdown.value)) as filtered_shortcodes[key]:
+											gr.Label(label="Options",value=f"{key}: {Unprompted.shortcode_objects[key].description}")
+											if hasattr(Unprompted.shortcode_objects[key],"run_block"): gr.Textbox(label="Content",max_lines=2,min_lines=2)
+											# Run the shortcode's UI function to populate
+											Unprompted.shortcode_objects[key].ui(gr)
+											# Auto-include is always the last element
+											gr.Checkbox(label="Auto-include this in prompt",value=False)											
+											# Add event listeners
+											for child in filtered_shortcodes[key].children:
+												if ("change" in dir(child) and child.get_block_name() != "label"):
+													# use function to pass obj by reference
+													wizard_set_event_listener(child)
+
+								Unprompted.wizard_dropdown.change(fn=wizard_select_item,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img)],outputs=list(filtered_shortcodes.values()))
+								
+								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
+							
+							wizard_result = gr.HTML(label="wizard_result",value="")
+							wizard_shortcode_btn.click(fn=wizard_generate_shortcode,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
+							wizard_function_btn.click(fn=wizard_generate_function,inputs=[functions_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
+
 					else: gr.HTML(label="wizard_debug",value="You have disabled the Wizard in your config.")
 
-					wizard_autoinclude = gr.Checkbox(label="Auto-include in prompt",value=Unprompted.Config.ui.wizard_autoinclude)
+					# wizard_autoinclude = gr.Checkbox(label="Auto-include in prompt",value=Unprompted.Config.ui.wizard_autoinclude)
 					
 				with gr.Accordion("📝 Dry Run", open=Unprompted.Config.ui.dry_run_open):
 					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False)
@@ -183,9 +295,9 @@ class Scripts(scripts.Script):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
 				
-		return [is_enabled,wizard_autoinclude]
+		return [is_enabled]
 	
-	def process(self, p, is_enabled, wizard_autoinclude):
+	def process(self, p, is_enabled):
 		if not is_enabled:
 			return p
 		
@@ -195,8 +307,23 @@ class Scripts(scripts.Script):
 		# Reset vars
 		original_prompt = p.all_prompts[0]
 
-		if wizard_autoinclude and Unprompted.Config.ui.wizard_enabled:
-			original_prompt = wizard_generate_shortcode(Unprompted.wizard_dropdown.value,hasattr(p,"init_images"),original_prompt)
+		# Process Wizard auto-includes
+		if Unprompted.Config.ui.wizard_enabled:
+			is_img2img = hasattr(p,"init_images")
+
+			for mode in range(len(WizardModes)):
+				groups = Unprompted.wizard_groups[mode][int(is_img2img)]
+				for idx,key in enumerate(groups):
+					group = groups[key]
+					autoinclude_obj = group
+
+					# In theory, this should always select the "autoinclude" checkbox at the bottom of the UI
+					while hasattr(autoinclude_obj,"children"): autoinclude_obj = autoinclude_obj.children[-1]
+
+					# autoinclude_obj = group.children[1].children[-1]
+					if (autoinclude_obj.value):
+						if mode == WizardModes.SHORTCODES: original_prompt = wizard_generate_shortcode(key,is_img2img,"",original_prompt)
+						elif mode == WizardModes.FUNCTIONS: original_prompt = wizard_generate_function(idx,is_img2img,"",original_prompt)
 
 		original_negative_prompt = p.all_negative_prompts[0]
 		Unprompted.shortcode_user_vars = {}
@@ -206,7 +333,7 @@ class Scripts(scripts.Script):
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
-			if not att.startswith("__"):
+			if not att.startswith("__") and att != "sd_model": # Workaround for sd_model var, will look into adding proper support soon
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
 		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
@@ -214,7 +341,7 @@ class Scripts(scripts.Script):
 
 		# Apply any updates to system vars
 		for att in dir(p):
-			if not att.startswith("__"):
+			if not att.startswith("__") and att != "sd_model": # Workaround for sd_model var, will look into adding proper support soon
 				setattr(p,att,Unprompted.shortcode_user_vars[att])	
 
 		if p.seed is not None and p.seed != -1.0:
@@ -250,8 +377,7 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 
 	# After routines
-	def postprocess(self, p, processed, is_enabled, test):
-		# TODO: 'test' appears to contain the name of this file in new versions of A1111, need to figure out what the point of it is
+	def postprocess(self, p, processed, is_enabled):
 		Unprompted.log("Entering After routine...")
 		for i in Unprompted.after_routines:
 			Unprompted.shortcode_objects[i].after(p,processed)

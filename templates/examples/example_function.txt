@@ -1,0 +1,12 @@
+[template name="Example Function"]
+This template demonstrates the structure of a basic Wizard function. You can find this file in your `Unprompted/templates/examples` folder.
+
+The content of the `template` block is parsed as [Markdown format](https://www.markdownguide.org/basic-syntax/). This means that you can include rich content like links and pictures here. Cool, huh?
+
+The following UI fields are generated automatically by detecting `<set>` blocks with the `_new` flag.
+[/template]
+
+[set subject _new _label="Enter a subject"]person[/set]
+[set use_fluff _new _label="Add fluff terms?" _ui="checkbox"]0[/set]
+
+[if use_fluff=1]masterpiece, best quality, [/if][get subject]

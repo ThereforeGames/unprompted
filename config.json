@@ -20,7 +20,8 @@
 		"tag_end_alt":"}",
 		"tag_close":"/",
 		"tag_escape":"`",
-		"delimiter":"|"
+		"delimiter":"|",
+		"wizard_delimiter":"🡢"
 	},
 	"templates":
 	{
@@ -38,7 +39,6 @@
 		"wizard_enabled":true,
 		"wizard_open":false,
 		"wizard_default_shortcode":"txt2mask",
-		"wizard_autoinclude":false,
 		"dry_run_open":false
 	}
 }

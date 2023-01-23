@@ -135,3 +135,5 @@ dmypy.json
 !/templates/common
 !/templates/examples
 !/templates/human
+# clipseg weights
+/lib/clipseg/weights/*

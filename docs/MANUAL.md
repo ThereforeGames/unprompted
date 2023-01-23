@@ -65,7 +65,7 @@ Atomic shortcodes do not receive a `content` variable.
 
 It is important to understand that **inner shortcodes are processed before outer shortcodes**.
 
-This has a number of advantages, but it does present one tricky situation: **conditional functions are weird.**
+This has a number of advantages, but it does present an unintuitive situation: conditional functions.
 
 Consider the following code:
 
@@ -75,9 +75,9 @@ Consider the following code:
 
 Anyone with a background in programming would take this to mean that `another_var` is set to 0 if my_var equals 1... but this is not the case here.
 
-In Unprompted, `another_var` will equal 0 regardless of the outcome of the `if` statement.
+In Unprompted, `another_var` will equal 0 regardless of the outcome of the `if` statement. This is due to the fact that `[set]` is the innermost shortcode and thus evaluated before `[if]`.
 
-The next section offers a solution.
+The following section offers a solution.
 
 ## Secondary Shortcode Tags
 
@@ -159,6 +159,20 @@ Also note: if a shortcode is undefined, Unprompted will print it as a literal as
 ```
 Photo of a `[cat|dog]
 ```
+
+## Why some shortcode arguments begin with an _underscore
+
+We use underscores to denote optional system arguments in shortcodes that may also accept dynamic, user-defined arguments.
+
+Take a look at `[replace]` as an example.
+
+`[replace]` allows you to modify a string with arbitrary before-after argument pairings, e.g. `[replace this=that red=blue]`.
+
+However, `[replace]` also features system arguments like `_count` and so the shortcode must have a way to differentiate between the two types.
+
+In short, if the argument begins with `_`, the program will assume it is a system argument of some kind.
+
+That said, we're still ironing out the methodology for underscores - some arguments may use underscores where it wasn't strictly necessary.
 
 ## The Wizard
 
