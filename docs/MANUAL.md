@@ -172,17 +172,21 @@ However, `[replace]` also features system arguments like `_count` and so the sho
 
 In short, if the argument begins with `_`, the program will assume it is a system argument of some kind.
 
-That said, we're still ironing out the methodology for underscores - some arguments may use underscores where it wasn't strictly necessary.
+That said, we're still ironing out the methodology for underscores - at the moment, some arguments may use underscores where it isn't strictly necessary. If you find any such cases feel free to open an Issue or Discussion Thread about it.
 
 ## The Wizard
 
-In the WebUI extension, Unprompted has a dedicated panel called the Wizard. It is a GUI-based shortcode builder.
-
-At the top of the panel, you select the shortcode you wish to create. It defaults to `[txt2mask]`, although you can change this in `config_user.json`.
+The Unprompted WebUI extension has a dedicated panel called the Wizard. It is a GUI-based shortcode builder.
 
 Pressing **"Generate Shortcode"** will assemble a ready-to-use block of code that you can add to your prompts.
 
-Alternatively, you can enable `Auto-include in prompt` which will add the shortcode to your prompts behind the scenes. This essentially lets you use Unprompted shortcodes as if they were standalone scripts.
+Alternatively, you can enable `Auto-include this in prompt` which will add the shortcode to your prompts behind the scenes. This essentially lets you use Unprompted shortcodes as if they were standalone scripts. You can enable/disable this setting on a per-shortcode basis.
+
+The Wizard includes two distinct modes: Shortcodes and Functions.
+
+### Shortcodes Mode
+
+This mode presents you with a list of all shortcodes that have a `ui()` block in their source code.
 
 You can add Wizard UI support to your own custom shortcodes by declaring a `ui()` function as shown below:
 
@@ -200,13 +204,33 @@ You can add Wizard UI support to your own custom shortcodes by declaring a `ui()
 
 The above code is the entirety of txt2mask's UI at the time of writing. We recommend examining the .py files of other shortcodes if you want to see additional examples of how to construct your UI.
 
-Every possible shortcode argument is exposed in the UI, labeled in the form of `Natural description 🡢 technical_argument_name`. The Wizard uses the last part of the string when constructing the final shortcode.
+Every possible shortcode argument is exposed in the UI, labeled in the form of `Natural description 🡢 technical_argument_name`. The Wizard only uses the technical_argument_name when constructing the final shortcode.
 
-There are a few reserved argument names that will alter the Wizard's behavior:
+There are a few reserved argument names that will modify the Wizard's behavior:
 
 - `verbatim`: This will inject the field's value directly into the shortcode. Useful for shortcodes that can accept multiple, optional arguments that do not have pre-determined names.
 - `str`: This will inject the field's value into the shortcode, enclosing it in quotation marks.
 - `int`: This will inject the field's value into the shortcode, casting it as an integer. 
+
+### Functions Mode
+
+This mode presents you with a list of txt files inside your `Unprompted/templates` directory that begin with a `[template]` block.
+
+By including this block in your file, Unprompted will parse the file for its `[set x _new]` statements and adapt those into a custom Wizard UI.
+
+The `_new` argument means "only set this variable if it doesn't already exist," which are generally the variables we want to show in a UI.
+
+The `[template]` block supports the optional `name` argument which is a friendly name for your function shown in the functions dropdown menu.
+
+The content of `[template]` is a description of your function to be rendered with [Markdown](https://www.markdownguide.org/basic-syntax/), which means you can include rich content like pictures or links. It will show up at the top of your UI.
+
+The `[set]` block supports `_ui` which determines the type of UI element to render your variable as. Defaults to `textbox`. Here are the possible types:
+
+- `textbox`: Ideal for strings. The content of your `[set]` block will be rendered as placeholder text.
+- `number`: Ideal for integers. 
+- `radio`: A list of radio buttons that are determined by the `_choices` argument, constructed as a delimited list.
+- `dropdown`: A dropdown menu that is populated by the `_choices` argument, constructed as a delimited list.
+- `slider`: Limits selection to a range of numbers. You must also specify `_minimum`, `_maximum` and `_step` (step size, normally 1) for this element to work properly.
 
 ## The config file
 
@@ -815,6 +839,12 @@ Sets a variable to the given content.
 
 Supports the optional `_new` argument which will bypass the shortcode if the variable already exists.
 
+Supports the optional `_choices` argument, which is a delimited string of accepted values. The behavior of this argument depends on whether or not the `_new` argument is present:
+
+- If `_new` and the variable exists with a value that is not accepted by `_choices`, then `_new` is bypassed.
+- If not `_new` and we're trying to set a value that is not accepted by `_choices`, then the `[set]` block is bypassed.
+- In the Wizard UI for certain kinds of elements, `_choices` is used to populate the element, such as a dropdown menu or radio group.
+
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.
 
 ```
@@ -825,7 +855,7 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 
 The atomic version of `[set]` that allows you to set multiple variables at once.
 
-Supports the optional `_new` argument which will bypass the shortcode if the variable already exists.
+This shortcode processes your arguments with `[set]` directly, meaning you can take advantage of system arguments supported by `[set]`, such as `_new`.
 
 ```
 [sets var_a=10 var_b=something var_c=500]

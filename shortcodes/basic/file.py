@@ -35,7 +35,7 @@ class Shortcode():
 		# Use [set] with keyword arguments
 		for key, value in kwargs.items():
 			if (key[0] == "_"): continue # Skips system arguments
-			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value)
+			self.Unprompted.shortcode_objects["set"].run_block([key],{},context,value)
 
 		self.Unprompted.shortcode_objects["else"].do_else = False
 		return(self.Unprompted.process_string(file_contents,path))

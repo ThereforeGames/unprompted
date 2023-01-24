@@ -9,7 +9,7 @@ import gradio as gr
 import modules.scripts as scripts
 from modules.processing import process_images,fix_seed,Processed
 from modules.shared import opts, cmd_opts, state, Options
-import lib.shortcodes as shortcodes
+import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
 from enum import IntEnum,auto
 
@@ -19,7 +19,7 @@ import os
 base_dir = scripts.basedir()
 sys.path.append(base_dir)
 # Main object
-from lib.shared import Unprompted
+from lib_unprompted.shared import Unprompted
 
 Unprompted = Unprompted(base_dir)
 
@@ -68,8 +68,8 @@ def wizard_generate_function(option,is_img2img,prepend="",append=""):
 	group = filtered_functions[Unprompted.wizard_function_files[option]]
 
 	try:
-		for gr_obj in group.children[1].children[:-1]:
-			if (not gr_obj.value): continue # Skip empty fields
+		for gr_obj in group.children[2].children[:-1]:
+			if gr_obj.value is None or gr_obj.value is "": continue # Skip empty fields
 			arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
 			this_val = str(Unprompted.autocast(gr_obj.value))
 			if " " in this_val: this_val = f"\"{this_val}\"" # Enclose in quotes if necessary
@@ -152,7 +152,7 @@ class Scripts(scripts.Script):
 				else: is_open = True
 				
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! <strong>Premium Fantasy Card Template</strong> is now available.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p>')
+					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">UPDATED! The <strong>Premium Fantasy Card Template v2.0.0</strong> is here.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids. Now enhanced with a GUI.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p>')
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -169,9 +169,18 @@ class Scripts(scripts.Script):
 								block_name = kwargs["_ui"] if "_ui" in kwargs else "textbox"
 
 								this_label = f"{friendly_name} {Unprompted.Config.syntax.wizard_delimiter} {pargs[0]}"
-								if (block_name == "textbox"): gr.Textbox(label=this_label,max_lines=1)
+
+								# Produce UI based on type
+								if (block_name == "textbox"):
+									if "_placeholder" in kwargs: this_placeholder = kwargs["_placeholder"]
+									else: this_placeholder = str(content)
+									gr.Textbox(label=this_label,max_lines=1,placeholder=this_placeholder)
 								elif (block_name == "checkbox"): gr.Checkbox(label=this_label,value=bool(content))
 								elif (block_name == "number"): gr.Number(label=this_label,value=int(content),interactive=True)
+								elif (block_name == "dropdown"): gr.Dropdown(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter))
+								elif (block_name == "radio"): gr.Radio(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax_delimiter),interactive=True)
+								elif (block_name == "slider"):
+									gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"])
 							return("")
 						wizard_shortcode_parser.register(handler,"set",f"{Unprompted.Config.syntax.tag_close}set")
 
@@ -179,9 +188,16 @@ class Scripts(scripts.Script):
 							if "name" in kwargs: self.dropdown_item_name = kwargs["name"]
 							# Fix content formatting for markdown
 							content = content.replace("\\r\\n", "<br>") + "<br><br>"
+							gr.Label(label="Options",value=f"{self.dropdown_item_name}")
 							gr.Markdown(value=content)
 							return("")
 						wizard_shortcode_parser.register(handler,"template",f"{Unprompted.Config.syntax.tag_close}template")	
+
+						def handler(keyword,pargs,kwargs,context):
+							filepath = Path(os.path.relpath(filename,f"{base_dir}")).parent
+							return(f"file/extensions/unprompted/{filepath}")
+							
+						wizard_shortcode_parser.register(handler,"base_dir")
 
 						with gr.Tabs():
 							filtered_functions = Unprompted.wizard_groups[WizardModes.FUNCTIONS][int(is_img2img)]
@@ -320,7 +336,6 @@ class Scripts(scripts.Script):
 					# In theory, this should always select the "autoinclude" checkbox at the bottom of the UI
 					while hasattr(autoinclude_obj,"children"): autoinclude_obj = autoinclude_obj.children[-1]
 
-					# autoinclude_obj = group.children[1].children[-1]
 					if (autoinclude_obj.value):
 						if mode == WizardModes.SHORTCODES: original_prompt = wizard_generate_shortcode(key,is_img2img,"",original_prompt)
 						elif mode == WizardModes.FUNCTIONS: original_prompt = wizard_generate_function(idx,is_img2img,"",original_prompt)

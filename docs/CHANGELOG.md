@@ -3,6 +3,23 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>5.2.0 - 24 January 2023</summary>
+
+### Added
+- The `[set]` shortcode now supports the `_choices` argument which accepts an array of valid values
+- The `[set]` shortcode now supports the Wizard UI `_placeholder` argument
+- The `[sets]` shortcode has been rewritten to pass off its arguments to `[set]`, which means it now supports all current and future system arguments of `[set]`
+- Wizard Functions now support `dropdown`, `radio` and `slider` as valid `_ui` types
+- Wizard Function textboxes show the `[set]` content as a placeholder
+- Wizard Functions will now include a gr.Label title element by default
+- The Wizard shortcode parser now supports `[base_dir]` which is useful for linking to files within the template directory (note that [this function is broken](https://github.com/gradio-app/gradio/issues/3009) in the version of Gradio that A1111 currently uses)
+- Updated the manual
+
+### Changed
+- Renamed the `lib` folder to `lib_unprompted` in order to resolve import calls conflicting with other extensions, possibly due to a flaw in the A1111 extension framework (more research needed)
+
+</details>
+
 <details><summary>5.1.0 - 23 January 2023</summary>
 
 ### Added

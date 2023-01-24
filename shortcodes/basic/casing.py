@@ -1,4 +1,4 @@
-import lib.casefy as casefy
+import lib_unprompted.casefy as casefy
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted

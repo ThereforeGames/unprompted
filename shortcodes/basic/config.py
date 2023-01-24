@@ -20,7 +20,7 @@ class Shortcode():
 
 		# Write new settings
 		# self.Unprompted.cfg_dict.update(json_obj)
-		import lib.flatdict as flatdict
+		import lib_unprompted.flatdict as flatdict
 		flat_user_cfg = flatdict.FlatDict(json_obj)
 		flat_cfg = flatdict.FlatDict(self.Unprompted.cfg_dict)
 		# Write differences to flattened dictionary

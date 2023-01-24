@@ -5,7 +5,7 @@ class Shortcode():
 		self.show = False
 		self.description = "Creates an image mask from the content for use with inpainting."
 	def run_block(self, pargs, kwargs, context, content):
-		from lib.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
+		from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
 		from PIL import ImageChops, Image, ImageOps
 		import os.path
