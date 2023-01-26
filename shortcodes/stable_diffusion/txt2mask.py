@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-from torchvision.utils import draw_segmentation_masks
-from torchvision.transforms.functional import pil_to_tensor, to_pil_image
-=======
->>>>>>> Stashed changes
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -101,11 +96,7 @@ class Shortcode():
 		def get_mask():
 			# load model
 			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
-<<<<<<< Updated upstream
-			model_dir = f"{self.Unprompted.base_dir}/lib/stable_diffusion/clipseg/weights"
-=======
 			model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
->>>>>>> Stashed changes
 			os.makedirs(model_dir, exist_ok=True)
 
 			d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
@@ -195,11 +186,8 @@ class Shortcode():
 		gr.Checkbox(label="Show mask in output 🡢 show")
 		gr.Checkbox(label="Use legacy weights 🡢 legacy_weights")
 		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
-		gr.Number(label="Precision of negative selected area 🡢 neg_precision",value=100,interactive=True)
 		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
-		gr.Number(label="Padding radius in pixels for negative mask 🡢 neg_padding",value=0,interactive=True)
 		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
-		gr.Number(label="Smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
 		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
 		gr.Number(label="Negative mask precision of selected area 🡢 neg_precision",value=100,interactive=True)
 		gr.Number(label="Negative mask padding radius in pixels 🡢 neg_padding",value=0,interactive=True)
