@@ -9,6 +9,7 @@ import gradio as gr
 import modules.scripts as scripts
 from modules.processing import process_images,fix_seed,Processed
 from modules.shared import opts, cmd_opts, state, Options
+from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
 from enum import IntEnum,auto
@@ -105,7 +106,7 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 					result += " " + str(gr_obj.value)
 				elif (block_name=="checkbox"):
 					if gr_obj.value: result += " " + arg_name
-				elif (block_name=="number"): result += f" {arg_name}={int(gr_obj.value)}"
+				elif (block_name=="number"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
 				elif (block_name=="textbox"):
 					if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
 				else: result += f" {arg_name}=\"{gr_obj.value}\""
@@ -148,6 +149,9 @@ class Scripts(scripts.Script):
 			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
 				is_enabled = gr.Checkbox(label="Enabled",value=gradio_enabled_checkbox_workaround)
 
+				unprompted_seed = gr.Number(label="Unprompted Seed",value=-1)
+				setattr(unprompted_seed,"do_not_save_to_config",True)
+
 				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/fantasy_card/main{Unprompted.Config.txt_format}")): is_open = False
 				else: is_open = True
 				
@@ -174,13 +178,16 @@ class Scripts(scripts.Script):
 								if (block_name == "textbox"):
 									if "_placeholder" in kwargs: this_placeholder = kwargs["_placeholder"]
 									else: this_placeholder = str(content)
-									gr.Textbox(label=this_label,max_lines=1,placeholder=this_placeholder)
-								elif (block_name == "checkbox"): gr.Checkbox(label=this_label,value=bool(content))
-								elif (block_name == "number"): gr.Number(label=this_label,value=int(content),interactive=True)
-								elif (block_name == "dropdown"): gr.Dropdown(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter))
-								elif (block_name == "radio"): gr.Radio(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax_delimiter),interactive=True)
+									obj = gr.Textbox(label=this_label,max_lines=1,placeholder=this_placeholder)
+								elif (block_name == "checkbox"):
+									obj = gr.Checkbox(label=this_label,value=bool(int(content)))
+								elif (block_name == "number"): obj = gr.Number(label=this_label,value=int(content),interactive=True)
+								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter))
+								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax_delimiter),interactive=True)
 								elif (block_name == "slider"):
-									gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"])
+									obj = gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"])
+							
+								setattr(obj,"do_not_save_to_config",True)
 							return("")
 						wizard_shortcode_parser.register(handler,"set",f"{Unprompted.Config.syntax.tag_close}set")
 
@@ -311,11 +318,15 @@ class Scripts(scripts.Script):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
 				
-		return [is_enabled]
+		return [is_enabled,unprompted_seed]
 	
-	def process(self, p, is_enabled):
+	def process(self, p, is_enabled, unprompted_seed):
 		if not is_enabled:
 			return p
+
+		if unprompted_seed != -1:
+			import random
+			random.seed(unprompted_seed)
 		
 		def apply_prompt_template(string,template):
 			return template.replace("*",string)
@@ -348,7 +359,7 @@ class Scripts(scripts.Script):
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
-			if not att.startswith("__") and att != "sd_model": # Workaround for sd_model var, will look into adding proper support soon
+			if not att.startswith("__") and att != "sd_model":
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
 		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
@@ -356,8 +367,15 @@ class Scripts(scripts.Script):
 
 		# Apply any updates to system vars
 		for att in dir(p):
-			if not att.startswith("__") and att != "sd_model": # Workaround for sd_model var, will look into adding proper support soon
+			if not att.startswith("__") and att != "sd_model":
 				setattr(p,att,Unprompted.shortcode_user_vars[att])	
+
+		# Support loading a new checkpoint by name
+		if "sd_model" in Unprompted.shortcode_user_vars:
+			info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
+			print(info)
+			if (info): sd_models.reload_model_weights(None,info)
+
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
@@ -392,7 +410,7 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 
 	# After routines
-	def postprocess(self, p, processed, is_enabled):
+	def postprocess(self, p, processed, is_enabled, unprompted_seed):
 		Unprompted.log("Entering After routine...")
 		for i in Unprompted.after_routines:
 			Unprompted.shortcode_objects[i].after(p,processed)

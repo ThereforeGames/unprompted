@@ -8,7 +8,7 @@ Value of my_var: [get my_var]
 
 
 [##]
-Old method:
+Old method (should still work):
 
 You can add or subtract from an existing variable with 'set'.
 

@@ -2,45 +2,11 @@
 
 Shortcode syntax is subject to change based on community feedback.
 
-## Adding New Shortcodes
+If you encounter any confusing, incomplete, or out-of-date information here, please do not hesitate to open an issue. I appreciate it!
 
-Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within the `/custom` subdirectory.)
+## Proficiency
 
-The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
-
-A shortcode is structured as follows:
-
-```
-class Shortcode():
-	"""A description of the shortcode goes here."""
-	def __init__(self,Unprompted):
-		self.Unprompted = Unprompted
-
-	def run_block(self, pargs, kwargs, context,content):
-		
-		return("")
-
-	def cleanup(self):
-		
-		return("")
-```
-
-The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
-
-The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following documentation was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
-
-- `pargs`: a list of the shortcode's positional arguments.
-- `kwargs`: a dictionary of the shortcode's keyword arguments.
-- `context`: an optional arbitrary context object supplied by the caller.
-- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
-
-Positional and keyword arguments are passed as strings. The function itself should return a string which will replace the shortcode in the parsed text.
-
-The `cleanup` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
-
-For more details, please examine the code of the stock shortcodes.
-
-## Atomic vs Block Shortcodes
+<details><summary>Atomic vs Block Shortcodes</summary>
 
 Unprompted supports two types of shortcodes:
 
@@ -61,7 +27,9 @@ def run_atomic(self, pargs, kwargs, context):
 
 Atomic shortcodes do not receive a `content` variable.
 
-## Understanding the Processing Chain
+</details>
+
+<details><summary>Understanding the Processing Chain</summary>
 
 It is important to understand that **inner shortcodes are processed before outer shortcodes**.
 
@@ -79,7 +47,9 @@ In Unprompted, `another_var` will equal 0 regardless of the outcome of the `if` 
 
 The following section offers a solution.
 
-## Secondary Shortcode Tags
+</details>
+
+<details><summary>Secondary Shortcode Tags</summary>
 
 Unprompted allows you to write tags using `{}` instead of `[]` to defer processing.
 
@@ -94,7 +64,7 @@ This way, the inner shortcode is not processed until *after* it is returned by t
 Secondary shortcode tags give us a couple additional benefits:
 
 - If your shortcode is computationally expensive, you can avoid running it unless the outer shortcode succeeds. This is good for performance.
-- **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance _probability="{get my_var}"]content[/chance]`
+- **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance "{get my_var}"]content[/chance]`
 
 Secondary shortcode tags can have infinite nested depth. The number of `{}` around a shortcode indicates its nested level. Consider this example:
 
@@ -124,7 +94,9 @@ wow
 
 Rinse and repeat until no `{}` remain.
 
-## Advanced expressions
+</details>
+
+<details><summary>Advanced Expressions</summary>
 
 Most shortcodes support programming-style evaluation via the [simpleeval library](https://github.com/danthedeckie/simpleeval).
 
@@ -148,7 +120,9 @@ You can even mix advanced expressions with shortcodes. Check this out:
 
 For more information on constructing advanced expressions, check the documentation linked above.
 
-## Escaping characters
+</details>
+
+<details><summary>Escaping Characters</summary>
 
 Use the backtick to print a shortcode as a literal part of your prompt. This may be useful if you wish to take advantage of the prompt editing features of the A1111 WebUI (which are denoted with square brackets and could thus conflict with Unprompted shortcodes.)
 
@@ -160,7 +134,23 @@ Also note: if a shortcode is undefined, Unprompted will print it as a literal as
 Photo of a `[cat|dog]
 ```
 
-## Why some shortcode arguments begin with an _underscore
+</details>
+
+<details><summary>System Variables</summary>
+
+In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
+
+### batch_index
+
+An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
+
+### sd_model
+
+You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
+
+</details>
+
+<details><summary>Why some shortcode arguments begin with an _underscore</summary>
 
 We use underscores to denote optional system arguments in shortcodes that may also accept dynamic, user-defined arguments.
 
@@ -174,7 +164,11 @@ In short, if the argument begins with `_`, the program will assume it is a syste
 
 That said, we're still ironing out the methodology for underscores - at the moment, some arguments may use underscores where it isn't strictly necessary. If you find any such cases feel free to open an Issue or Discussion Thread about it.
 
+</details>
+
 ## The Wizard
+
+<details><summary>What is the Wizard?</summary>
 
 The Unprompted WebUI extension has a dedicated panel called the Wizard. It is a GUI-based shortcode builder.
 
@@ -184,7 +178,9 @@ Alternatively, you can enable `Auto-include this in prompt` which will add the s
 
 The Wizard includes two distinct modes: Shortcodes and Functions.
 
-### Shortcodes Mode
+</details>
+
+<details><summary>Shortcodes Mode</summary>
 
 This mode presents you with a list of all shortcodes that have a `ui()` block in their source code.
 
@@ -212,7 +208,9 @@ There are a few reserved argument names that will modify the Wizard's behavior:
 - `str`: This will inject the field's value into the shortcode, enclosing it in quotation marks.
 - `int`: This will inject the field's value into the shortcode, casting it as an integer. 
 
-### Functions Mode
+</details>
+
+<details><summary>Functions Mode</summary>
 
 This mode presents you with a list of txt files inside your `Unprompted/templates` directory that begin with a `[template]` block.
 
@@ -232,7 +230,9 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 - `dropdown`: A dropdown menu that is populated by the `_choices` argument, constructed as a delimited list.
 - `slider`: Limits selection to a range of numbers. You must also specify `_minimum`, `_maximum` and `_step` (step size, normally 1) for this element to work properly.
 
-## The config file
+</details>
+
+<details><summary>The config file</summary>
 
 Various aspects of Unprompted's behavior are controlled through `unprompted/config.json`.
 
@@ -301,20 +301,11 @@ The main purpose of this setting is for hardcoding shortcodes you want to run ev
 
 Same as above, but for the negative prompt.
 
-## System Variables
+</details>
 
-In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
+## Shortcodes
 
-### batch_index
-
-An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
-
-## Stable Diffusion Shortcodes
-
-This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
-
-### [file2mask]
-
+<<<<<<< Updated upstream
 Allows you to modify or replace your img2img mask with arbitrary files.
 
 Supports the `mode` argument which determines how the file mask will behave alongside the existing mask:
@@ -534,18 +525,22 @@ The content and `negative_mask` both support the vertical pipe delimiter (`|`) w
 ```
 
 ## Basic Shortcodes
+=======
+<details><summary>Basic Shortcodes</summary>
+>>>>>>> Stashed changes
 
 This section describes all of the included basic shortcodes and their functionality.
 
-### [#]
+<details><summary>[#]</summary>
 
 Use this to write comments in your templates. Comments are ultimately discarded by Unprompted and will not affect your final output.
 
 ```
 [# This is my comment.]
 ```
+</details>
 
-### [##]
+<details><summary>[##]</summary>
 
 Same as `[#]` but for multiline comments.
 
@@ -557,7 +552,9 @@ I can't believe it, we're doing 3 lines of text!
 [/##]
 ```
 
-### [after step(int)]
+</details>
+
+<details><summary>[after step(int)]</summary>
 
 Processes the content after the main task is complete.
 
@@ -573,7 +570,9 @@ Photo of a cat
 [/after]
 ```
 
-### [array name(str)]
+</details>
+
+<details><summary>[array name(str)]</summary>
 
 Manages a group or list of values.
 
@@ -625,12 +624,15 @@ Supports `_find` which will return the index of the first matching value in the 
 
 Supports `_shuffle` which will randomize the order of the array.
 
+</details>
 
-### [case]
+<details><summary>[case]</summary>
 
 See `[switch]`.
 
-### [casing type]
+</details>
+
+<details><summary>[casing type]</summary>
 
 Converts the casing of content to the selected type. Possible types:
 
@@ -656,7 +658,9 @@ For more information on these types, consult the [casefy docs](https://github.co
 Result: WHY AM I SCREAMING
 ```
 
-### [chance int {_sides}]
+</details>
+
+<details><summary>[chance int {_sides}]</summary>
 
 Returns the content if the integer you passed is greater than or equal to a randomly generated number between 1 and 100.
 
@@ -666,7 +670,9 @@ You can change the upper boundary by specifying the optional `_sides` argument.
 [chance 25]I will show up in your prompt 25% of the time.[/chance]
 ```
 
-### [choose]
+</details>
+
+<details><summary>[choose]</summary>
 
 Randomly returns one of multiple options, as delimited by the vertical pipe or newline character.
 
@@ -686,7 +692,7 @@ Supports the optional `_weighted` argument, which allows you to customize the pr
 [/choose]
 ```
 
-If you skip a weight value--e.g. `3|Apple|Strawberry`--then the option (Strawberry) will automatically have a weight value of 1.
+If you skip a weight value--e.g. `3|Apple|Strawberry`--then the following option (Strawberry) will automatically have a weight value of 1.
 
 The weight value dictates the number of times that an option is added to the master list of choices, which is then shuffled and picked from at random. So, if your content is `2|Blue|3|Red|Green` the master list becomes `Blue,Blue,Red,Red,Red,Green`.
 
@@ -694,7 +700,9 @@ The weight value dictates the number of times that an option is added to the mas
 [choose]red|yellow|blue|green[/choose]
 ```
 
-### [config]
+</details>
+
+<details><summary>[config]</summary>
 
 Updates your Unprompted settings with the content for the duration of a run. Generally you would put this at the top of a template.
 
@@ -712,7 +720,9 @@ Do not enter a file extension, `.json` is assumed.
 [config]./my_custom_settings[/config]
 ```
 
-### [do until(str)]
+</details>
+
+<details><summary>[do until(str)]</summary>
 
 Do-until style loop. The content is processed, then the `until` expression is evaluated - if it's true, the content is processed again. Repeat until `until` is false.
 
@@ -724,7 +734,9 @@ Do-until style loop. The content is processed, then the `until` expression is ev
 [/do]
 ```
 
-### [elif]
+</details>
+
+<details><summary>[elif]</summary>
 
 Shorthand "else if." Equivalent to `[else]{if my_var="something"}content{/if}[/else]`.
 
@@ -734,7 +746,9 @@ Shorthand "else if." Equivalent to `[else]{if my_var="something"}content{/if}[/e
 [elif my_var=5]Return this content![/elif]
 ```
 
-### [else]
+</details>
+
+<details><summary>[else]</summary>
 
 Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) failed its check, otherwise discards content.
 
@@ -744,7 +758,9 @@ Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) 
 [if my_var=0]Print something[/if][else]It turns out my_var did not equal 0.[/else]
 ```
 
-### [eval]
+</details>
+
+<details><summary>[eval]</summary>
 
 Parses the content using the simpleeval library, returning the result. Particularly useful for arithmetic.
 
@@ -754,7 +770,9 @@ simpleeval is designed to prevent the security risks of Python's stock `eval` fu
 [eval]5 + 5[/eval]
 ```
 
-### [file path(str)]
+</details>
+
+<details><summary>[file path(str)]</summary>
 
 Processes the content of `path` (including any shortcodes therein) and returns the result.
 
@@ -774,7 +792,9 @@ The file is expected to be `utf-8` encoding. You can change this with the option
 [file my_template/common/adjective]
 ```
 
-### [filelist path(str)]
+</details>
+
+<details><summary>[filelist path(str)]</summary>
 
 Returns a delimited string containing the full paths of all files in a given path.
 
@@ -786,7 +806,9 @@ Supports the optional `_delimiter` argument which lets you specify the separator
 [filelist "C:/my_pictures/*.*"]
 ```
 
-### [for var "test var" "update var"]
+</details>
+
+<details><summary>[for var "test var" "update var"]</summary>
 
 Returns the content an arbitrary number of times until the `test` condition returns false.
 
@@ -802,7 +824,9 @@ Current value of i: {get i}
 [/for]
 ```
 
-### [get variable]
+</details>
+
+<details><summary>[get variable]</summary>
 
 Returns the value of `variable`.
 
@@ -820,7 +844,9 @@ You can change the default separator with `_sep`.
 My name is [get name]
 ```
 
-### [if variable {_not} {_any} {_is}]
+</details>
+
+<details><summary>[if variable {_not} {_any} {_is}]</summary>
 
 Checks whether `variable` is equal to the given value, returning the content if true, otherwise discarding the content.
 
@@ -843,7 +869,9 @@ Supports [advanced expressions](#advanced-expressions) - useful for testing comp
 [if "subject is 'man' or subject is 'woman'"]wearing a shirt[/if]
 ```
 
-### [info]
+</details>
+
+<details><summary>[info]</summary>
 
 Prints metadata about the content. You must pass the type(s) of data as positional arguments.
 
@@ -862,7 +890,9 @@ Supports `clip_count` for retrieving the number of CLIP tokens in the content (i
 Result: 5
 ```
 
-### [length]
+</details>
+
+<details><summary>[length]</summary>
 
 Returns the number of items in a delimited string.
 
@@ -877,7 +907,9 @@ Supports the optional `_max` argument which caps the value returned by this shor
 Result: 3
 ```
 
-### [max]
+</details>
+
+<details><summary>[max]</summary>
 
 Returns the greatest value among the arguments. Supports advanced expressions.
 
@@ -889,7 +921,9 @@ Returns the greatest value among the arguments. Supports advanced expressions.
 Result: 500
 ```
 
-### [min]
+</details>
+
+<details><summary>[min]</summary>
 
 Returns the smallest value among the arguments. Supports advanced expressions.
 
@@ -901,7 +935,9 @@ Returns the smallest value among the arguments. Supports advanced expressions.
 Result: 2
 ```
 
-### [override variable]
+</details>
+
+<details><summary>[override variable]</summary>
 
 Forces `variable` to equal the given value when attempting to `[set]` it.
 
@@ -913,7 +949,9 @@ In the example below, `my_variable` will equal "panda" after running the `[set]`
 [override my_variable="panda"][set my_variable]fox[/set]
 ```
 
-### [random {_min} {_max} {_float}]
+</details>
+
+<details><summary>[random {_min} {_max} {_float}]</summary>
 
 Returns a random integer between 0 and the given integer, e.g. `[random 2]` will return 0, 1, or 2.
 
@@ -925,7 +963,9 @@ If you pass `_float` into this shortcode, it will support decimal numbers instea
 [set restore_faces][random 1][/set]
 ```
 
-### [repeat times(int) {_sep}]
+</details>
+
+<details><summary>[repeat times(int) {_sep}]</summary>
 
 Processes and returns the content a number of `times`.
 
@@ -940,7 +980,9 @@ Variable is currently: {set my_var _out _append}1</set>
 [/repeat]
 ```
 
-### [replace]
+</details>
+
+<details><summary>[replace]</summary>
 
 Updates the content using argument pairings as replacement logic.
 
@@ -959,7 +1001,9 @@ A photo of red flowers.
 Result: A photo of purple marbles.
 ```
 
-### [set {_append} {_prepend}]
+</details>
+
+<details><summary>[set {_append} {_prepend}]</summary>
 
 Sets a variable to the given content.
 
@@ -981,7 +1025,9 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 [set my_var]This is the value of my_var[/set]
 ```
 
-### [sets]
+</details>
+
+<details><summary>[sets]</summary>
 
 The atomic version of `[set]` that allows you to set multiple variables at once.
 
@@ -991,7 +1037,9 @@ This shortcode processes your arguments with `[set]` directly, meaning you can t
 [sets var_a=10 var_b=something var_c=500]
 ```
 
-### [substring {start} {end} {step} {unit}]
+</details>
+
+<details><summary>[substring {start} {end} {step} {unit}]</summary>
 
 Returns a slice of the content as determined by the keyword arguments.
 
@@ -1010,7 +1058,9 @@ Returns a slice of the content as determined by the keyword arguments.
 Result: photo of a
 ```
 
-### [switch var(str)]
+</details>
+
+<details><summary>[switch var(str)]</summary>
 
 Allows you to run different logic blocks with inner case statements that match the value of the given `var`.
 
@@ -1025,7 +1075,9 @@ Allows you to run different logic blocks with inner case statements that match t
 [/switch]
 ```
 
-### [while variable {_not} {_any} {_is}]
+</details>
+
+<details><summary>[while variable {_not} {_any} {_is}]</summary>
 
 Checks whether `variable` is equal to the given value, returning the content repeatedly until the condition is false. This can create an infinite loop if you're not careful.
 
@@ -1056,7 +1108,9 @@ Advanced expression demo:
 [/while]
 ```
 
-### [unset variable]
+</details>
+
+<details><summary>[unset variable]</summary>
 
 Removes one or more variables from memory.
 
@@ -1066,3 +1120,292 @@ Note that variables are automatically deleted at the end of each run - you do **
 [set var_a=10 var_b="something"]
 [unset var_a var_b]
 ```
+<<<<<<< Updated upstream
+=======
+
+</details>
+</details>
+
+<details><summary>Stable Diffusion Shortcodes</summary>
+
+This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
+
+<details><summary>[file2mask]</summary>
+
+Allows you to modify or replace your img2img mask with arbitrary files.
+
+Supports the `mode` argument which determines how the file mask will behave alongside the existing mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will scrap the existing mask entirely.
+- `subtract` will remove the file mask region from the existing mask region.
+
+Supports the optional `_show` positional argument which will append the final mask to your generation output window.
+
+```
+Walter White[file2mask "C:/pictures/my_mask.png"]
+```
+
+</details>
+
+<details><summary>[img2img]</summary>
+
+Used within the `[after]` block to append an img2img task to your generation.
+
+The image resulting from your main prompt (e.g. the txt2img result) will be used as the initial image for `[img2img]`.
+
+While this shortcode does not take any arguments, most img2img settings can be set in advance. **Does not currently support batch_size or batch_count** - coming soon!
+
+```
+Photo of a cat
+[after]
+	{sets prompt="Photo of a dog" denoising_strength=0.75}
+	{img2img}
+[/after]
+```
+
+</details>
+
+<details><summary>[img2img_autosize]</summary>
+
+Automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image.
+
+Stable Diffuion generates images in sizes divisible by 64 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
+
+Supports `target_size` which is the minimum possible size of either dimension. Defaults to 512.
+
+Supports `only_full_res` which, if true, will bypass this shortcode unless the "full resolution inpainting" setting is enabled. Defaults to false.
+
+```
+[img2img_autosize] Photo of a cat
+```
+
+</details>
+
+<details><summary>[init_image path(str)]</summary>
+
+Loads an image from the given `path` and sets it as the initial image for use with img2img.
+
+Note that `path` must be an absolute path, including the file extension.
+
+If the given `path` ends with the `*` wildcard, `[init_image]` will choose a random file in that directory.
+
+**Important:** At the moment, you still have to select an image in the WebUI before pressing Generate, or this shortcode will throw an error. You can select any image - it doesn't matter what it is, just as long as the field isn't empty.
+
+```
+[init_image "C:/pictures/my_image.png"]
+```
+
+</details>
+
+<details><summary>[invert_mask]</summary>
+
+Inverts the mask. Great in combination with `[txt2mask]` and `[instance2mask]`.
+
+</details>
+
+<details><summary>[instance2mask]</summary>
+
+Uses Mask R-CNN (an instance segmentation model) to predict instances. The found instances are mask. Different from `[txt2mask]` as it allows to run the inpainting for each found instance individually. This is useful, when using high resolution inpainting. This shortcode only works in the img2img tab of the A1111 WebUI.
+**Important:** If per_instance is used it is assumed to be the last operator changing the mask.
+
+The supported classes of instances are:
+- `person`
+- `bicycle`
+- `car`
+- `motorcycle`
+- `airplane`
+- `bus`
+- `train`
+- `truck`
+- `boat`
+- `traffic light`
+- `fire hydrant`
+- `stop sign`
+- `parking meter`
+- `bench`
+- `bird`
+- `cat`
+- `dog`
+- `horse`
+- `sheep`
+- `cow`
+- `elephant`
+- `bear`
+- `zebra`
+- `giraffe`
+- `backpack`
+- `umbrella`
+- `handbag`
+- `tie`
+- `suitcase`
+- `frisbee`
+- `skis`
+- `snowboard`
+- `sports ball`
+- `kite`
+- `baseball bat`
+- `baseball glove`
+- `skateboard`
+- `surfboard`
+- `tennis racket`
+- `bottle`
+- `wine glass`
+- `cup`
+- `fork`
+- `knife`
+- `spoon`
+- `bowl`
+- `banana`
+- `apple`
+- `sandwich`
+- `orange`
+- `broccoli`
+- `carrot`
+- `hot dog`
+- `pizza`
+- `donut`
+- `cake`
+- `chair`
+- `couch`
+- `potted plant`
+- `bed`
+- `dining table`
+- `toilet`
+- `tv`
+- `laptop`
+- `mouse`
+- `remote`
+- `keyboard`
+- `cell phone`
+- `microwave`
+- `oven`
+- `toaster`
+- `sink`
+- `refrigerator`
+- `book`
+- `clock`
+- `vase`
+- `scissors`
+- `teddy bear`
+- `hair drier`
+- `toothbrush`
+
+Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will ignore the brush mask entirely.
+- `subtract` will remove the brush mask region from the text mask region.
+- `refine` will limit the inital mask to the selected instances.
+
+Supports the optional `mask_precision` argument which determines the confidence of the instance mask. Default is 0.5, max value is 1.0. Lowering this value means you may select more than you intend per instance (instances may overlap).
+
+Supports the optional `instance_precision` argument which determines the classification thresshold for instances to be masked. Reduce this, if instances are not detected successfully. Default is 0.85, max value is 1.0. Lowering this value can lead to wrongly classied areas.
+
+Supports the optional `padding` argument which increases the radius of the instance masks by a given number of pixels.
+
+Supports the optional `smoothing` argument which refines the boundaries of the mask, allowing you to create a smoother selection. Default is 0. Try a value of 20 or greater if you find that your masks are blocky.
+
+Supports the optional `select` argument which defines how many instances to mask. Default value is 0, which means all instances.
+
+Supports the optional `select_mode` argument which specifies which instances are selected:
+- `overlap` will select the instances starting with the instance that has the greatest absolute brushed mask in it.
+- `overlap relative` behaves similar to `overlap` but normalizes the areas by the size of the instance.
+- `greatest area` will select the greatest instances by pixels first.
+- `random` will select instances in a random order
+Defaults to `overlap`.
+
+Supports the optional `show` positional argument which will append the final masks to your generation output window and for debug purposes a combined instance segmentation image.
+
+Supports the optional `per_instance` positional argument which will render and append the selected masks individually. Leading to better results if full resolution inpainting is used.
+
+```
+[instance2mask]clock[/txt2mask]
+```
+
+</details>
+
+<details><summary>[enable_multi_images]</summary>
+This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
+
+</details>
+
+<details><summary>[txt2mask]</summary>
+
+A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
+
+Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
+- `add` will overlay the two masks. This is the default value.
+- `discard` will ignore the brush mask entirely.
+- `subtract` will remove the brush mask region from the text mask region.
+
+Supports the optional `precision` argument which determines the confidence of the mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+
+Supports the optional `padding` argument which increases the radius of your selection by a given number of pixels.
+
+Supports the optional `smoothing` argument which refines the boundaries of the mask, allowing you to create a smoother selection. Default is 20. Try increasing this value if you find that your masks are looking blocky.
+
+Supports the optional `size_var` argument which will cause the shortcode to calculate the region occupied by your mask selection as a percentage of the total canvas. That value is stored into the variable you specify. For example: `[txt2mask size_var=test]face[/txt2mask]` if "face" takes up 40% of the canvas, then the `test` variable will become 0.4.
+
+Supports the optional `negative_mask` argument which will subtract areas from the content mask.
+
+Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+
+Supports the optional `neg_padding` which is the same as `padding` but for the negative prompts.
+
+Supports the optional `neg_smoothing` which is the same as `smoothing` but for the negative prompts.
+
+Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
+
+Supports the optional `show` positional argument which will append the final mask to your generation output window.
+
+Supports the optional `legacy_weights` positional argument which will utilize the original CLIPseg weights. By default, `[txt2mask]` will use the [refined weights](https://github.com/timojl/clipseg#new-fine-grained-weights).
+
+The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
+
+```
+[txt2mask]head and shoulders[/txt2mask]Walter White
+```
+
+</details>
+
+</details>
+
+<details><summary>Adding New Shortcodes</summary>
+
+Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within the `/custom` subdirectory.)
+
+The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
+
+A shortcode is structured as follows:
+
+```
+class Shortcode():
+	"""A description of the shortcode goes here."""
+	def __init__(self,Unprompted):
+		self.Unprompted = Unprompted
+
+	def run_block(self, pargs, kwargs, context,content):
+		
+		return("")
+
+	def cleanup(self):
+		
+		return("")
+```
+
+The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
+
+The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following documentation was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
+
+- `pargs`: a list of the shortcode's positional arguments.
+- `kwargs`: a dictionary of the shortcode's keyword arguments.
+- `context`: an optional arbitrary context object supplied by the caller.
+- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
+
+Positional and keyword arguments are passed as strings. The function itself should return a string which will replace the shortcode in the parsed text.
+
+The `cleanup` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
+
+For more details, please examine the code of the stock shortcodes.
+
+</details>
+>>>>>>> Stashed changes

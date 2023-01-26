@@ -1,10 +1,10 @@
 # Starter Guide
 
-Let's walk through the process of making your own templates for Unprompted. It's fun and easy.
+Your first Unprompted template. It's a big step, I know. You feeling nervous? A sense of tremendous pressure maybe? Don't worry, it's not that hard to set this thing up.
 
 For the purposes of this guide, we will construct a basic "human generator" similar to the one that is included with the repo download.
 
-## 1) Create the entry point
+<details><summary>Step 1: Create the entry point</summary>
 
 In the root directory of the WebUI app, navigate to `extensions/unprompted/templates`. This is where all your templates belong - you can organize the files here in any way you like.
 
@@ -30,7 +30,9 @@ You can check the information underneath the resulting picture to confirm that S
 
 Cool! Now let's proceed to the good stuff...
 
-## 2) Using the \[choose\] shortcode
+</details>
+
+<details><summary>Step 2: Using the [choose] shortcode</summary>
 
 Let's ask Unprompted to choose between a man and a woman. This is easy to do:
 
@@ -76,7 +78,9 @@ Yes, we are using a `[file]` shortcode inside of another file. This is perhaps o
 
 Next, let's check out some other shortcodes we can use.
 
-## 3) Managing Stable Diffusion options with \[set\]
+</details>
+
+<details><summary>Step 3: Managing Stable Diffusion options with [set]</summary>
 
 Unprompted has the ability to manage variables using `[set]` and `[get]`. You can create your own variables or even adjust the system variables used by the image generator.
 
@@ -95,7 +99,9 @@ For improved image quality, we can also force a CFG scale of 7 and turn on the "
 
 Now no matter how we change the UI, our template will continue using these optimized values.
 
-## 4) Overriding parts of the template
+</details>
+
+<details><summary>Step 4: Overriding parts of the template</summary>
 
 Imagine a situation where you want the randomness a template offers, but you need to lock in a certain word or phrase of your choosing.
 
@@ -123,7 +129,9 @@ That's it, now you've got pandas!
 
 In the final section, we will learn about some more advanced functions.
 
-## 5) Conditional shortcodes
+</details>
+
+<details><summary>Step 5: Conditional shortcodes</summary>
 
 The last subject I want to discuss are the conditional shortcodes `[if]` and `[chance]`. These will evaluate given variable(s) in deciding what to output.
 
@@ -147,12 +155,16 @@ Finally, if we want to make this occur only 75% of the time, we introduce `[chan
 
 He'd like to congratulate you on making it this far.
 
-## In conclusion
+</details>
+
+<details><summary>GG no RE</summary>
 
 I hope you found this starter guide useful and now have a better idea of what Unprompted brings to the table!
 
-We have only scratched the surface here - when you're ready to do a deeper dive, please check out the full documentation here:
+We have only scratched the surface here - when you're ready to do a deeper dive, please check out the full documentation here (or simply click on the Manual tab if you're inside of the app itself):
 
 [Unprompted Manual](MANUAL.md)
 
 Good luck!
+
+</details>

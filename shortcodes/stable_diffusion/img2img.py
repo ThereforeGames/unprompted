@@ -18,17 +18,18 @@ class Shortcode():
 				break
 
 		img2img_result = modules.img2img.img2img(
-			self.Unprompted.shortcode_user_vars["mode"] if "mode" in self.Unprompted.shortcode_user_vars else 0, #p.mode
+			"unprompted_img2img",
+			self.Unprompted.shortcode_user_vars["img2img_mode"] if "img2img_mode" in self.Unprompted.shortcode_user_vars else 0, #p.mode
 			self.Unprompted.shortcode_user_vars["prompt"],
 			self.Unprompted.shortcode_user_vars["negative_prompt"],
-			"None", #prompt_style1
-			"None", #prompt_style2
+			"None", # prompt_styles
 			self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.after_processed.images) - 1],
+			None, # sketch
 			None, # p.init_img_with_mask
-			None, # p.init_img_with_mask_orig
+			None, # inpaint_color_sketch
+			None, # inpaint_color_sketch_orig
 			self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.after_processed.images) - 1], # p.init_img_inpaint
 			init_mask, # p.init_mask_inpaint
-			self.Unprompted.shortcode_user_vars["mask_mode"],
 			self.Unprompted.shortcode_user_vars["steps"],
 			sampler_index,
 			self.Unprompted.shortcode_user_vars["mask_blur"] if "mask_blur" in self.Unprompted.shortcode_user_vars else 0, # p.mask_blur

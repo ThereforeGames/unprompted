@@ -2,7 +2,7 @@
 # https://patreon.com/thereforegames
 # https://github.com/ThereforeGames/unprompted
 
-from lib.shared import Unprompted
+from lib_unprompted.shared import Unprompted
 
 # Main object
 Unprompted = Unprompted()

@@ -3,6 +3,27 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>6.0.0 - 25 January 2023</summary>
+
+### Added
+- You can now change the active SD checkpoint with `[set sd_model]`
+- New `[instance2mask]` shortcode by WeberSamuel (PR #48)
+- New `[invert_mask]` shortcode by WeberSamuel (PR #48)
+- New `[enable_multi_images]` shortcode by WeberSamuel (PR #48)
+- The `[txt2mask]` shortcode now supports GPU (PR #48)
+- New `[txt2mask]` arguments: `neg_precision`, `neg_padding`, and `neg_smoothing` by WeberSamuel (PR #48)
+- The `[txt2mask]` argument `show` will also append a segmentation mask (PR #48)
+- New UI option `Unprompted Seed` allows you to reproduce images that feature shortcodes with randomness, such as `[choose]` 
+
+### Changed
+- Wizard Function default values are no longer written to ui-config.json
+- Fixed `[img2img]` syntax for compatibility with latest A1111
+- Fixed a rounding issue with Wizard shortcode number fields
+- The Manual and Starter Guide have been reorganized into collapsible sections
+- Moved all included templates into `templates\common` for simplicity
+
+</details>
+
 <details><summary>5.2.0 - 24 January 2023</summary>
 
 ### Added

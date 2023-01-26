@@ -1,5 +1,8 @@
+<<<<<<< Updated upstream
 from torchvision.utils import draw_segmentation_masks
 from torchvision.transforms.functional import pil_to_tensor, to_pil_image
+=======
+>>>>>>> Stashed changes
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -10,7 +13,6 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context, content):
 		from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
-
 		from PIL import ImageChops, Image, ImageOps
 		import os.path
 		import torch
@@ -99,7 +101,11 @@ class Shortcode():
 		def get_mask():
 			# load model
 			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
+<<<<<<< Updated upstream
 			model_dir = f"{self.Unprompted.base_dir}/lib/stable_diffusion/clipseg/weights"
+=======
+			model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
+>>>>>>> Stashed changes
 			os.makedirs(model_dir, exist_ok=True)
 
 			d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
@@ -161,7 +167,7 @@ class Shortcode():
 
 		# Set up processor parameters correctly
 		self.image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
-		self.Unprompted.shortcode_user_vars["mode"] = 1
+		self.Unprompted.shortcode_user_vars["mode"] = 0
 		self.Unprompted.shortcode_user_vars["mask_mode"] = 1
 		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
 		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
@@ -172,6 +178,9 @@ class Shortcode():
 		return ""
 	
 	def after(self,p=None,processed=None):
+		from torchvision.utils import draw_segmentation_masks
+		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
+		
 		if self.image_mask and self.show:
 			processed.images.append(self.image_mask)
 			
@@ -192,4 +201,7 @@ class Shortcode():
 		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
 		gr.Number(label="Smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
 		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
+		gr.Number(label="Negative mask precision of selected area 🡢 neg_precision",value=100,interactive=True)
+		gr.Number(label="Negative mask padding radius in pixels 🡢 neg_padding",value=0,interactive=True)
+		gr.Number(label="Negative mask smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
 		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)
