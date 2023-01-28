@@ -55,6 +55,7 @@ class Shortcode():
 			0, # p.inpainting_mask_invert
 			"", #p.batch_input_directory
 			"", #p.batch_output_directory
+			"", #p.img2img_batch_inpaint_mask_dir
 			0, # this is the *args tuple and I believe 0 indicates we are not using an extra script in img2img
 		)
 

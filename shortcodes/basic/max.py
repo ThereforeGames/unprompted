@@ -6,7 +6,7 @@ class Shortcode():
 		max_value = None
 		for key in pargs:
 			this_value = self.Unprompted.parse_advanced(key)
-			if max_value is None or this_value > max_value: max_value = this_value
+			if max_value is None or int(this_value) > max_value: max_value = int(this_value)
 		return(max_value)
 
 	def ui(self,gr):

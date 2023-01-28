@@ -10,7 +10,7 @@ class Shortcode():
 		for key, value in kwargs.items():
 			if (key[0] == "_"): continue # Skips system arguments
 			this_var = key
-			self.Unprompted.shortcode_objects["set"].run_block([key],None,context,value)
+			self.Unprompted.shortcode_objects["set"].run_block([key],[],context,value)
 
 		while True:
 			if (self.Unprompted.parse_advanced(pargs[0],context)):

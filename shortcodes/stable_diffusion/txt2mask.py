@@ -17,7 +17,7 @@ class Shortcode():
 		import numpy
 		from modules.images import flatten
 		from modules.shared import opts
-
+		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
@@ -154,12 +154,61 @@ class Shortcode():
 				subject_size = 1 - black_pixels / total_pixels
 				self.Unprompted.shortcode_user_vars[kwargs["size_var"]] = subject_size
 
+			# Inpaint sketch compatibility
+			if "sketch_color" in kwargs:
+				self.Unprompted.shortcode_user_vars["mode"] = 3
+
+				this_color = kwargs["sketch_color"]
+				# Convert to tuple for use with colorize
+				if this_color[0].isdigit(): this_color = tuple(map(int,this_color.split(',')))
+				paste_mask  = ImageOps.colorize(final_img.convert("L"),black="black",white=this_color)
+
+				# Convert black pixels to transparent
+				paste_mask = paste_mask.convert('RGBA')
+				mask_data = paste_mask.load()
+				width, height = paste_mask.size
+				for y in range(height):
+					for x in range(width):
+						if mask_data[x, y] == (0, 0, 0, 255): mask_data[x, y] = (0, 0, 0, 0)
+
+				# Match size just in case
+				paste_mask = paste_mask.resize((flattened_input.size[0],flattened_input.size[1]))
+
+				# Workaround for A1111 not including mask_alpha in p object
+				if "sketch_alpha" in kwargs:
+					alpha_channel = paste_mask.getchannel('A')
+					new_alpha = alpha_channel.point(lambda i: int(float(kwargs["sketch_alpha"])) if i>0 else 0)
+					paste_mask.putalpha(new_alpha)
+
+				# Workaround for A1111 bug, not accepting inpaint_color_sketch param w/ blur
+				if (self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
+					from PIL import ImageFilter
+					blur = ImageFilter.GaussianBlur(self.Unprompted.shortcode_user_vars["mask_blur"])
+					paste_mask = paste_mask.filter(blur)
+					self.Unprompted.shortcode_user_vars["mask_blur"] = 0
+
+				# Paste mask on
+				flattened_input.paste(paste_mask,box=None,mask=paste_mask)
+				
+				self.Unprompted.shortcode_user_vars["init_images"][0] = flattened_input
+				# not used by SD, just used to append to our GUI later
+				self.Unprompted.shortcode_user_vars["colorized_mask"] = paste_mask
+
+				# Assign webui vars, note - I think it should work this way but A1111 doesn't appear to store some of these in p obj
+				# note: inpaint_color_sketch = flattened image with mask on top
+				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch"] = flattened_input
+				# note: inpaint_color_sketch_orig = the init image
+				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch_orig"] = self.Unprompted.shortcode_user_vars["init_images"][0]
+				# return flattened_input
+
+			else: self.Unprompted.shortcode_user_vars["mode"] = 2
+
 			return final_img
 
 		# Set up processor parameters correctly
 		self.image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
-		self.Unprompted.shortcode_user_vars["mode"] = 0
-		self.Unprompted.shortcode_user_vars["mask_mode"] = 1
+		# self.Unprompted.shortcode_user_vars["mode"] = 2
+		self.Unprompted.shortcode_user_vars["mode"] = max(2,self.Unprompted.shortcode_user_vars["mode"])
 		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
 		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["latent_mask"] = None # fixes inpainting full resolution
@@ -169,11 +218,12 @@ class Shortcode():
 		return ""
 	
 	def after(self,p=None,processed=None):
-		from torchvision.utils import draw_segmentation_masks
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
+		from torchvision.utils import draw_segmentation_masks
 		
 		if self.image_mask and self.show:
-			processed.images.append(self.image_mask)
+			if self.Unprompted.shortcode_user_vars["mode"] == 2: processed.images.append(self.image_mask)
+			else: processed.images.append(self.Unprompted.shortcode_user_vars["colorized_mask"])
 			
 			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(p.init_images[0]), pil_to_tensor(self.image_mask.convert("L")) > 0)
 			processed.images.append(to_pil_image(overlayed_init_img))
@@ -192,4 +242,6 @@ class Shortcode():
 		gr.Number(label="Negative mask precision of selected area 🡢 neg_precision",value=100,interactive=True)
 		gr.Number(label="Negative mask padding radius in pixels 🡢 neg_padding",value=0,interactive=True)
 		gr.Number(label="Negative mask smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
+		gr.Textbox(label="Mask color, enables Inpaint Sketch mode 🡢 sketch_color",max_lines=1,placeholder="e.g. tan or 127,127,127")
+		gr.Number(label="Mask alpha, must be used in conjunction with mask color 🡢 sketch_alpha",value=0,interactive=True)
 		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)

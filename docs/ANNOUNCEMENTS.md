@@ -1,6 +1,32 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Synonyms, Sketches and Wizards — 28 January 2023</summary>
+
+It's been a while since the last announcement post... let's catch up on some of the new features in Unprompted!
+
+Earlier this week, I added a new tab to the Wizard panel called **Functions Mode**. It searches your templates folder for txt files that begin with the special `[template]` block. These files are then assembled into **custom GUIs** based on their `[set _new]` calls. In other words, your templates can now contain **logic** and **interface elements** inside of a single text file. Very easy to share with others. I hope you'll give Functions Mode a try!
+
+Next, we have a bunch of new natural language processing features in Unprompted. With the power of [NLTK](https://github.com/nltk/nltk) and the [Moby Thesaurus](http://onlinebooks.library.upenn.edu/webbin/gutbook/lookup?num=3202), you can now find synonyms, antonyms, hypernyms, and hyponyms for any text. Once the word databases are downloaded to your machine, an internet connection is not required to use these features.
+
+What are hyponyms and hypernyms, you might ask? Well, they describe a hierarchical relationship between words. For example, **dog** and **cat** are hyponyms of **animal**, and **animal** is a hypernym of **dog** and **cat**.
+
+You can use these functions in place of a traditional set of wildcards. Of course, it's hard to beat a nice, curated list of terms, but if you want fast results, give something like this a try:
+
+```
+[hyponyms max=1]food[/hyponyms]
+```
+
+Presto, you've got random food.
+
+There have also been some cool updates for the `[txt2mask]` feature. [Shoutout to Weber Samuel](https://github.com/ThereforeGames/unprompted/pull/48) for introducing several new parameters such as negative precision as well as multiple init image support. Very handy!
+
+I also added **Inpaint Sketch compatibility** in the form of the new `sketch_color` and `sketch_alpha` parameters. This can give you much more control over your img2img results, and in the future may even support multple colors per mask.
+
+That's all for now. Enjoy!
+
+</details>
+
 <details><summary>Happy Holidays from Unprompted — 22 December 2022</summary>
 
 Yep, it's time for some gifts. 🎅

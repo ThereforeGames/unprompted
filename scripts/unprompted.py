@@ -68,14 +68,27 @@ def wizard_generate_function(option,is_img2img,prepend="",append=""):
 	filtered_functions = Unprompted.wizard_groups[WizardModes.FUNCTIONS][int(is_img2img)]
 	group = filtered_functions[Unprompted.wizard_function_files[option]]
 
-	try:
-		for gr_obj in group.children[2].children[:-1]:
-			if gr_obj.value is None or gr_obj.value is "": continue # Skip empty fields
-			arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
-			this_val = str(Unprompted.autocast(gr_obj.value))
-			if " " in this_val: this_val = f"\"{this_val}\"" # Enclose in quotes if necessary
-			result += f" {arg_name}={this_val}"
-	except: pass
+	def parse_children(obj,result):
+		try:
+			for gr_obj in obj.children:
+				block_name = gr_obj.get_block_name()
+
+				if block_name == "form":
+					result = parse_children(gr_obj,result)
+				else:
+					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue # Skip empty fields
+					arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
+					# Skip special fields
+					if (arg_name == "prompt"): continue
+
+					this_val = str(Unprompted.autocast(gr_obj.value))
+
+					if " " in this_val: this_val = f"\"{this_val}\"" # Enclose in quotes if necessary
+					result += f" {arg_name}={this_val}"
+		except: pass
+		return(result)
+	
+	result = parse_children(group,result)
 
 	# Closing bracket
 	result += Unprompted.Config.syntax.tag_end
@@ -182,8 +195,8 @@ class Scripts(scripts.Script):
 								elif (block_name == "checkbox"):
 									obj = gr.Checkbox(label=this_label,value=bool(int(content)))
 								elif (block_name == "number"): obj = gr.Number(label=this_label,value=int(content),interactive=True)
-								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter))
-								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(self.Unprompted.Config.syntax_delimiter),interactive=True)
+								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,value=content,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter))
+								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(Unprompted.Config.syntax_delimiter),interactive=True)
 								elif (block_name == "slider"):
 									obj = gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"])
 							
@@ -408,6 +421,8 @@ class Scripts(scripts.Script):
 		Unprompted.log("Entering Cleanup routine...",False)
 		for i in Unprompted.cleanup_routines:
 			Unprompted.shortcode_objects[i].cleanup()
+		
+		if unprompted_seed != -1: random.seed()
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled, unprompted_seed):

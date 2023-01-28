@@ -350,6 +350,26 @@ Photo of a cat
 
 </details>
 
+<details><summary>[antonyms]</summary>
+
+Replaces the content with one or more random antonyms. This shortcode is powered by a combination of WordNet and Moby Thesaurus II. Does not require an online connection after first use (word databases are downloaded to disk.)
+
+The optional `max` argument allows you to specify the maximum number of antonyms to return. Defaults to -1, which returns all antonyms. The antonyms list is delimited by `Unprompted.Config.syntax.delimiter`.
+
+The optional `include_self` positional argument determines whether the original content can be returned as a possible result. Defaults to False.
+
+The optional `enable_moby` keyword argument determines whether Moby Thesaurus II will be referenced. Defaults to True. On first use, the Moby Thesaurus will be downloaded to the `lib_unprompted` folder - it is about 24 MB.
+
+The optional `enable_wordnet` keyword argument determines whether WordNet will be references. Defaults to True.
+
+It is worth noting that Moby does not have native antonym support. This shortcode first queries WordNet, the results of which are then sent to Moby via `[synonyms]`.
+
+```
+[antonyms]cold[/antonyms]
+```
+
+</details>
+
 <details><summary>[array name(str)]</summary>
 
 Manages a group or list of values.
@@ -649,6 +669,38 @@ Supports [advanced expressions](#advanced-expressions) - useful for testing comp
 
 </details>
 
+<details><summary>[hypernyms]</summary>
+
+Replaces the content with one or more random hypernyms. This shortcode is powered by WordNet.
+
+The optional `max` argument allows you to specify the maximum number of hypernyms to return. Defaults to -1, which returns all hypernyms. The hypernyms list is delimited by `Unprompted.Config.syntax.delimiter`.
+
+```
+[hypernyms max=1]dog[/hypernyms]
+```
+
+```
+Possible result: animal
+```
+
+</details>
+
+<details><summary>[hyponyms]</summary>
+
+Replaces the content with one or more random hyponyms. This shortcode is powered by WordNet.
+
+The optional `max` argument allows you to specify the maximum number of hyponyms to return. Defaults to -1, which returns all hyponyms. The hyponyms list is delimited by `Unprompted.Config.syntax.delimiter`.
+
+```
+[hyponyms]animal[/hyponyms]
+```
+
+```
+Possible results: dog, cat, bird, ...
+```
+
+</details>
+
 <details><summary>[info]</summary>
 
 Prints metadata about the content. You must pass the type(s) of data as positional arguments.
@@ -840,7 +892,9 @@ Result: photo of a
 
 <details><summary>[switch var(str)]</summary>
 
-Allows you to run different logic blocks with inner case statements that match the value of the given `var`.
+Allows you to run different logic blocks with inner case statements that match the value of the given positional argument.
+
+Both `[switch]` and `[case]` support advanced expressions.
 
 ```
 [set my_var]100[/set]
@@ -851,6 +905,24 @@ Allows you to run different logic blocks with inner case statements that match t
 	{case 4}Does not match{/case}
 	{case}If no other case matches, this content will be returned by default{/case}
 [/switch]
+```
+
+</details>
+
+<details><summary>[synonyms]</summary>
+
+Replaces the content with one or more random synonyms. This shortcode is powered by a combination of WordNet and Moby Thesaurus II. Does not require an online connection after first use (word databases are downloaded to disk.)
+
+The optional `max` argument allows you to specify the maximum number of synonyms to return. Defaults to -1, which returns all synonyms. The synonym list is delimited by `Unprompted.Config.syntax.delimiter`.
+
+The optional `include_self` positional argument determines whether the original content can be returned as a possible result. Defaults to False.
+
+The optional `enable_moby` keyword argument determines whether Moby Thesaurus II will be referenced. Defaults to True. On first use, the Moby Thesaurus will be downloaded to the `lib_unprompted` folder - it is about 24 MB.
+
+The optional `enable_wordnet` keyword argument determines whether WordNet will be references. Defaults to True.
+
+```
+[synonyms]amazing[/synonyms]
 ```
 
 </details>
@@ -1128,6 +1200,12 @@ Supports the optional `neg_precision` argument which determines the confidence o
 Supports the optional `neg_padding` which is the same as `padding` but for the negative prompts.
 
 Supports the optional `neg_smoothing` which is the same as `smoothing` but for the negative prompts.
+
+Supports the optional `sketch_color` argument which enables support for "Inpaint Sketch" mode. Using this argument will force "Inpaint Sketch" mode regardless of which img2img tab you are on. The `sketch_color` value can either be a preset color string, e.g. `sketch_color="tan"` ([full list of color strings available here](https://github.com/python-pillow/Pillow/blob/12028c9789c3c6ac15eb147a092bfc463ebbc398/src/PIL/ImageColor.py#L163)) or an RGB tuple, e.g. `sketch_color="127,127,127"`. Currently, txt2mask only supports single-color masks.
+
+Supports the optional `sketch_alpha` argument, which should be paired with `sketch_color`. The `sketch_alpha` value is the level of mask transparency, from 0 (invisible) to 255 (fully opaque.)
+
+Due to a limitation in the A1111 WebUI at the time of writing, the `sketch_alpha` parameter is **not** the same as the "mask transparency" option in the UI. "Mask transparency" is not stored in the `p` object as far as I can tell, so txt2mask implements its own custom solution.
 
 Supports the optional `save` argument which will output the final mask as a PNG image to the given filepath.
 

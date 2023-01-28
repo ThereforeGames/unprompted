@@ -3,6 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.0.0 - 28 January 2023</summary>
+
+### Added
+- Added [NLTK](https://github.com/nltk/nltk) to install.py to enable natural language processing features
+- New `[synonyms]` shortcode
+- New `[antonyms]` shortcode
+- New `[hypernyms]` shortcode
+- New `[hyponyms]` shortcode
+- The `[txt2mask]` shortcode now supports the optional `sketch_color` argument
+- The `[txt2mask]` shortcode now supports the optional `sketch_alpha` argument
+- The above arguments provide compatibility with Inpaint Sketch mode, albeit with some workarounds for A1111 limitations
+
+### Changed
+- The `[switch]` shortcode now supports advanced expressions
+- Rewrote Wizard function generator for better layout handling
+- Fixed issue with `[for]`
+- Fixed issue with Unprompted seed locking the main seed
+- Fixed issue with dropdown and radio Wizard UI delimiters
+- Fixed SyntaxWarning related to Wizard function generator
+
+</details>
+
 <details><summary>6.0.0 - 25 January 2023</summary>
 
 ### Added
