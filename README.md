@@ -66,7 +66,6 @@ Generate pixel art in the style of DemonCrawl with this custom Stable Diffusion 
 <br/>
 <br/>
 <br/>
-<br />
 <img align="left" src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" width=150>
 
 ### [Fantasy Card Template](https://payhip.com/b/hdgNR)
