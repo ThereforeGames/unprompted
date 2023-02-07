@@ -56,20 +56,11 @@ Once you have verified that Unprompted is installed and running correctly, you h
 
 While Unprompted is completely free to use, we do offer **Premium Template add-ons** that demonstrate some of the software's more advanced functionality.
 
-<img align="left" src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" width=150>
-
-### [DemonCrawl Avatar Generator](https://payhip.com/b/qLUX9)
-Generate pixel art in the style of DemonCrawl with this custom Stable Diffusion model! Trained on more than 50 avatars from the game. Create your very own character portraits even if you're not an artist!
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
 <img align="left" src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" width=150>
 
 ### [Fantasy Card Template](https://payhip.com/b/hdgNR)
 Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.
+<br/>
 <br/>
 <br/>
 <br/>

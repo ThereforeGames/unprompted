@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.1.0 - 7 February 2023</summary>
+
+### Added
+- Added [pattern](https://github.com/NicolasBizzozzero/pattern) package to install.py for additional language processing features
+- New `[article]` shortcode
+- New `[pluralize]` shortcode
+- New `[singularize]` shortcode
+- New `[conjugate]` shortcode
+- New `[autocorrect]` shortcode
+- The `txt2img2img` template is now available as a Wizard Function
+
+### Changed
+- Updated the `[img2img]` shortcode for compatibility with the latest A1111 WebUI
+- Updated the look of generated result text
+- Updated the promo panel with info about the new DemonCrawl Avatar Generator
+
+</details>
+
 <details><summary>7.0.0 - 28 January 2023</summary>
 
 ### Added

@@ -201,17 +201,22 @@ class Shortcode():
 				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch_orig"] = self.Unprompted.shortcode_user_vars["init_images"][0]
 				# return flattened_input
 
-			else: self.Unprompted.shortcode_user_vars["mode"] = 2
+			else: self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
 
 			return final_img
 
 		# Set up processor parameters correctly
 		self.image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
-		# self.Unprompted.shortcode_user_vars["mode"] = 2
-		self.Unprompted.shortcode_user_vars["mode"] = max(2,self.Unprompted.shortcode_user_vars["mode"])
+		self.Unprompted.shortcode_user_vars["mode"] = max(4,self.Unprompted.shortcode_user_vars["mode"])
 		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
+		self.Unprompted.shortcode_user_vars["mask"]=self.image_mask
 		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["latent_mask"] = None # fixes inpainting full resolution
+		arr = {}
+		arr["image"] = self.Unprompted.shortcode_user_vars["init_images"][0]
+		arr["mask"] = self.image_mask
+		self.Unprompted.shortcode_user_vars["init_img_with_mask"] = arr
+		self.Unprompted.shortcode_user_vars["init_mask"] = self.image_mask
 
 		if "save" in kwargs: self.image_mask.save(f"{self.Unprompted.parse_advanced(kwargs['save'],context)}.png")
 
@@ -222,10 +227,10 @@ class Shortcode():
 		from torchvision.utils import draw_segmentation_masks
 		
 		if self.image_mask and self.show:
-			if self.Unprompted.shortcode_user_vars["mode"] == 2: processed.images.append(self.image_mask)
+			if self.Unprompted.shortcode_user_vars["mode"] == 4: processed.images.append(self.image_mask)
 			else: processed.images.append(self.Unprompted.shortcode_user_vars["colorized_mask"])
 			
-			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(p.init_images[0]), pil_to_tensor(self.image_mask.convert("L")) > 0)
+			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(self.Unprompted.shortcode_user_vars["init_images"][0]), pil_to_tensor(self.image_mask.convert("L")) > 0)
 			processed.images.append(to_pil_image(overlayed_init_img))
 			self.image_mask = None
 			self.show = False

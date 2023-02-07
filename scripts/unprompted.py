@@ -165,11 +165,11 @@ class Scripts(scripts.Script):
 				unprompted_seed = gr.Number(label="Unprompted Seed",value=-1)
 				setattr(unprompted_seed,"do_not_save_to_config",True)
 
-				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/fantasy_card/main{Unprompted.Config.txt_format}")): is_open = False
+				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/demoncrawl_avatar_generator_v0.0.1/main{Unprompted.Config.txt_format}")): is_open = False
 				else: is_open = True
 				
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="https://i.ibb.co/1MSpHL4/Fantasy-Card-Template2.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">UPDATED! The <strong>Premium Fantasy Card Template v2.0.0</strong> is here.</h1><p style="margin:1em 0;">Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids. Now enhanced with a GUI.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a><hr style="margin:1em 0;clear:both;"><p style="max-width:80%"><em>Purchases help fund the continued development of Unprompted. Thank you for your support!</em> ❤</p>')
+					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -289,7 +289,7 @@ class Scripts(scripts.Script):
 								
 								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
 							
-							wizard_result = gr.HTML(label="wizard_result",value="")
+							wizard_result = gr.HTML(label="wizard_result",value="",elem_id="unprompted_result")
 							wizard_shortcode_btn.click(fn=wizard_generate_shortcode,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
 							wizard_function_btn.click(fn=wizard_generate_function,inputs=[functions_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
 
@@ -300,7 +300,7 @@ class Scripts(scripts.Script):
 				with gr.Accordion("📝 Dry Run", open=Unprompted.Config.ui.dry_run_open):
 					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False)
 					dry_run = gr.Button(value="Process Text")
-					dry_run_result = gr.HTML(label="dry_run_result",value="")
+					dry_run_result = gr.HTML(label="dry_run_result",value="",elem_id="unprompted_result")
 					dry_run.click(fn=do_dry_run,inputs=dry_run_prompt,outputs=dry_run_result)
 				
 				with gr.Tab("💡 About"):
@@ -426,6 +426,7 @@ class Scripts(scripts.Script):
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled, unprompted_seed):
+		if not is_enabled: return False # Prevents endless loop with some shortcodes
 		Unprompted.log("Entering After routine...")
 		for i in Unprompted.after_routines:
 			Unprompted.shortcode_objects[i].after(p,processed)

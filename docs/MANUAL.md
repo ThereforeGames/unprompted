@@ -424,6 +424,46 @@ Supports `_shuffle` which will randomize the order of the array.
 
 </details>
 
+<details><summary>[article]</summary>
+
+Returns the content prefixed with the correct English indefinite article, in most cases `a` or `an`.
+
+Supports the optional `definite` positional argument which will instead return the definite article as a prefix, usually `the`.
+
+```
+[article]tiger[/article]
+```
+
+```
+RESULT: a tiger
+```
+
+```
+[article]apple[/article]
+```
+```
+RESULT: an apple
+```
+
+</details>
+
+<details><summary>[autocorrect]</summary>
+
+Performs word-by-word spellcheck on the content, replacing any typos it finds with the most likely correction.
+
+Powered by the [pattern](https://github.com/clips/pattern/wiki/pattern-en) library - see pattern docs for more info.
+
+Supports the optional `confidence` argument, which is a float between 0 and 1 that determines how similar the suggested correction must be to the original content. Defaults to 0.85.
+
+```
+[autocorrect]speling is vrey dfficult soemtims, okky!!![/autocorrect]
+```
+```
+RESULT: spelling is very difficult sometimes, okay!!!
+```
+
+</details>
+
 <details><summary>[case]</summary>
 
 See `[switch]`.
@@ -516,6 +556,37 @@ Do not enter a file extension, `.json` is assumed.
 
 ```
 [config]./my_custom_settings[/config]
+```
+
+</details>
+
+<details><summary>[conjugate]</summary>
+
+Converts the verbs in the content to variety of conjugated forms.
+
+Powered by the [pattern](https://github.com/clips/pattern/wiki/pattern-en) library - see pattern docs for more info.
+
+Supports the optional `tense` argument. Defaults to `present`. Other options include: `infinitive`, `past`, `future`.
+
+Supports the optional `person` argument for perspective. Defaults to `3`. Other options include: `1`, `2` and `none`.
+
+Supports the optional `number` argument. Defaults to `singular`. Also supports `plural`.
+
+Supports the optional `mood` argument. Defaults to `indicative`. Other options include: `imperative`,`conditional` and `subjunctive`.
+
+Supports the optional `aspect` argument. Defaults to `imperfective`. Other options include: `perfective` and `progressive`.
+
+Supports the optional `negated` boolean argument. Defaults to 0.
+
+Supports the optional `parse` boolean argument. Defaults to 1.
+
+Supports the optional `alias` argument, which is a shorthand "preset" for the above settings. Overrides your other arguments. The following aliases are supported: `inf`,`1sg`,`2sg`,`3sg`,`pl`,`part`,`p`,`1sgp`,`2sgp`,`3gp`,`ppl`,`ppart`.
+
+```
+[conjugate tense="past"]She says[/conjugate]
+```
+```
+RESULT: She said
 ```
 
 </details>
@@ -781,6 +852,21 @@ In the example below, `my_variable` will equal "panda" after running the `[set]`
 
 </details>
 
+<details><summary>[pluralize]</summary>
+
+Returns the content in its plural form. Powered by the [pattern](https://github.com/clips/pattern/wiki/pattern-en) library - see pattern docs for more info.
+
+Supports the optional `pos` argument. This is the target position of speech and defaults to "noun." In some rare cases, you may want to switch this to "adjective."
+
+```
+[pluralize]child[/pluralize]
+```
+```
+RESULT: children
+```
+
+</details>
+
 <details><summary>[random {_min} {_max} {_float}]</summary>
 
 Returns a random integer between 0 and the given integer, e.g. `[random 2]` will return 0, 1, or 2.
@@ -865,6 +951,21 @@ This shortcode processes your arguments with `[set]` directly, meaning you can t
 
 ```
 [sets var_a=10 var_b=something var_c=500]
+```
+
+</details>
+
+<details><summary>[singularize]</summary>
+
+Returns the content in its singular form. Powered by the [pattern](https://github.com/clips/pattern/wiki/pattern-en) library - see pattern docs for more info.
+
+Supports the optional `pos` argument. This is the target position of speech and defaults to "noun." In some rare cases, you may want to switch this to "adjective."
+
+```
+[singularize]children[/singularize]
+```
+```
+RESULT: child
 ```
 
 </details>
