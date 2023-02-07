@@ -19,6 +19,7 @@ You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as 
 - Simple creation of `.txt` templates that can be organized according to your preferences
 - Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
 - Supports **numerous Stable Diffusion variables** such as `negative_prompt` and `cfg_scale`
+- Supports natural language processing features such as auto-pluralization, finding synonyms, and even verb conjugation
 - Includes a growing list of examples that demonstrate advanced functionality, such as **customizing the weight of a choice list** and **applying emphasis to a random part of your prompt**
 - Comprehensive documentation that is always up-to-date
 - Free
@@ -78,7 +79,9 @@ A big "thank you" to the authors of the following libraries that Unprompted depe
 - [Simple Eval](https://github.com/danthedeckie/simpleeval) by @danthedeckie
 - [Casefy](https://github.com/dmlls/python-casefy) by @dmlls
 - [CLIPseg](https://github.com/timojl/clipseg) by uddecke, Timo and Ecker, Alexander
-
+- [NLTK](https://github.com/nltk/nltk) by Bird, S., Klein, E., & Loper, E., O'Reilly Media, Inc.
+- [pattern](https://github.com/clips/pattern) by Tom De Smedt and Walter Daelemans
+- [Moby Thesaurus II](http://onlinebooks.library.upenn.edu/webbin/gutbook/lookup?num=3202) by Grady Ward
 
 ## 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
 

@@ -21,7 +21,7 @@ Presto, you've got random food.
 
 There have also been some cool updates for the `[txt2mask]` feature. [Shoutout to Weber Samuel](https://github.com/ThereforeGames/unprompted/pull/48) for introducing several new parameters such as negative precision as well as multiple init image support. Very handy!
 
-I also added **Inpaint Sketch compatibility** in the form of the new `sketch_color` and `sketch_alpha` parameters. This can give you much more control over your img2img results, and in the future may even support multple colors per mask.
+I also added **Inpaint Sketch compatibility** in the form of the new `sketch_color` and `sketch_alpha` parameters. This can give you much more control over your img2img results, and in the future may even support multiple colors per mask.
 
 That's all for now. Enjoy!
 
