@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.3.0 - 8 February 2023</summary>
+
+### Added
+- The `[img2pez]` function now supports all settings from the Hard Prompts Made Easy method
+- The `[img2pez]` function now supports `image_path` if you wish to use something other than the initial img2img image
+- Full Wizard GUI compatibility for `[img2pez]`
+
+### Changed
+- The `parse_filepath()` function has been updated to support choosing a random file from a directory
+
+</details>
+
 <details><summary>7.2.0 - 8 February 2023</summary>
 
 ### Added

@@ -1130,6 +1130,32 @@ Supports `only_full_res` which, if true, will bypass this shortcode unless the "
 
 </details>
 
+<details><summary>[img2pez]</summary>
+
+Performs an advanced CLIP interrogation technique on the initial image known as [Hard Prompts Made Easy](https://github.com/YuxinWenRick/hard-prompts-made-easy).
+
+Be aware that this technique is essentially a training routine and will significantly lengthen your inference time, at least on the default settings. On a Geforce 3090, it appears to take around 1-2 minutes.
+
+By default, this shortcode is only compatible with SD 1.5 models. If you wish to use it with SD 2.1, please set `clip_model` to `ViT-H-14` and `clip_pretrain` to `laion2b_s32b_b79k`.
+
+Supports the optional `image_path` argument. This is a path to a file or directory to use as the initial image. If not provided, it will default to the initial image in your img2img tab.
+
+Supports the optional `prompt_length` argument, which is the length of the resulting prompt in tokens. Default to 8.
+
+Supports the optional `iterations` argument, which is the total number of training steps to perform. Defaults to 3000.
+
+Supports the optional `learning_rate` argument. Defaults to 0.1.
+
+Supports the optional `weight_decay` argument. Defaults to 0.1.
+
+Supports the amusingly-named `prompt_bs` argument, which is described by the technique's authors as "number of intializations." Defaults to 1.
+
+Supports the optional `clip_model` argument. Defaults to ViT-L-14.
+
+Supports the optional `pretrain_clip` argument. Defaults to openai.
+
+</details>
+
 <details><summary>[init_image path(str)]</summary>
 
 Loads an image from the given `path` and sets it as the initial image for use with img2img.

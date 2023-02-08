@@ -94,11 +94,21 @@ class Unprompted:
 		return(string)
 
 	def parse_filepath(self,string,context = ""):
+		import random
 		# Relative path
 		if (string[0] == "."):
 			string = os.path.dirname(context) + "/" + string
 		# Absolute path
 		else: string = self.base_dir + "/" + self.Config.template_directory + "/" + string
+
+		files = glob.glob(string)
+		filecount = len(files)
+		if (filecount == 0):
+			self.Unprompted.log(f"No files found at this location: {string}",True,"ERROR")
+			return("")
+		elif filecount > 1:
+			string = random.choice(files)
+
 		return(string)
 
 	def parse_advanced(self,string,context=None):
