@@ -36,11 +36,11 @@ You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as 
 
 First, try the included demo template by entering the following as your prompt:
 
-`[file human/main]`
+`[file common/examples/human/main]`
 
 This is a simple "person generator" that automatically chooses characteristics like hair color, race, and posture.
 
-The `[file]` shortcode will look in `unprompted/templates` for the specified text file (in this case `unprompted/templates/human/main.txt`.) You do not need to enter the file extension.
+The `[file]` shortcode will look in `unprompted/templates` for the specified text file (in this case `unprompted/templates/common/examples/human/main.txt`.) You do not need to enter the file extension.
 
 **Example output:**
 
