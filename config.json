@@ -3,7 +3,7 @@
 	"app":"unprompted",
 	"debug":false,
 	"advanced_expressions":true,
-	"template_directory":"./templates",
+	"template_directory":"templates",
 	"txt_format":".txt",
 	"base_dir":"",
 	"subdirectories":

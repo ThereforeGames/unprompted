@@ -3,11 +3,29 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.4.0 - 10 February 2023</summary>
+
+### Added
+- The `[img2pez]` shortcode now accepts multiple image paths and will optimize a single prompt across all of them
+- The `[img2pez]` shortcode now supports `free_memory`
+- The `[img2pez]` shortcode log now outputs the best candidates in realtime, courtesy of @bakkot
+
+### Changed
+- Reduced the `[img2pez]` default value for `iterations` from 3000 to 200 (thank you to @bakkot for the suggested optimizations)
+- Increased the `[img2pez]` default value for `prompt_length` from 8 to 16
+- The `template_directory` setting changed from `./templates` to `templates` for Linux compatibility, may also help with colab setups
+- The `[...nyms]` shortcodes will now perform a download check for the required `wordnet` package
+- Fixed Usage section in README.md
+- Fixed a few filepaths in `templates/common/examples/human/main.txt`
+- Rewrote the Wizard Shortcode generator function to fix a few issues
+
+</details>
+
 <details><summary>7.3.0 - 8 February 2023</summary>
 
 ### Added
-- The `[img2pez]` function now supports all settings from the Hard Prompts Made Easy method
-- The `[img2pez]` function now supports `image_path` if you wish to use something other than the initial img2img image
+- The `[img2pez]` shortcode now supports all settings from the Hard Prompts Made Easy method
+- The `[img2pez]` shortcode now supports `image_path` if you wish to use something other than the initial img2img image
 - Full Wizard GUI compatibility for `[img2pez]`
 
 ### Changed

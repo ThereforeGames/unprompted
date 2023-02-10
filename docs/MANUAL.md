@@ -1047,7 +1047,7 @@ Advanced expression demo:
 [set my_var]3[/set]
 [while "my_var < 10"]
 	Output
-	<sets my_var="my_var + 1">
+	{sets my_var="my_var + 1"}
 [/while]
 ```
 
@@ -1055,7 +1055,7 @@ Advanced expression demo:
 [set my_var]3[/set]
 [while my_var="10" _is="<"]
 	Output
-	<sets my_var="my_var + 1">
+	{sets my_var="my_var + 1"}
 [/while]
 ```
 
@@ -1138,7 +1138,7 @@ Be aware that this technique is essentially a training routine and will signific
 
 By default, this shortcode is only compatible with SD 1.5 models. If you wish to use it with SD 2.1, please set `clip_model` to `ViT-H-14` and `clip_pretrain` to `laion2b_s32b_b79k`.
 
-Supports the optional `image_path` argument. This is a path to a file or directory to use as the initial image. If not provided, it will default to the initial image in your img2img tab.
+Supports the optional `image_path` argument. This is a path to file(s) or a directory to use as the initial image. If not provided, it will default to the initial image in your img2img tab. Note: you can supply multiple paths delimited by `Unprompted.Config.syntax.delimiter`, and img2pez will optimize a single prompt across all provided images.
 
 Supports the optional `prompt_length` argument, which is the length of the resulting prompt in tokens. Default to 8.
 
@@ -1153,6 +1153,8 @@ Supports the amusingly-named `prompt_bs` argument, which is described by the tec
 Supports the optional `clip_model` argument. Defaults to ViT-L-14.
 
 Supports the optional `pretrain_clip` argument. Defaults to openai.
+
+Supports the optional `free_memory` argument which attempts to free the CLIP model from memory as soon as the img2pez operation is finished. This isn't recommended unless you are running into OOM issues.
 
 </details>
 

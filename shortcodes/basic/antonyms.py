@@ -3,6 +3,8 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Replaces the content with one or more antonyms."
 	def run_block(self, pargs, kwargs, context, content):
+		from nltk import download
+		download("wordnet")
 		from nltk.corpus import wordnet
 		import random
 

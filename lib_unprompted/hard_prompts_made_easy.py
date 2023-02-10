@@ -138,6 +138,7 @@ def optimize_prompt_loop(model, tokenizer, token_embedding, all_target_features,
     weight_decay = args.weight_decay
     print_step = args.print_step
     batch_size = args.batch_size
+    print_new_best = getattr(args, 'print_new_best', False)
 
     # initialize prompt
     prompt_embeds, dummy_embeds, dummy_ids = initialize_prompt(tokenizer, token_embedding, args, device)
@@ -196,12 +197,18 @@ def optimize_prompt_loop(model, tokenizer, token_embedding, all_target_features,
 
         decoded_text = decode_ids(nn_indices, tokenizer)[best_indx]
         if print_step is not None and (step % print_step == 0 or step == opt_iters-1):
-            print(f"step: {step}, lr: {curr_lr}, cosim: {universal_cosim_score:.3f}, text: {decoded_text}")
+            per_step_message = f"step: {step}, lr: {curr_lr}"
+            if not print_new_best:
+                per_step_message = f"\n{per_step_message}, cosim: {universal_cosim_score:.3f}, text: {decoded_text}"
+            print(per_step_message)
         
         if best_sim < universal_cosim_score:
             best_sim = universal_cosim_score
             
             best_text = decoded_text
+            if print_new_best:
+                print(f"new best cosine sim: {best_sim}")
+                print(f"new best prompt: {best_text}")
 
     if print_step is not None:
         print()

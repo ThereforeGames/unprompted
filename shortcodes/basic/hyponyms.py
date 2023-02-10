@@ -3,6 +3,8 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Replaces the content with one or more synonyms."
 	def run_block(self, pargs, kwargs, context, content):
+		from nltk import download
+		download("wordnet")
 		import random
 		from nltk.corpus import wordnet
 		result = []

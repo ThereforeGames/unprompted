@@ -101,29 +101,44 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 	group = filtered_shortcodes[option]
 	block_content=""
 
-	try:
-		for gr_obj in group.children[1].children[:-1]:
-			if gr_obj.label=="Content":
-				block_content = gr_obj.value
-			else:
-				if (not gr_obj.value): continue # Skip empty fields
-
-				arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
+	def parse_children(obj,result):
+		block_content = ""
+		try:
+			for gr_obj in obj.children:
 				block_name = gr_obj.get_block_name()
-				# Rules
-				if (arg_name == "str"):
-					result += " \"" + str(gr_obj.value) + "\""
-				elif (arg_name == "int"):
-					result += " " + str(int(gr_obj.value))
-				elif (arg_name == "verbatim"):
-					result += " " + str(gr_obj.value)
-				elif (block_name=="checkbox"):
-					if gr_obj.value: result += " " + arg_name
-				elif (block_name=="number"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
-				elif (block_name=="textbox"):
-					if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
-				else: result += f" {arg_name}=\"{gr_obj.value}\""
-	except: pass
+
+				if block_name == "form":
+					results = parse_children(gr_obj,result)
+					block_content = results[0]
+					result = results[1]
+				elif gr_obj.label=="Content":
+					block_content = gr_obj.value
+				else:
+					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue # Skip empty fields		
+
+					arg_name = gr_obj.label.split(" ")[-1] # Get everything after the last space
+
+					# Rules
+					if (arg_name == "prompt"): continue
+					elif (arg_name == "str"):
+						result += " \"" + str(gr_obj.value) + "\""
+					elif (arg_name == "int"):
+						result += " " + str(int(gr_obj.value))
+					elif (arg_name == "verbatim"):
+						result += " " + str(gr_obj.value)
+					elif (block_name=="checkbox"):
+						if gr_obj.value: result += " " + arg_name
+					elif (block_name=="number"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
+					elif (block_name=="textbox"):
+						if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
+					else: result += f" {arg_name}=\"{gr_obj.value}\""		
+
+		except: pass
+		return([block_content,result])
+
+	results = parse_children(group,result)
+	block_content = results[0]
+	result = results[1]
 
 	# Closing bracket
 	result += Unprompted.Config.syntax.tag_end

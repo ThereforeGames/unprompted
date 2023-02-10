@@ -3,6 +3,8 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Replaces the content with one or more synonyms."
 	def run_block(self, pargs, kwargs, context, content):
+		from nltk import download
+		download("wordnet")
 		from nltk.corpus import wordnet
 		# from nltk import download
 		# from collections import Counter
@@ -36,8 +38,6 @@ class Shortcode():
 
 		# Add results from wordnet
 		if enable_wordnet is True:
-			from nltk import download
-			download("wordnet")
 			content = content.replace(" ","_")
 			pos = kwargs["type"] if "type" in kwargs else None
 			if pos == "verb": pos = wordnet.VERB
