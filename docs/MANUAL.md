@@ -1136,7 +1136,7 @@ Performs an advanced CLIP interrogation technique on the initial image known as 
 
 Be aware that this technique is essentially a training routine and will significantly lengthen your inference time, at least on the default settings. On a Geforce 3090, it appears to take around 1-2 minutes.
 
-By default, this shortcode is only compatible with SD 1.5 models. If you wish to use it with SD 2.1, please set `clip_model` to `ViT-H-14` and `clip_pretrain` to `laion2b_s32b_b79k`.
+By default, this shortcode is only compatible with SD 1.5 models. If you wish to use it with SD 2.1 or Midjourney, please set `clip_model` to `ViT-H-14` and `clip_pretrain` to `laion2b_s32b_b79k`. It does work surprisingly well with Midjourney.
 
 Supports the optional `image_path` argument. This is a path to file(s) or a directory to use as the initial image. If not provided, it will default to the initial image in your img2img tab. Note: you can supply multiple paths delimited by `Unprompted.Config.syntax.delimiter`, and img2pez will optimize a single prompt across all provided images.
 
