@@ -651,7 +651,7 @@ Do not enter a file extension, `.txt` is assumed.
 
 Supports relative paths by starting the `path` with `./`, e.g. `[file ./main]` will target the folder that the previously-called `[file]` resides in.
 
-If the given `path` is a directory as opposed to a file, `[file]` will return the contents of a random file in that directory.
+This shortcode is powered by Python's glob module, which means it supports wildcards and other powerful syntax expressions. For example, if you wanted to process a random file inside of the `common` directory, you would do so like this: `[file common/*]`
 
 Supports optional keyword arguments that are passed to `[set]` for your convenience. This effectively allows you to use `[file]` like a function in programming, e.g. `[file convert_to_roman_numeral number=7]`.
 
