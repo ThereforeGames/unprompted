@@ -1079,6 +1079,36 @@ Note that variables are automatically deleted at the end of each run - you do **
 
 This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
 
+<details><summary>[controlnet]</summary>
+
+Enables support for [ControlNet](https://github.com/lllyasviel/ControlNet) models in img2img mode. ControlNet is a neural network structure to control diffusion models by adding extra conditions.
+
+You need a bare minimum of 8 GB of VRAM to use this shortcode, although 12 GB is recommended.
+
+Supports the `model` argument, which is the name of a ControlNet checkpoint in your `models/Stable-diffusion` directory (do not include the file extension.) You can download ControlNet checkpoints from [the official HuggingFace page](https://huggingface.co/lllyasviel/ControlNet/tree/main/models).
+
+For each model, you also need a copy of the [cldm_v15.yaml](https://github.com/lllyasviel/ControlNet/tree/main/models) config file. Rename it to match the name of the ControlNet model, e.g. `control_sd15_normal.yaml`.
+
+For each model, you also need the associated [annotator files available here](https://huggingface.co/lllyasviel/ControlNet/tree/main/annotator/ckpts). Place these into your  `extensions/unprompted/lib_unprompted/stable_diffusion/controlnet/annotator/ckpts` folder.
+
+If you run into any errors, please triple-check your filepaths before opening a bug report.
+
+You can use ControlNet with custom SD 1.5 models [by merging checkpoints as described here](https://github.com/lllyasviel/ControlNet/issues/4#issuecomment-1426877944).
+
+Please be aware that the last part of your model's filename indicates which type of ControlNet model it is. The following ControlNet model types are supported: `openpose`, `scribble`, `mlsd`, `depth`, `normal`, `hed`, `canny`, `seg`
+
+ControlNet models should **not** be loaded manually from your WebUI dropdown.
+
+Supports the `save_memory` argument to minimize VRAM requirements.
+
+Supports the `detect_resolution` argument which is the size of the detected map. Defaults to 512. Some models may perform better at 384. Lowering this value to 256 may help with VRAM requirements.
+
+Supports the `eta` argument.
+
+Supports the following model-specific arguments: `value_threshold`, `distance_threshold`, `bg_threshold`, `low_threshold`, `high_threshold`
+
+</details>
+
 <details><summary>[file2mask]</summary>
 
 Allows you to modify or replace your img2img mask with arbitrary files.
