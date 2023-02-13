@@ -11,6 +11,7 @@ class Shortcode():
 		self.detect_resolution = 512
 		self.value_threshold = 0.1
 		self.distance_threshold = 0.1
+		self.bg_threshold = 0.4
 		self.model = "control_sd15_openpose"
 		self.model_type = "openpose"
 		self.eta = 0
@@ -34,12 +35,14 @@ class Shortcode():
 		if "distance_threshold" in kwargs: self.distance_threshold = float(kwargs["distance_threshold"])
 		if "save_memory" in pargs: self.save_memory = True
 		if "eta" in kwargs: self.eta = float(kwargs["eta"])
+		if "bg_threshold" in kwargs: self.bg_threshold = float(kwargs["bg_threshold"])
 		if "model" in kwargs:
 			self.model = kwargs["model"]
 			if self.model.endswith("openpose"): self.model_type = "openpose"
 			elif self.model.endswith("scribble"): self.model_type = "scribble"
 			elif self.model.endswith("mlsd"): self.model_type = "mlsd"
 			elif self.model.endswith("depth"): self.model_type = "depth"
+			elif self.model.endswith("normal"): self.model_type = "normal"
 		return("")
 
 	def after(self,p=None,processed=None):
@@ -62,10 +65,19 @@ class Shortcode():
 		import sys
 		sys.path.append(f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/controlnet")
 
-		from modules import sd_models, sd_samplers
-		info = sd_models.get_closet_checkpoint_match(self.model)
-		if (info): sd_models.load_model(info,None,None).cuda()
-		self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
+		current_name = opts.sd_model_checkpoint.split(" ", 1)[0]
+		print("current_name " + current_name)
+		print("self.model " + self.model)
+		if current_name != f"{self.model}.ckpt":
+			from modules import sd_models, sd_samplers
+			info = sd_models.get_closet_checkpoint_match(self.model)
+			if (info):
+				sd_models.load_model(info,None,None).cuda()
+				opts.sd_model_checkpoint = info.title
+				print(opts.sd_model_checkpoint)
+			# self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
+		else: print("ControlNet model already loaded...")
+
 		ddim_sampler = DDIMSampler(sd_model)
 
 		image_resolution = min(self.Unprompted.shortcode_user_vars["width"],self.Unprompted.shortcode_user_vars["height"])
@@ -79,6 +91,7 @@ class Shortcode():
 				input_image = HWC3(img)
 				img = resize_image(input_image, image_resolution)
 				H, W, C = img.shape
+				
 
 				if self.model_type=="openpose":
 					from lib_unprompted.stable_diffusion.controlnet.annotator.openpose import apply_openpose
@@ -98,10 +111,16 @@ class Shortcode():
 					detected_map, _ = apply_midas(resize_image(input_image, self.detect_resolution))
 					detected_map = HWC3(detected_map)
 					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)
+				elif self.model_type=="normal":
+					from annotator.midas import apply_midas
+					_, detected_map = apply_midas(resize_image(input_image, self.detect_resolution), bg_th=self.bg_threshold)
+					detected_map = HWC3(detected_map)
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)				
 
 				
-
-				control = torch.from_numpy(detected_map.copy()).float().cuda() / 255.0
+				if self.model_type=="normal":
+					control = torch.from_numpy(detected_map[:, :, ::-1].copy()).float().cuda() / 255.0
+				else: control = torch.from_numpy(detected_map.copy()).float().cuda() / 255.0
 				control = torch.stack([control for _ in range(num_samples)], dim=0)
 				control = einops.rearrange(control, 'b h w c -> b c h w').clone()
 
@@ -143,10 +162,13 @@ class Shortcode():
 						output_map = 255 - cv2.dilate(detected_map, np.ones(shape=(3, 3), dtype=np.uint8), iterations=1)
 					elif self.model_type == "depth":
 						output_map = detected_map
+					elif self.model_type == "normal":
+						output_map = detected_map
 					
 					output_map = Image.fromarray(output_map)
 					processed.images.append(output)
 					processed.images.append(output_map)
+					# Fix vars for save button
 
 		# Set back to user defined value
 		cmd_opts.no_half = self.temp_no_half
@@ -158,6 +180,10 @@ class Shortcode():
 		self.model_type = "openpose"
 		self.eta = 0
 		
+		ddim_sampler = None
+		import gc
+		gc.collect()
+
 		return(processed)
 
 	def ui(self,gr):
