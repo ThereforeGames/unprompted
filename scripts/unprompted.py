@@ -14,8 +14,12 @@ import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
 from enum import IntEnum,auto
 
+from ui import settings
+
 import sys
 import os
+
+settings.initialize()
 
 base_dir = scripts.basedir()
 sys.path.append(base_dir)
@@ -438,6 +442,14 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 		
 		if unprompted_seed != -1: random.seed()
+
+		# Re-run Lora, etc (WIP)
+		if opts.unprompted_rerun_extra_networks and not p.disable_extra_networks:
+			pass
+			#from modules import extra_networks
+			#_, extra_network_data = extra_networks.parse_prompts(p.all_prompts[0:1])
+			#extra_networks.activate(p, extra_network_data)
+			#prompts, _ = extra_networks.parse_prompts(p.all_prompts[0:1])
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled, unprompted_seed):

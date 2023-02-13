@@ -5,8 +5,8 @@ class Shortcode():
 		self.description = "Optimize a hard prompt using the PEZ algorithm and CLIP encoders, AKA Hard Prompts Made Easy."
 
 	def run_atomic(self, pargs, kwargs, context):
-		import lib_unprompted.hard_prompts_made_easy as pez
-		import lib_unprompted.pez_open_clip as open_clip
+		import lib_unprompted.stable_diffusion.hard_prompts_made_easy as pez
+		import lib_unprompted.stable_diffusion.pez_open_clip as open_clip
 		import torch
 		from modules.images import flatten
 		from modules.shared import opts

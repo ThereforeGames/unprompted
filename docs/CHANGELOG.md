@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.0 - 13 February 2023</summary>
+
+### About
+The new features in this release are still under development and may or may not work as intended.
+
+### Added
+- New WIP `[controlnet]` shortcode, only supports "pose2image" at the moment
+- New WIP `[pix2pix_zero]` shortcode
+- New WIP setting to enable compatibility with extra networks such as Lora, not yet functional
+
+### Changed
+- Moved the `pez_open_clip` dependency into the `stable_diffusion` subfolder
+
+</details>
+
 <details><summary>7.4.0 - 10 February 2023</summary>
 
 ### Added

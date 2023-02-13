@@ -10,7 +10,9 @@
 
 Unlike most templating languages, Unprompted was designed for **maximum readibility with natural language.** It is built around `[shortcodes]` and inspired by the likes of BBCode.
 
-You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as an extension for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
+You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as a **superextension** for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
+
+Additionally, it gives you access to **exclusive Stable Diffusion features** such as txt2mask, txt2img2img, img2pez, and more.
 
 ## Features
 
@@ -27,10 +29,27 @@ You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as 
 
 ## Installation
 
+We provide two methods of installation:
+
+<details><summary>How to install directly... (click to expand)</summary>
+
+1. Visit the **Extensions** tab of Automatic's WebUI.
+2. Visit the **Install from URL** subtab.
+3. Paste this repo's URL into the first field: `https://github.com/ThereforeGames/unprompted`
+4. Click **Install**.
+
+</details>
+
+<details><summary>How to install through extensions index... (click to expand)</summary>
+
 1. Visit the **Extensions** tab of Automatic's WebUI.
 2. Visit the **Available** subtab.
 3. Uncheck the "ads" filter and press the **Load from** button.
-4. Scroll down to **Unprompted** and press the **Install** button.
+4. Scroll down to **Unprompted** and press the **Install** button. (Or use CTRL+F for convenience)
+
+</details>
+
+With either method, **please be sure to restart your WebUI after installing.** This allows Unprompted to download its Python dependencies.
 
 ## Usage
 
@@ -78,7 +97,7 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 <br/>
 <br/>
 <br/>
-Purchases help fund this project. Your support is greatly appreciated! ❤️
+Purchases are not required, but are always greatly appreciated. ❤️
 
 ## Acknowledgements
 
@@ -95,3 +114,5 @@ A big "thank you" to the authors of the following libraries that Unprompted depe
 ## 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
 
 ## 💬 For discussion and template sharing, use [the Discussion Board.](https://github.com/ThereforeGames/unprompted/discussions)
+
+## ⭐ Like my work? Please consider giving the repo a "star" for visibility.
