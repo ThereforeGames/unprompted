@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.3 - 13 February 2023</summary>
+
+### Added
+- The `[controlnet]` shortcode now supports face restoration 
+
+### Changed
+- Fixed bug causing `[controlnet]` to run inadvertently
+
+</details>
+
 <details><summary>7.5.2 - 13 February 2023</summary>
 
 ### Added

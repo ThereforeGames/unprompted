@@ -41,7 +41,7 @@ class Shortcode():
 
 	def after(self,p=None,processed=None):
 		if "init_images" not in self.Unprompted.shortcode_user_vars or not self.can_run:
-			self.Unprompted.log("This shortcode is only supported in img2img mode.","ERROR")
+			return
 		import torch
 		import cv2
 		import einops
@@ -59,10 +59,11 @@ class Shortcode():
 		import sys
 		sys.path.append(f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/controlnet")
 
-		from modules import sd_models
+		from modules import sd_models, sd_samplers
 		info = sd_models.get_closet_checkpoint_match(self.model)
 		if (info): sd_models.reload_model_weights(None,info)
 		sd_model = sd_model.cuda()
+		self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
 		ddim_sampler = DDIMSampler(sd_model)
 
 		image_resolution = min(self.Unprompted.shortcode_user_vars["width"],self.Unprompted.shortcode_user_vars["height"])
@@ -111,6 +112,8 @@ class Shortcode():
 															shape, cond, verbose=False, eta=self.Unprompted.shortcode_user_vars["denoising_strength"],
 															unconditional_guidance_scale=self.Unprompted.shortcode_user_vars["cfg_scale"],
 															unconditional_conditioning=un_cond)
+				
+				# samples = self.sampler.sample_img2img(p, control, self.Unprompted.shortcode_user_vars["denoising_strength"], cond, un_cond, self.steps, image_conditioning=None)
 
 				if self.save_memory:
 					sd_model.low_vram_shift(is_diffusing=False)
@@ -119,7 +122,12 @@ class Shortcode():
 				x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
 				for i in range(num_samples):
+					if (self.Unprompted.shortcode_user_vars["restore_faces"]):
+						from modules.face_restoration import restore_faces
+						x_samples[i] = restore_faces(x_samples[i])
+
 					output = Image.fromarray(x_samples[i])
+
 					if self.model_type == "scribble":
 						output_map = 255 - detected_map
 					elif self.model_type == "openpose":
@@ -135,11 +143,12 @@ class Shortcode():
 		cmd_opts.no_half = self.temp_no_half
 
 		# Reset vars
+		self.can_run = False
 		self.save_memory = False
 		self.model = "control_sd15_openpose"
 		self.model_type = "openpose"
 		
 		return(processed)
-		
+
 	def ui(self,gr):
 		pass
