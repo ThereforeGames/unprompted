@@ -132,7 +132,7 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 						result += " " + str(gr_obj.value)
 					elif (block_name=="checkbox"):
 						if gr_obj.value: result += " " + arg_name
-					elif (block_name=="number"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
+					elif (block_name=="number" or block_name=="slider"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
 					elif (block_name=="textbox"):
 						if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
 					else: result += f" {arg_name}=\"{gr_obj.value}\""		

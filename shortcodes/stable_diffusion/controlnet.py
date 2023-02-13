@@ -2,19 +2,20 @@ from modules.shared import cmd_opts
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
-		self.description = "A neural network structure to control diffusion models by adding extra conditions."
+		self.description = "A neural network structure to control diffusion models by adding extra conditions. Check manual for setup info."
 		self.detect_resolution = 512
 		self.save_memory = False
 		self.steps = 20
 		self.can_run = False
 		self.temp_no_half = False
-		self.detect_resolution = 512
 		self.value_threshold = 0.1
 		self.distance_threshold = 0.1
 		self.bg_threshold = 0.4
 		self.model = "control_sd15_openpose"
 		self.model_type = "openpose"
 		self.eta = 0
+		self.canny_low_threshold = 100
+		self.canny_high_threshold = 200
 	
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
@@ -33,6 +34,8 @@ class Shortcode():
 		if "detect_resolution" in kwargs: self.detect_resolution = int(float(kwargs["detect_resolution"]))
 		if "value_threshold" in kwargs: self.value_threshold = float(kwargs["value_threshold"])
 		if "distance_threshold" in kwargs: self.distance_threshold = float(kwargs["distance_threshold"])
+		if "low_threshold" in kwargs: self.canny_low_threshold = int(float(kwargs["low_threshold"]))
+		if "high_threshold" in kwargs: self.canny_high_threshold = int(float(kwargs["high_threshold"]))
 		if "save_memory" in pargs: self.save_memory = True
 		if "eta" in kwargs: self.eta = float(kwargs["eta"])
 		if "bg_threshold" in kwargs: self.bg_threshold = float(kwargs["bg_threshold"])
@@ -43,6 +46,10 @@ class Shortcode():
 			elif self.model.endswith("mlsd"): self.model_type = "mlsd"
 			elif self.model.endswith("depth"): self.model_type = "depth"
 			elif self.model.endswith("normal"): self.model_type = "normal"
+			elif self.model.endswith("hed"): self.model_type = "hed"
+			elif self.model.endswith("canny"): self.model_type = "canny"
+			elif self.model.endswith("seg"): self.model_type = "seg"
+		
 		return("")
 
 	def after(self,p=None,processed=None):
@@ -72,7 +79,7 @@ class Shortcode():
 			from modules import sd_models, sd_samplers
 			info = sd_models.get_closet_checkpoint_match(self.model)
 			if (info):
-				sd_models.load_model(info,None,None).cuda()
+				sd_model = sd_models.load_model(info,None,None).cuda()
 				opts.sd_model_checkpoint = info.title
 				print(opts.sd_model_checkpoint)
 			# self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
@@ -115,7 +122,21 @@ class Shortcode():
 					from annotator.midas import apply_midas
 					_, detected_map = apply_midas(resize_image(input_image, self.detect_resolution), bg_th=self.bg_threshold)
 					detected_map = HWC3(detected_map)
-					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)				
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)
+				elif self.model_type=="hed":
+					from annotator.hed import apply_hed
+					detected_map = apply_hed(resize_image(input_image, self.detect_resolution))
+					detected_map = HWC3(detected_map)
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)
+				elif self.model_type=="canny":
+					from annotator.canny import apply_canny
+					detected_map = apply_canny(img, self.canny_low_threshold, self.canny_high_threshold)
+					detected_map = HWC3(detected_map)
+				elif self.model_type == "seg":
+					from annotator.uniformer import apply_uniformer
+					detected_map = apply_uniformer(resize_image(input_image, self.detect_resolution))
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
+
 
 				
 				if self.model_type=="normal":
@@ -164,11 +185,16 @@ class Shortcode():
 						output_map = detected_map
 					elif self.model_type == "normal":
 						output_map = detected_map
+					elif self.model_type == "hed":
+						output_map = detected_map
+					elif self.model_type == "canny":
+						output_map = 255 - detected_map
+					elif self.model_type == "seg":
+						output_map = detected_map
 					
 					output_map = Image.fromarray(output_map)
 					processed.images.append(output)
 					processed.images.append(output_map)
-					# Fix vars for save button
 
 		# Set back to user defined value
 		cmd_opts.no_half = self.temp_no_half
@@ -187,4 +213,11 @@ class Shortcode():
 		return(processed)
 
 	def ui(self,gr):
-		pass
+		gr.Slider(label="Resolution of the detection map 🡢 detect_resolution",value=512,interactive=True,step=64,minimum=256,maximum=1024)
+		gr.Checkbox(label="Use low VRAM mode? 🡢 save_memory")
+		gr.Slider(label="DDIM ETA 🡢 eta",value=0.0,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+		gr.Slider(label="Value Threshold 🡢 value_threhsold",value=0.1,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+		gr.Slider(label="Distance Threshold 🡢 distance_threhsold",value=0.1,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+		gr.Slider(label="Background Threshold 🡢 bg_threhsold",value=0.4,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+		gr.Slider(label="Canny low threshold 🡢 low_threshold", minimum=1, maximum=255, value=100, step=1)
+		gr.Slider(label="Canny high threshold 🡢 high_threshold", minimum=1, maximum=255, value=200, step=1)

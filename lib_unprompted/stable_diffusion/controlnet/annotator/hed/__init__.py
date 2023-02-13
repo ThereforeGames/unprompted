@@ -63,8 +63,9 @@ class Network(torch.nn.Module):
             torch.nn.Conv2d(in_channels=5, out_channels=1, kernel_size=1, stride=1, padding=0),
             torch.nn.Sigmoid()
         )
-
-        self.load_state_dict({strKey.replace('module', 'net'): tenWeight for strKey, tenWeight in torch.load('./annotator/ckpts/network-bsds500.pth').items()})
+        import os
+        this_path = os.path.dirname(os.path.realpath(__file__))
+        self.load_state_dict({strKey.replace('module', 'net'): tenWeight for strKey, tenWeight in torch.load(this_path+'/../ckpts/network-bsds500.pth').items()})
     # end
 
     def forward(self, tenInput):
