@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.1 - 13 February 2023</summary>
+
+### Changed
+
+- The `[controlnet]` shortcode now expects its models to be in the `Stable-diffusion` directory like a normal model
+
+</details>
+
 <details><summary>7.5.0 - 13 February 2023</summary>
 
 ### About
