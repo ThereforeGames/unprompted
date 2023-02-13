@@ -13,6 +13,7 @@ class Shortcode():
 		self.distance_threshold = 0.1
 		self.model = "control_sd15_openpose"
 		self.model_type = "openpose"
+		self.eta = 0
 	
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
@@ -32,11 +33,13 @@ class Shortcode():
 		if "value_threshold" in kwargs: self.value_threshold = float(kwargs["value_threshold"])
 		if "distance_threshold" in kwargs: self.distance_threshold = float(kwargs["distance_threshold"])
 		if "save_memory" in pargs: self.save_memory = True
+		if "eta" in kwargs: self.eta = float(kwargs["eta"])
 		if "model" in kwargs:
 			self.model = kwargs["model"]
 			if self.model.endswith("openpose"): self.model_type = "openpose"
 			elif self.model.endswith("scribble"): self.model_type = "scribble"
 			elif self.model.endswith("mlsd"): self.model_type = "mlsd"
+			elif self.model.endswith("depth"): self.model_type = "depth"
 		return("")
 
 	def after(self,p=None,processed=None):
@@ -61,8 +64,7 @@ class Shortcode():
 
 		from modules import sd_models, sd_samplers
 		info = sd_models.get_closet_checkpoint_match(self.model)
-		if (info): sd_models.reload_model_weights(None,info)
-		sd_model = sd_model.cuda()
+		if (info): sd_models.load_model(info,None,None).cuda()
 		self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
 		ddim_sampler = DDIMSampler(sd_model)
 
@@ -91,6 +93,11 @@ class Shortcode():
 					detected_map = apply_mlsd(resize_image(input_image, self.detect_resolution), self.value_threshold, self.distance_threshold)
 					detected_map = HWC3(detected_map)
 					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
+				elif self.model_type=="depth":
+					from annotator.midas import apply_midas
+					detected_map, _ = apply_midas(resize_image(input_image, self.detect_resolution))
+					detected_map = HWC3(detected_map)
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)
 
 				
 
@@ -109,7 +116,7 @@ class Shortcode():
 					sd_model.low_vram_shift(is_diffusing=True)
 
 				samples, intermediates = ddim_sampler.sample(self.steps, num_samples,
-															shape, cond, verbose=False, eta=self.Unprompted.shortcode_user_vars["denoising_strength"],
+															shape, cond, verbose=False, eta=self.eta,
 															unconditional_guidance_scale=self.Unprompted.shortcode_user_vars["cfg_scale"],
 															unconditional_conditioning=un_cond)
 				
@@ -134,6 +141,8 @@ class Shortcode():
 						output_map = detected_map
 					elif self.model_type == "mlsd":
 						output_map = 255 - cv2.dilate(detected_map, np.ones(shape=(3, 3), dtype=np.uint8), iterations=1)
+					elif self.model_type == "depth":
+						output_map = detected_map
 					
 					output_map = Image.fromarray(output_map)
 					processed.images.append(output)
@@ -147,6 +156,7 @@ class Shortcode():
 		self.save_memory = False
 		self.model = "control_sd15_openpose"
 		self.model_type = "openpose"
+		self.eta = 0
 		
 		return(processed)
 

@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.4 - 13 February 2023</summary>
+
+### Added
+- The `[controlnet]` shortcode now supports the Depth model
+
+### Changed
+- The `[controlnet]` ETA is no longer mistakenly assigned to denoising strength
+- Potentially fixed memory leak related to `[controlnet]`
+
+</details>
+
 <details><summary>7.5.3 - 13 February 2023</summary>
 
 ### Added

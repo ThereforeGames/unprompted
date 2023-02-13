@@ -10,10 +10,11 @@ from .midas.midas_net import MidasNet
 from .midas.midas_net_custom import MidasNet_small
 from .midas.transforms import Resize, NormalizeImage, PrepareForNet
 
-
+import os
+this_path = os.path.dirname(os.path.realpath(__file__))
 ISL_PATHS = {
-    "dpt_large": "annotator/ckpts/dpt_large-midas-2f21e586.pt",
-    "dpt_hybrid": "annotator/ckpts/dpt_hybrid-midas-501f0c75.pt",
+    "dpt_large": f"{this_path}/../ckpts/dpt_large-midas-2f21e586.pt",
+    "dpt_hybrid": f"{this_path}/../ckpts/dpt_hybrid-midas-501f0c75.pt",
     "midas_v21": "",
     "midas_v21_small": "",
 }
