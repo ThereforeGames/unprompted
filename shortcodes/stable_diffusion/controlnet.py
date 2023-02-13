@@ -8,6 +8,11 @@ class Shortcode():
 		self.steps = 20
 		self.can_run = False
 		self.temp_no_half = False
+		self.detect_resolution = 512
+		self.value_threshold = 0.1
+		self.distance_threshold = 0.1
+		self.model = "control_sd15_openpose"
+		self.model_type = "openpose"
 	
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
@@ -23,12 +28,19 @@ class Shortcode():
 		self.temp_no_half = cmd_opts.no_half
 		cmd_opts.no_half = True
 
-		if "detect_resolution" in kwargs: self.detect_resolution = kwargs["detect_resolution"]
+		if "detect_resolution" in kwargs: self.detect_resolution = int(float(kwargs["detect_resolution"]))
+		if "value_threshold" in kwargs: self.value_threshold = float(kwargs["value_threshold"])
+		if "distance_threshold" in kwargs: self.distance_threshold = float(kwargs["distance_threshold"])
 		if "save_memory" in pargs: self.save_memory = True
+		if "model" in kwargs:
+			self.model = kwargs["model"]
+			if self.model.endswith("openpose"): self.model_type = "openpose"
+			elif self.model.endswith("scribble"): self.model_type = "scribble"
+			elif self.model.endswith("mlsd"): self.model_type = "mlsd"
 		return("")
 
 	def after(self,p=None,processed=None):
-		if "init_images" not in self.Unprompted.shortcode_user_vars:
+		if "init_images" not in self.Unprompted.shortcode_user_vars or not self.can_run:
 			self.Unprompted.log("This shortcode is only supported in img2img mode.","ERROR")
 		import torch
 		import cv2
@@ -41,17 +53,14 @@ class Shortcode():
 		from modules.shared import opts, sd_model
 
 		from lib_unprompted.stable_diffusion.controlnet.annotator.util import resize_image, HWC3
-		from lib_unprompted.stable_diffusion.controlnet.annotator.openpose import apply_openpose
 		from lib_unprompted.stable_diffusion.controlnet.cldm.model import create_model, load_state_dict
 		from lib_unprompted.stable_diffusion.controlnet.ldm.models.diffusion.ddim import DDIMSampler
-
-		# from modules import sd_models
 
 		import sys
 		sys.path.append(f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/controlnet")
 
 		from modules import sd_models
-		info = sd_models.get_closet_checkpoint_match("control_sd15_openpose")
+		info = sd_models.get_closet_checkpoint_match(self.model)
 		if (info): sd_models.reload_model_weights(None,info)
 		sd_model = sd_model.cuda()
 		ddim_sampler = DDIMSampler(sd_model)
@@ -65,12 +74,24 @@ class Shortcode():
 				img = np.asarray(flatten(img, opts.img2img_background_color))
 
 				input_image = HWC3(img)
-				detected_map, _ = apply_openpose(resize_image(input_image, self.detect_resolution))
-				detected_map = HWC3(detected_map)
 				img = resize_image(input_image, image_resolution)
 				H, W, C = img.shape
 
-				detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
+				if self.model_type=="openpose":
+					from lib_unprompted.stable_diffusion.controlnet.annotator.openpose import apply_openpose
+					detected_map, _ = apply_openpose(resize_image(input_image, self.detect_resolution))
+					detected_map = HWC3(detected_map)
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
+				elif self.model_type=="scribble":
+					detected_map = np.zeros_like(img, dtype=np.uint8)
+					detected_map[np.min(img, axis=2) < 127] = 255
+				elif self.model_type=="mlsd":
+					from annotator.mlsd import apply_mlsd
+					detected_map = apply_mlsd(resize_image(input_image, self.detect_resolution), self.value_threshold, self.distance_threshold)
+					detected_map = HWC3(detected_map)
+					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
+
+				
 
 				control = torch.from_numpy(detected_map.copy()).float().cuda() / 255.0
 				control = torch.stack([control for _ in range(num_samples)], dim=0)
@@ -99,18 +120,26 @@ class Shortcode():
 
 				for i in range(num_samples):
 					output = Image.fromarray(x_samples[i])
-					output_map = Image.fromarray(detected_map)
+					if self.model_type == "scribble":
+						output_map = 255 - detected_map
+					elif self.model_type == "openpose":
+						output_map = detected_map
+					elif self.model_type == "mlsd":
+						output_map = 255 - cv2.dilate(detected_map, np.ones(shape=(3, 3), dtype=np.uint8), iterations=1)
+					
+					output_map = Image.fromarray(output_map)
 					processed.images.append(output)
 					processed.images.append(output_map)
 
 		# Set back to user defined value
 		cmd_opts.no_half = self.temp_no_half
-		
-		# processed.images.append([detected_map])
-		return(processed)
 
-	def cleanup(self):
+		# Reset vars
 		self.save_memory = False
-
+		self.model = "control_sd15_openpose"
+		self.model_type = "openpose"
+		
+		return(processed)
+		
 	def ui(self,gr):
 		pass

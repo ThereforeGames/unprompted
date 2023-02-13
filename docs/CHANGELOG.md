@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.2 - 13 February 2023</summary>
+
+### Added
+- The `[controlnet]` shortcode now supports Scribble and M-LSD Line models with the `model` argument
+
 <details><summary>7.5.1 - 13 February 2023</summary>
 
 ### Changed

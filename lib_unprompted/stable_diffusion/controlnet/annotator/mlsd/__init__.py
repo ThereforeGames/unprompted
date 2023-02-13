@@ -9,7 +9,8 @@ from .models.mbv2_mlsd_large import  MobileV2_MLSD_Large
 from .utils import  pred_lines
 
 
-model_path = './annotator/ckpts/mlsd_large_512_fp32.pth'
+this_path = os.path.dirname(os.path.realpath(__file__))
+model_path = this_path + '/../ckpts/mlsd_large_512_fp32.pth'
 model = MobileV2_MLSD_Large()
 model.load_state_dict(torch.load(model_path), strict=True)
 model = model.cuda().eval()
