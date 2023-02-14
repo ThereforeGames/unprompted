@@ -213,6 +213,7 @@ class Shortcode():
 		return(processed)
 
 	def ui(self,gr):
+		gr.Text(label="Model name (do not include extension) 🡢 model",value="control_sd15_openpose")
 		gr.Slider(label="Resolution of the detection map 🡢 detect_resolution",value=512,interactive=True,step=64,minimum=256,maximum=1024)
 		gr.Checkbox(label="Use low VRAM mode? 🡢 save_memory")
 		gr.Slider(label="DDIM ETA 🡢 eta",value=0.0,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
