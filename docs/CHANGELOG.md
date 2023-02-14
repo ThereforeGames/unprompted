@@ -3,9 +3,18 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.8 - 14 February 2023</summary>
+
+### Changed
+
+- Fixed a startup crash that could occur when a ControlNet model was listed as previously selected
+
+</summary>
+
 <details><summary>7.5.7 - 13 February 2023</summary>
 
 ### Changed
+
 - Fixed `[controlnet]` save button
 
 </details>

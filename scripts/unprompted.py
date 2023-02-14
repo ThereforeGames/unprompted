@@ -406,7 +406,7 @@ class Scripts(scripts.Script):
 		if "sd_model" in Unprompted.shortcode_user_vars:
 			info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
 			print(info)
-			if (info): sd_models.reload_model_weights(None,info)
+			if (info): sd_models.load_model(info,None,None) # reload_model_weights(None,info)
 
 
 		if p.seed is not None and p.seed != -1.0:
@@ -443,13 +443,7 @@ class Scripts(scripts.Script):
 		
 		if unprompted_seed != -1: random.seed()
 
-		# Re-run Lora, etc (WIP)
-		if opts.unprompted_rerun_extra_networks and not p.disable_extra_networks:
-			pass
-			#from modules import extra_networks
-			#_, extra_network_data = extra_networks.parse_prompts(p.all_prompts[0:1])
-			#extra_networks.activate(p, extra_network_data)
-			#prompts, _ = extra_networks.parse_prompts(p.all_prompts[0:1])
+		# print(f"atts {self.__dir__()}")
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled, unprompted_seed):

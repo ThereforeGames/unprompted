@@ -20,7 +20,6 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			self.Unprompted.log("This shortcode is only supported in img2img mode.","ERROR")
-
 		
 		# Hacky way of bypassing the normal img2img routine
 		self.steps = self.Unprompted.shortcode_user_vars["steps"]
@@ -50,6 +49,7 @@ class Shortcode():
 			elif self.model.endswith("canny"): self.model_type = "canny"
 			elif self.model.endswith("seg"): self.model_type = "seg"
 		
+		#print(f"atts {self.__dir__()}")
 		return("")
 
 	def after(self,p=None,processed=None):
