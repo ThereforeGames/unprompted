@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.7 - 13 February 2023</summary>
+
+### Changed
+- Fixed `[controlnet]` save button
+
+</details>
+
 <details><summary>7.5.6 - 13 February 2023</summary>
 
 ### Added
@@ -10,7 +17,6 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 - Implemented Wizard UI for the `[controlnet]` shortcode
 
 ### Changed
-
 - Fixed a syntax issue related to sliders and the Wizard Shortcode generator
 
 </details>

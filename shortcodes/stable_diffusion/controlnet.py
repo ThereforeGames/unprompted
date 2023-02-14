@@ -55,6 +55,22 @@ class Shortcode():
 	def after(self,p=None,processed=None):
 		if "init_images" not in self.Unprompted.shortcode_user_vars or not self.can_run:
 			return
+		
+		# Fix for save button
+		if hasattr(processed,"infotexts"):
+			new_infotexts = []
+			new_seeds = []
+			new_prompts = []
+			infotexts_len = len(processed.infotexts)
+			for i in range(0,infotexts_len,3):
+				for k in range(3):
+					new_infotexts.append([processed.infotexts[i]])
+					new_seeds.append(processed.all_seeds[i])
+					new_prompts.append(processed.all_prompts[i])
+			processed.infotexts = new_infotexts
+			processed.all_seeds = new_seeds
+			processed.all_prompts = new_prompts
+
 		import torch
 		import cv2
 		import einops
@@ -73,8 +89,6 @@ class Shortcode():
 		sys.path.append(f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/controlnet")
 
 		current_name = opts.sd_model_checkpoint.split(" ", 1)[0]
-		print("current_name " + current_name)
-		print("self.model " + self.model)
 		if current_name != f"{self.model}.ckpt":
 			from modules import sd_models, sd_samplers
 			info = sd_models.get_closet_checkpoint_match(self.model)
@@ -193,8 +207,8 @@ class Shortcode():
 						output_map = detected_map
 					
 					output_map = Image.fromarray(output_map)
-					processed.images.append(output)
-					processed.images.append(output_map)
+					processed.images.extend([output])
+					processed.images.extend([output_map])
 
 		# Set back to user defined value
 		cmd_opts.no_half = self.temp_no_half
