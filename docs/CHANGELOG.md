@@ -9,7 +9,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 - Fixed a startup crash that could occur when a ControlNet model was listed as previously selected
 
-</summary>
+</details>
 
 <details><summary>7.5.7 - 13 February 2023</summary>
 
