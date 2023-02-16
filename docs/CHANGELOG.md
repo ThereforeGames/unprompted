@@ -3,6 +3,22 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.5.9 - 15 February 2023</summary>
+
+### About
+
+The `[controlnet]` shortcode is now considered a "legacy" feature as it is generally less robust than [Mikubill's dedicated ControlNet extension](https://github.com/Mikubill/sd-webui-controlnet). I have decided to re-allocate my energy into other aspects of Unprompted as I prefer to work on features that are not amply represented in the SD community.
+
+### Added
+
+- The `[controlnet]` shortcode now supports the `openpose_hands` argument
+
+### Removed
+
+- Unnecessary Gradio files from ControlNet library
+
+</details>
+
 <details><summary>7.5.8 - 14 February 2023</summary>
 
 ### Changed

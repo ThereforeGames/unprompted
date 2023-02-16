@@ -405,7 +405,6 @@ class Scripts(scripts.Script):
 		# Support loading a new checkpoint by name
 		if "sd_model" in Unprompted.shortcode_user_vars:
 			info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
-			print(info)
 			if (info): sd_models.load_model(info,None,None) # reload_model_weights(None,info)
 
 
@@ -442,8 +441,6 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_objects[i].cleanup()
 		
 		if unprompted_seed != -1: random.seed()
-
-		# print(f"atts {self.__dir__()}")
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled, unprompted_seed):

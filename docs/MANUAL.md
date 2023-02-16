@@ -1083,6 +1083,8 @@ This section describes all of the included shortcodes which are specifically des
 
 Enables support for [ControlNet](https://github.com/lllyasviel/ControlNet) models in img2img mode. ControlNet is a neural network structure to control diffusion models by adding extra conditions.
 
+**NOTE:** This is a "wrapper" implementation of the original ControlNet code. For a more robust solution, you can check out [the dedicated ControlNet extension by Mikubill](https://github.com/Mikubill/sd-webui-controlnet).
+
 You need a bare minimum of 8 GB of VRAM to use this shortcode, although 12 GB is recommended.
 
 Supports the `model` argument, which is the name of a ControlNet checkpoint in your `models/Stable-diffusion` directory (do not include the file extension.) You can download ControlNet checkpoints from [the official HuggingFace page](https://huggingface.co/lllyasviel/ControlNet/tree/main/models).

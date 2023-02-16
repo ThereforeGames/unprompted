@@ -16,11 +16,12 @@ class Shortcode():
 		self.eta = 0
 		self.canny_low_threshold = 100
 		self.canny_high_threshold = 200
+		self.openpose_hands = False
 	
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			self.Unprompted.log("This shortcode is only supported in img2img mode.","ERROR")
-		
+
 		# Hacky way of bypassing the normal img2img routine
 		self.steps = self.Unprompted.shortcode_user_vars["steps"]
 		self.Unprompted.shortcode_user_vars["steps"] = 1
@@ -36,6 +37,7 @@ class Shortcode():
 		if "low_threshold" in kwargs: self.canny_low_threshold = int(float(kwargs["low_threshold"]))
 		if "high_threshold" in kwargs: self.canny_high_threshold = int(float(kwargs["high_threshold"]))
 		if "save_memory" in pargs: self.save_memory = True
+		if "openpose_hands" in pargs: self.openpose_hands = True
 		if "eta" in kwargs: self.eta = float(kwargs["eta"])
 		if "bg_threshold" in kwargs: self.bg_threshold = float(kwargs["bg_threshold"])
 		if "model" in kwargs:
@@ -49,7 +51,6 @@ class Shortcode():
 			elif self.model.endswith("canny"): self.model_type = "canny"
 			elif self.model.endswith("seg"): self.model_type = "seg"
 		
-		#print(f"atts {self.__dir__()}")
 		return("")
 
 	def after(self,p=None,processed=None):
@@ -90,14 +91,14 @@ class Shortcode():
 
 		current_name = opts.sd_model_checkpoint.split(" ", 1)[0]
 		if current_name != f"{self.model}.ckpt":
-			from modules import sd_models, sd_samplers
+			from modules import sd_models
 			info = sd_models.get_closet_checkpoint_match(self.model)
 			if (info):
 				sd_model = sd_models.load_model(info,None,None).cuda()
 				opts.sd_model_checkpoint = info.title
 				print(opts.sd_model_checkpoint)
 			# self.sampler = sd_samplers.create_sampler(self.Unprompted.shortcode_user_vars["sampler_name"], sd_model)
-		else: print("ControlNet model already loaded...")
+		else: print("ControlNet model already loaded.")
 
 		ddim_sampler = DDIMSampler(sd_model)
 
@@ -116,7 +117,7 @@ class Shortcode():
 
 				if self.model_type=="openpose":
 					from lib_unprompted.stable_diffusion.controlnet.annotator.openpose import apply_openpose
-					detected_map, _ = apply_openpose(resize_image(input_image, self.detect_resolution))
+					detected_map, _ = apply_openpose(resize_image(input_image, self.detect_resolution),self.openpose_hands)
 					detected_map = HWC3(detected_map)
 					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
 				elif self.model_type=="scribble":
@@ -151,8 +152,6 @@ class Shortcode():
 					detected_map = apply_uniformer(resize_image(input_image, self.detect_resolution))
 					detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_NEAREST)
 
-
-				
 				if self.model_type=="normal":
 					control = torch.from_numpy(detected_map[:, :, ::-1].copy()).float().cuda() / 255.0
 				else: control = torch.from_numpy(detected_map.copy()).float().cuda() / 255.0
@@ -236,3 +235,4 @@ class Shortcode():
 		gr.Slider(label="Background Threshold 🡢 bg_threhsold",value=0.4,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
 		gr.Slider(label="Canny low threshold 🡢 low_threshold", minimum=1, maximum=255, value=100, step=1)
 		gr.Slider(label="Canny high threshold 🡢 high_threshold", minimum=1, maximum=255, value=200, step=1)
+		gr.Checkbox(label="Render hands with Openpose? 🡢 openpose_hands")
