@@ -13,22 +13,25 @@ class Shortcode():
 			# Get array name
 			if (idx==0):
 				# Define the array if it doesn't exist
-				parg = self.Unprompted.parse_advanced(parg,context)
+				# parg = self.Unprompted.parse_advanced(parg,context)
 				if not parg in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars[parg] = []
 				continue
 			# Print remaining pargs
-			result_list.append(str(self.Unprompted.shortcode_user_vars[pargs[0]][int(parg)]))
+			result_list.append(str(self.Unprompted.shortcode_user_vars[pargs[0]][int(self.Unprompted.parse_advanced(parg,context))]))
 
 		# Set new array values
 		for kwarg,val in kwargs.items():
 			if (self.Unprompted.is_system_arg(kwarg)): continue
-			self.Unprompted.shortcode_user_vars[parg][int(kwarg)] = val
-
+			this_kwarg = int(kwarg)
+			# Initialize null values if we're outside the array's length
+			while (len(self.Unprompted.shortcode_user_vars[parg]) <= this_kwarg):
+				self.Unprompted.shortcode_user_vars[parg].append("")
+			self.Unprompted.shortcode_user_vars[parg][int(kwarg)] = self.Unprompted.parse_advanced(val,context)
 
 		if "_shuffle" in pargs:
 			random.shuffle(self.Unprompted.shortcode_user_vars[parg])
 		if "_append" in kwargs:
-			split_append = kwargs["_append"].split(delimiter)
+			split_append =self.Unprompted.parse_advanced(kwargs["_append"],context).split(delimiter)
 			for idx,item in enumerate(split_append):
 				split_append[idx] = self.Unprompted.parse_advanced(item,context)
 			self.Unprompted.shortcode_user_vars[parg].extend(split_append)

@@ -3,6 +3,23 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.6.0 - 25 February 2023</summary>
+
+### Added
+- New `img2img_folder.txt` template function
+- The `[info]` shortcode now supports `sentence_count`
+- The `[info]` shortcode now supports `filename`
+- The `[after]` shortcode now stores a self-referential `after_index` variable
+- The `[length]` shortcode can now accept `[array]` variables directly
+
+### Changed
+- Fixed a crash related to setting index values with `[array]`
+- Fixed a crash when sending an empty string to `parse_advanced()`
+- Fixed a crash related to `[img2img]` when using multiple `[after]` blocks
+- Fixed a few mistakes in the Manual
+
+</details>
+
 <details><summary>7.5.9 - 15 February 2023</summary>
 
 ### About
@@ -10,11 +27,9 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 The `[controlnet]` shortcode is now considered a "legacy" feature as it is generally less robust than [Mikubill's dedicated ControlNet extension](https://github.com/Mikubill/sd-webui-controlnet). I have decided to re-allocate my energy into other aspects of Unprompted as I prefer to work on features that are not amply represented in the SD community.
 
 ### Added
-
 - The `[controlnet]` shortcode now supports the `openpose_hands` argument
 
 ### Removed
-
 - Unnecessary Gradio files from ControlNet library
 
 </details>

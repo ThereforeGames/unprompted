@@ -5,7 +5,7 @@ class Shortcode():
 		self.description = "Processes arbitrary text following the main output."
 
 	def run_block(self, pargs, kwargs, context, content):
-		index = pargs[0] if len(pargs) > 0 else 0
+		index = int(self.Unprompted.parse_advanced(pargs[0])) if len(pargs) > 0 else 0
 		self.after_content.insert(index,content)
 		return("")
 	
@@ -22,7 +22,8 @@ class Shortcode():
 				if not att.startswith("__"):
 					self.Unprompted.shortcode_user_vars[att] = getattr(p,att)
 
-			for content in self.after_content:
+			for idx,content in enumerate(self.after_content):
+				self.Unprompted.shortcode_user_vars["after_index"] = idx
 				self.Unprompted.process_string(self.Unprompted.parse_alt_tags(content,"after"))
 
 			self.after_content = []

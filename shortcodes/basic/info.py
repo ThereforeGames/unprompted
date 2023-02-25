@@ -8,6 +8,14 @@ class Shortcode():
 
 		if "character_count" in pargs: return_string += str(len(content)) + delimiter
 		if "word_count" in pargs: return_string += str(len(content.split())) + delimiter
+		if "sentence_count" in pargs:
+			import nltk
+			nltk.download("punkt")
+			from nltk.tokenize import sent_tokenize
+			return_string += str(len(sent_tokenize(content))) + delimiter
+		if "filename" in pargs:
+			from pathlib import Path
+			return_string += Path(content).stem + delimiter
 		if "string_count" in kwargs: return_string += str(content.count(kwargs["string_count"])) + delimiter
 		if "clip_count" in pargs:
 			try:
@@ -26,5 +34,7 @@ class Shortcode():
 	def ui(self,gr):
 		gr.Checkbox(label="Return the character count 🡢 character_count")
 		gr.Checkbox(label="Return the word count 🡢 word_count")
+		gr.Checkbox(label="Return the sentence count 🡢 sentence_count")
+		gr.Checkbox(label="Return the filename 🡢 filename")
 		gr.Checkbox(label="Return the CLIP token count (prompt complexity) 🡢 clip_count")
 		gr.Textbox(label="Return the count of a custom substring 🡢 string_count",max_lines=1)

@@ -17,7 +17,7 @@ class Shortcode():
 				sampler_index = i
 				break
 
-		init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.after_processed.images) - 1]
+		init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.shortcode_user_vars["init_images"]) - 1]
 		init_img_with_mask = self.Unprompted.shortcode_user_vars["init_img_with_mask"] if "init_img_with_mask" in self.Unprompted.shortcode_user_vars else None
 
 		img2img_result = modules.img2img.img2img(
@@ -71,6 +71,7 @@ class Shortcode():
 
 		# Add the new image(s) to our main output
 		self.Unprompted.after_processed.images.append(img2img_images[0])
+		self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
 
 		return("")
 

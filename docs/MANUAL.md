@@ -360,7 +360,7 @@ The optional `include_self` positional argument determines whether the original 
 
 The optional `enable_moby` keyword argument determines whether Moby Thesaurus II will be referenced. Defaults to True. On first use, the Moby Thesaurus will be downloaded to the `lib_unprompted` folder - it is about 24 MB.
 
-The optional `enable_wordnet` keyword argument determines whether WordNet will be references. Defaults to True.
+The optional `enable_wordnet` keyword argument determines whether WordNet will be referenced. Defaults to True.
 
 It is worth noting that Moby does not have native antonym support. This shortcode first queries WordNet, the results of which are then sent to Moby via `[synonyms]`.
 
@@ -1020,7 +1020,7 @@ The optional `include_self` positional argument determines whether the original 
 
 The optional `enable_moby` keyword argument determines whether Moby Thesaurus II will be referenced. Defaults to True. On first use, the Moby Thesaurus will be downloaded to the `lib_unprompted` folder - it is about 24 MB.
 
-The optional `enable_wordnet` keyword argument determines whether WordNet will be references. Defaults to True.
+The optional `enable_wordnet` keyword argument determines whether WordNet will be referenced. Defaults to True.
 
 ```
 [synonyms]amazing[/synonyms]
@@ -1172,9 +1172,9 @@ By default, this shortcode is only compatible with SD 1.5 models. If you wish to
 
 Supports the optional `image_path` argument. This is a path to file(s) or a directory to use as the initial image. If not provided, it will default to the initial image in your img2img tab. Note: you can supply multiple paths delimited by `Unprompted.Config.syntax.delimiter`, and img2pez will optimize a single prompt across all provided images.
 
-Supports the optional `prompt_length` argument, which is the length of the resulting prompt in tokens. Default to 8.
+Supports the optional `prompt_length` argument, which is the length of the resulting prompt in tokens. Default to 16.
 
-Supports the optional `iterations` argument, which is the total number of training steps to perform. Defaults to 3000.
+Supports the optional `iterations` argument, which is the total number of training steps to perform. Defaults to 200.
 
 Supports the optional `learning_rate` argument. Defaults to 0.1.
 

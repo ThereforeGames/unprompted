@@ -6,7 +6,11 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		_delimiter = self.Unprompted.parse_advanced(kwargs["_delimiter"],context) if "_delimiter" in kwargs else self.Unprompted.Config.syntax.delimiter
 		_max = self.Unprompted.parse_advanced(kwargs["_max"],context) if "_max" in kwargs else -1
-		strings = self.Unprompted.parse_advanced(pargs[0],context).split(_delimiter,_max)
+		this_obj = self.Unprompted.parse_advanced(pargs[0],context)
+		# Support direct array
+		if isinstance(this_obj,list):
+			return(min(_max if _max != -1 else len(this_obj),len(this_obj)))
+		strings = this_obj.split(_delimiter,_max)
 		return(len(strings))
 
 	def ui(self,gr):
