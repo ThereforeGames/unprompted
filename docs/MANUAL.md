@@ -332,13 +332,15 @@ I can't believe it, we're doing 3 lines of text!
 
 </details>
 
-<details><summary>[after step(int)]</summary>
+<details><summary>[after after_index(int)]</summary>
 
 Processes the content after the main task is complete.
 
 This is particularly useful with the A1111 WebUI, as it gives you the ability to queue up additional tasks. For example, you can run img2img after txt2img from the same template.
 
-Supports optional `step` argument which lets you control the order of multiple `[after]` blocks. Defaults to 0. For example, the `[after 2]` block will execute before the `[after 3]` block.
+Supports the optional `after_index` argument which lets you control the order of multiple `[after]` blocks. Defaults to 0. For example, the `[after 2]` block will execute before the `[after 3]` block.
+
+You can `[get after_index]` inside of the `[after]` block, which can be useful when working with arrays and for loops.
 
 ```
 Photo of a cat
@@ -572,7 +574,7 @@ Supports the optional `person` argument for perspective. Defaults to `3`. Other 
 
 Supports the optional `number` argument. Defaults to `singular`. Also supports `plural`.
 
-Supports the optional `mood` argument. Defaults to `indicative`. Other options include: `imperative`,`conditional` and `subjunctive`.
+Supports the optional `mood` argument. Defaults to `indicative`. Other options include: `imperative`, `conditional` and `subjunctive`.
 
 Supports the optional `aspect` argument. Defaults to `imperfective`. Other options include: `perfective` and `progressive`.
 
@@ -780,6 +782,10 @@ Supports `character_count` for retrieving the number of individual characters in
 
 Supports `word_count` for retrieving the number of words in the content, using space as a delimiter.
 
+Supports `sentence_count` for retrieving the number of sentences in the content. Powered by the nltk library.
+
+Supports `filename` for retreiving the base name of a file from the filepath content. For example, if the content is `C:/pictures/delicious hamburger.png` then this will return `delicious hamburger`.
+
 Supports `string_count` for retrieving the number of a custom substring in the content. For example, `[info string_count="the"]the frog and the dog and the log[/info]` will return 3.
 
 Supports `clip_count` for retrieving the number of CLIP tokens in the content (i.e. a metric for prompt complexity.) This argument is only supported within the A1111 WebUI environment.
@@ -795,7 +801,7 @@ Result: 5
 
 <details><summary>[length]</summary>
 
-Returns the number of items in a delimited string.
+Returns the number of items in a delimited string or `[array]` variable.
 
 Supports the optional `_delimiter` argument which lets you specify the separator between each item. It defaults to your config's `syntax.delimiter` value (`|`).
 

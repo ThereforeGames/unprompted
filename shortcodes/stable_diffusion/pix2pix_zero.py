@@ -95,10 +95,12 @@ class Shortcode():
 			pipe = EditingPipeline.from_pretrained(model_path, torch_dtype=torch_dtype).to("cuda")
 			pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
 
-
 			emb_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/pix2pix_zero/pix2pix_zero_utils/embeddings_sd_1.4"
-			embs_a = torch.load(os.path.join(emb_dir, f"cat.pt"))
-			embs_b = torch.load(os.path.join(emb_dir, f"dog.pt"))
+			emb_a = kwargs["emb_a"] if "embs_a" in kwargs else "cat"
+			emb_b = kwargs["emb_b"] if "embs_b" in kwargs else "dog"
+			
+			embs_a = torch.load(os.path.join(emb_dir, f"{emb_a}.pt"))
+			embs_b = torch.load(os.path.join(emb_dir, f"{emb_b}.pt"))
 			final_emb = (embs_b.mean(0)-embs_a.mean(0)).unsqueeze(0)
 
 			for inv_path, prompt_path in zip(l_inv_paths, l_prompt_paths):
@@ -119,6 +121,7 @@ class Shortcode():
 		
 		# Doesn't support ckpt or we could do this:
 		# sd_models.model_path+"\\"+shared.opts.sd_model_checkpoint.split(" ", 1)[0]
+
 		inversion()
 		edit_real()
 
