@@ -21,6 +21,7 @@ class Shortcode():
 			upscale_width = int(float(kwargs["upscale_width"])) if "upscale_width" in kwargs else 512
 			upscale_height = int(float(kwargs["upscale_height"])) if "upscale_height" in kwargs else 512
 			save = True if "save" in pargs else False
+			use_workaround = True if "use_workaround" in pargs else False
 
 			self.Unprompted.shortcode_user_vars["prompt"] = kwargs["replacement"] if "replacement" in kwargs else "face"
 			self.Unprompted.shortcode_user_vars["width"] = upscale_width
@@ -143,7 +144,7 @@ class Shortcode():
 						image_pil.paste(fixed_image, (x - padding, y - padding),sub_mask)
 
 						# self.Unprompted.shortcode_user_vars["init_images"].append(image_pil)
-						# self.Unprompted.after_processed.images.append(image_pil)
+						if use_workaround: append_originals.append(image_pil.copy())
 
 						# test outside after block, WIP pls don't use
 						if context != "after":
@@ -166,6 +167,7 @@ class Shortcode():
 		return ""
 
 	def ui(self,gr):
+		gr.Checkbox(label="Final image not showing up? Try using this workaround 🡢 use_workaround")
 		gr.Text(label="Mask to find 🡢 mask",value="face")
 		gr.Text(label="Replacement 🡢 replacement",value="face")
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")

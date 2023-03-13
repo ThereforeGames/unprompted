@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.7.2 - 13 March 2023</summary>
+
+### Added
+- The `[zoom_enhance]` shortcode now supports experimental `use_workaround` to hopefully resolve issues with output window
+
+</details>
+
 <details><summary>7.7.1 - 13 March 2023</summary>
 
 ### Changed
