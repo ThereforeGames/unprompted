@@ -35,7 +35,7 @@ class Shortcode():
 			self.Unprompted.shortcode_user_vars["batch_size"] = 1
 			self.Unprompted.shortcode_user_vars["n_iter"] = 1
 			
-			if "denoising_strength" in kwargs: self.Unprompted.shortcode_user_vars["denoising_strength"] = kwargs["denoising_strength"]
+			if "denoising_strength" in kwargs: self.Unprompted.shortcode_user_vars["denoising_strength"] = float(kwargs["denoising_strength"])
 			self.Unprompted.shortcode_user_vars["negative_prompt"] = kwargs["negative_replacement"] if "negative_replacement" in kwargs else ""
 
 			# vars for dynamic denoising strength
@@ -102,8 +102,8 @@ class Shortcode():
 							target_size = (w * h) / (self.Unprompted.shortcode_user_vars["width"] * self.Unprompted.shortcode_user_vars["height"])
 							if target_size < target_size_max:
 								sig = sigmoid((12 * (target_size / target_size_max) - 6) * -1)
+								self.Unprompted.log(f"Sigmoid value: {sig}")
 								self.Unprompted.shortcode_user_vars["denoising_strength"] = sig * denoising_max
-								12
 								self.Unprompted.log(f"Target size is {target_size}, denoising strength is {self.Unprompted.shortcode_user_vars['denoising_strength']}")
 							else:
 								self.Unprompted.log("Humongous target detected. Skipping zoom_enhance...")
@@ -135,7 +135,7 @@ class Shortcode():
 
 						fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
 						# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
-
+						if save: fixed_image.save("zoom_enhance_4.png")
 						# Downscale fixed image back to original size
 						fixed_image = fixed_image.resize((w + padding*2,h + padding*2))
 						

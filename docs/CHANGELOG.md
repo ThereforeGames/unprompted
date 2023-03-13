@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.7.1 - 13 March 2023</summary>
+
+### Changed
+- Fixed a few typos in the `[zoom_enhance]` shortcode
+
+</details>
+
 <details><summary>7.7.0 - 12 March 2023</summary>
 
 ### Added
