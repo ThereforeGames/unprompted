@@ -1388,6 +1388,43 @@ The content and `negative_mask` both support the vertical pipe delimiter (`|`) w
 
 </details>
 
+<details><summary>[zoom_enhance]</summary>
+
+Upscales a selected portion of an image via `[img2img]` and `[txt2mask]`.
+
+Greatly improves low-resolution details like faces and hands. It is significantly faster than Hires Fix and more flexible than the "Restore Faces" option.
+
+It must be used within an `[after]` block.
+
+Supports the `mask` keyword argument which is a region to search for within your image. Defaults to `face`. Note that if multiple non-contiguous regions are found, they will be processed independently.
+
+Supports the `replacement` keyword argument which is the prompt that will be used on the `mask` region via `[img2img]`. Defaults to `face`. If you're generating a specific character--say Walter White--you'll want to set `replacement` to a more specific value, like `walter white face`.
+
+Supports the `negative_replacement` keyword argument, which is the negative prompt that will be used on the mask region via `[img2img]`. Defaults to an empty string.
+
+Supports the `blur_size` keyword argument, which corresponds to the radius of the gaussian blur that will be applied to the mask of the upscaled image - this helps it blend seamlessly back into your original image. Defaults to `0.03`. Note: this is a float that is a percentage of the total canvas size; 0.03 means 3% of the total canvas.
+
+Supports the `denoising_max` keyword argument. The `[zoom_enhance]` shortcode is equipped with **dynamic denoising strength** based on a simple idea: the smaller the mask region, the higher denoise we should apply. This argument lets you set the upper limit of that feature.
+
+Supports the `mask_size_max` keyword argument. Defaults to `0.3`. If a mask region is determined to be greater than this value, it will not be processed by `[zoom_enhance]`. The reason is that large objects generally do not benefit from upscaling.
+
+Supports the `min_area` keyword argument. Defaults to `50`. If the pixel area of a mask is smaller than this, it may be a false-positive mask selection or at least not worth upscaling.
+
+Supports the `contour_padding` keyword argument. This is the radius in pixels to extend the mask region by. Defaults to `0`.
+
+Supports the `upscale_width` and `upscale_height` arguments. Default to `512`. This is the resolution to use with `[img2img]` and should usually match the native resolution of your Stable Diffusion model.
+
+Supports the `include_original` positional argument. This will append the original, "non-zoom-enhanced" image to your output window. Useful for before-after comparisons.
+
+This shortcode is compatible with batch count and batch size.
+
+
+```
+[after]{zoom_enhance}[/after]
+```
+
+</details>
+
 </details>
 
 <details><summary>Adding New Shortcodes</summary>
