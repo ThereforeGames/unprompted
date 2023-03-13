@@ -12,12 +12,16 @@ class Shortcode():
 		elif "init_mask_inpaint" in self.Unprompted.shortcode_user_vars: init_mask = self.Unprompted.shortcode_user_vars["init_mask_inpaint"]
 
 		# TODO: There might be a function to retrieve sampler index from its name, if so use that instead
+		sampler_index = 0
 		for i in range(len(sd_samplers.samplers_for_img2img)):
 			if sd_samplers.samplers_for_img2img[i].name == self.Unprompted.shortcode_user_vars["sampler_name"]:
 				sampler_index = i
 				break
 
-		init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.shortcode_user_vars["init_images"]) - 1]
+		if "img2img_init_image" in self.Unprompted.shortcode_user_vars:
+			init_img = self.Unprompted.shortcode_user_vars["img2img_init_image"]
+		else:
+			init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.shortcode_user_vars["init_images"]) - 1]			
 		init_img_with_mask = self.Unprompted.shortcode_user_vars["init_img_with_mask"] if "init_img_with_mask" in self.Unprompted.shortcode_user_vars else None
 
 		img2img_result = modules.img2img.img2img(
@@ -63,6 +67,7 @@ class Shortcode():
 			"", # override_settings_texts
 			0, # this is the *args tuple, 0 prevents additional scripts from running here
 			0, # Prevents endless loop
+			0,
 			-1
 		)
 		
@@ -70,8 +75,11 @@ class Shortcode():
 		img2img_images = img2img_result[0]
 
 		# Add the new image(s) to our main output
-		self.Unprompted.after_processed.images.append(img2img_images[0])
-		self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
+		if "return_image" in pargs:
+			return img2img_images[0]
+		else:
+			self.Unprompted.after_processed.images.append(img2img_images[0])
+			self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
 
 		return("")
 

@@ -18,3 +18,4 @@ if not launch.is_installed("cldm"):
 		destination = shutil.copytree(f"{this_path}/lib_unprompted/stable_diffusion/controlnet/cldm", f"{this_path}/../../venv/Lib/site-packages/cldm")
 	except OSError as err:
 		print("Copy error: % s" % err)
+	

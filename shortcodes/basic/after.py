@@ -3,13 +3,18 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.after_content = []
 		self.description = "Processes arbitrary text following the main output."
+		self.last_index = -1
 
 	def run_block(self, pargs, kwargs, context, content):
 		index = int(self.Unprompted.parse_advanced(pargs[0])) if len(pargs) > 0 else 0
-		self.after_content.insert(index,content)
+		if self.last_index != index or "allow_dupe_index" in pargs:
+			self.after_content.insert(index,content)
+			self.last_index = index
+		else: self.Unprompted.log("Duplicate [after] content detected, skipping - include allow_dupe_index to bypass this check")
 		return("")
 	
 	def after(self,p=None,processed=None):
+		self.last_index = -1
 		if self.after_content:
 			if processed:
 				# Share variable with other shortcodes

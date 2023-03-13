@@ -19,8 +19,10 @@ class Shortcode():
 		from modules.shared import opts
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
-		if "init_images" not in self.Unprompted.shortcode_user_vars:
+		if "txt2mask_init_image" in kwargs: self.init_image = kwargs["txt2mask_init_image"]
+		elif "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
+		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0]
 
 		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -118,7 +120,7 @@ class Shortcode():
 				transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 				transforms.Resize((512, 512)),
 			])
-			flattened_input = flatten(self.Unprompted.shortcode_user_vars["init_images"][0], opts.img2img_background_color)
+			flattened_input = flatten(self.init_image, opts.img2img_background_color)
 			img = transform(flattened_input).unsqueeze(0)
 
 			# predict
@@ -206,14 +208,17 @@ class Shortcode():
 			return final_img
 
 		# Set up processor parameters correctly
-		self.image_mask = get_mask().resize((self.Unprompted.shortcode_user_vars["init_images"][0].width,self.Unprompted.shortcode_user_vars["init_images"][0].height))
+		self.image_mask = get_mask().resize((self.init_image.width,self.init_image.height))
+		
+		if "return_image" in pargs: return(self.image_mask)
+		
 		self.Unprompted.shortcode_user_vars["mode"] = max(4,self.Unprompted.shortcode_user_vars["mode"])
 		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
 		self.Unprompted.shortcode_user_vars["mask"]=self.image_mask
 		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["latent_mask"] = None # fixes inpainting full resolution
 		arr = {}
-		arr["image"] = self.Unprompted.shortcode_user_vars["init_images"][0]
+		arr["image"] = self.init_image
 		arr["mask"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["init_img_with_mask"] = arr
 		self.Unprompted.shortcode_user_vars["init_mask"] = self.image_mask

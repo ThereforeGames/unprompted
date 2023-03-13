@@ -1,6 +1,77 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Enhance! CSI Magic Brought to Life — 12 March 2023</summary>
+
+I'm pleased to announce the latest addition to Unprompted: the `[zoom_enhance]` shortcode.
+
+Named after [the totally-not-fake technology from CSI](https://www.youtube.com/watch?v=I_8ZH1Ggjk0), `zoom_enhance` allows you to automatically upscale small details within your image where Stable Diffusion tends to struggle. It is particularly good at fixing faces and hands in long-distance shots.
+
+![zoom_enhance_example](https://user-images.githubusercontent.com/95403634/224587439-947cf094-2d20-45f7-9c2c-491b51d62683.png)
+
+## How does it work?
+
+The `[zoom_enhance]` shortcode searches your image for specified target(s), crops out the matching regions and processes them through `[img2img]`. It then blends the result back into your original image. All of this happens behind-the-scenes without adding any unnecessary steps to your workflow. Just set it and forget it.
+
+## Features and Benefits
+
+- Great in both txt2img and img2img modes.
+- The shortcode is powered by the `[txt2mask]` implementation of clipseg, which means you can search for literally anything as a replacement target, and you get access to the full suite of `[txt2mask]` settings, such as `padding` and `negative_mask`.
+- It's also pretty good at deepfakes. Set `mask="face"` and `replacement="another person's face"` and check out the results.
+- It applies a gaussian blur to the boundaries of the upscaled image which helps it blend seamlessly with the original.
+- It is equipped with **Dynamic Denoising Strength** which is based on a simple idea: the smaller your replacement target, the worse it probably looks. Think about it: when you generate a character who's far away from the camera, their face is often a complete mess. So, the shortcode will use a high denoising strength for small objects and a low strength for larger ones.
+- It is significantly faster than Hires. Fix and won't mess up the rest of your image.
+- Compatible with A1111's color correction setting, which you'll probably want to use to avoid issues related to over-saturation.
+- In many cases, it makes the "restore faces" option obsolete. Try the shortcode with and without "restore faces" and see for yourself.
+- Unlike "restore faces," `[zoom_enhance]` won't interfere with the style of your image. Face restoration is biased toward photography. With this shortcode, you can provide a subject like "illustration of walter white face" to avoid that problem.
+- Compatible with all models. You can even use `[set sd_model]` to change your checkpoint just during the upscale step.
+- Compatible with batch size and batch count.
+
+## More Examples
+
+Don't take my word for it. Judge for yourself.
+
+![zoom_enhance_example_parrot](https://user-images.githubusercontent.com/95403634/224598218-c469c44d-0ee4-4b9d-8082-7d9930573e81.png)
+![zoom_enhance_example_dragon](https://user-images.githubusercontent.com/95403634/224598221-cc07b75a-8587-4d05-9d73-d6f2f6415dd1.png)
+![zoom_enhance_example_maisie](https://user-images.githubusercontent.com/95403634/224598223-0725d178-9033-4fac-8c49-755b16faab60.png)
+![zoom_enhance_example_trump](https://user-images.githubusercontent.com/95403634/224598224-633e6464-d05c-4c0e-af0b-4c498aa19534.png)
+
+## How to Use
+
+You can access the GUI through **Unprompted » Wizard » Shortcodes » zoom_enhance**:
+
+![image](https://user-images.githubusercontent.com/95403634/224593040-41ab6d55-5366-4752-9880-c3d88360096b.png)
+
+Or slam this into your prompt:
+
+```
+[after]{zoom_enhance}[/after]
+```
+
+It goes inside of an `[after]` block because it is supposed to execute **after** the generation of an image.
+
+By default, it will look for `face` and replace it with an upscaled `face`. If you're making a specific person --such as Walter White--you should provide a more specific `replacement` value like so:
+
+```
+[after]{zoom_enhance replacement="walter white face"}[/after]
+```
+
+If you want to fix hands instead of a face, you can try something like this:
+
+```
+[after]{zoom_enhance mask="fingers" replacement="closeup hand" max_denoising_strength=0.9 precision=120}[/after]
+```
+**Note:** it's going to take some trial and error to find optimized settings for hands. Let me know if you find a config that works better than the one above.
+
+You can place multiple `zoom_enhance` blocks back-to-back. Fixes multiple problem areas in one go.
+
+## Limitations
+
+- Because this shortcode calls an img2img task in an unusual manner, it may not be compatible with every extension. Try disabling your other extensions if you run into issues.
+- This shortcode has not yet been throughly battle-tested. Your bug reports are appreciated.
+
+</details>
+
 <details><summary>Synonyms, Sketches and Wizards — 28 January 2023</summary>
 
 It's been a while since the last announcement post... let's catch up on some of the new features in Unprompted!

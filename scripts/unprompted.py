@@ -100,7 +100,8 @@ def wizard_generate_function(option,is_img2img,prepend="",append=""):
 	return(prepend+result+append)
 
 def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
-	result = Unprompted.Config.syntax.tag_start + option
+	if hasattr(Unprompted.shortcode_objects[option],"wizard_prepend"): result = Unprompted.shortcode_objects[option].wizard_prepend
+	else: result = Unprompted.Config.syntax.tag_start + option
 	filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
 	group = filtered_shortcodes[option]
 	block_content=""
@@ -145,7 +146,8 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 	result = results[1]
 
 	# Closing bracket
-	result += Unprompted.Config.syntax.tag_end
+	if hasattr(Unprompted.shortcode_objects[option],"wizard_append"): result += Unprompted.shortcode_objects[option].wizard_append
+	else: result += Unprompted.Config.syntax.tag_end
 
 	if hasattr(Unprompted.shortcode_objects[option],"run_block"):
 		if (append and not block_content):
@@ -170,6 +172,8 @@ def gradio_enabled_checkbox_workaround():
 	return(Unprompted.Config.ui.enabled)
 
 class Scripts(scripts.Script):
+	allow_postprocess = True
+
 	def title(self):
 		return "Unprompted"
 
@@ -352,7 +356,7 @@ class Scripts(scripts.Script):
 				
 		return [is_enabled,unprompted_seed]
 	
-	def process(self, p, is_enabled, unprompted_seed):
+	def process(self, p, is_enabled=True, unprompted_seed=-1, *args):
 		if not is_enabled:
 			return p
 
@@ -443,8 +447,10 @@ class Scripts(scripts.Script):
 		if unprompted_seed != -1: random.seed()
 
 	# After routines
-	def postprocess(self, p, processed, is_enabled, unprompted_seed):
-		if not is_enabled: return False # Prevents endless loop with some shortcodes
+	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1):
+		if not self.allow_postprocess or not is_enabled: return False # Prevents endless loop with some shortcodes
+		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")
 		for i in Unprompted.after_routines:
 			Unprompted.shortcode_objects[i].after(p,processed)
+		self.allow_postprocess = True

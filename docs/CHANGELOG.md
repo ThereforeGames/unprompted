@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.7.0 - 12 March 2023</summary>
+
+### Added
+- New `[zoom_enhance]` shortcode for automatically fixing issues with low-resolution details like faces or hands
+- The `[after]` shortcode now supports `allow_dupe_index` when you want to run the same `after` content in batch mode
+- The `[txt2mask]` and `[img2img]` shortcodes now support `return_image` which lets you call them directly in the source of other shortcodes
+- Shortcodes can now declare custom `wizard_prepend` and `wizard_append` values in the event that they need to be called in an unusual way
+
+### Changed
+- Fixed an issue with `[img2img]` when used from the img2img tab
+
+</details>
+
 <details><summary>7.6.0 - 25 February 2023</summary>
 
 ### Added
