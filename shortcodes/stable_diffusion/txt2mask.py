@@ -112,7 +112,7 @@ class Shortcode():
 				self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
 
 			# non-strict, because we only stored decoder weights (not CLIP weights)
-			model.load_state_dict(torch.load(d64_file), strict=False);	
+			model.load_state_dict(torch.load(d64_file, map_location=device), strict=False)
 			model = model.eval().to(device=device)
 
 			transform = transforms.Compose([

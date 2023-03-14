@@ -5,6 +5,11 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		import modules.img2img
 		from modules import sd_samplers
+		from modules import scripts
+
+		# Temporarily bypass alwayson scripts because I am not sure how to call modules.img2img.img2img with arbitrary extension args
+		temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
+		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()
 
 		if "mask_mode" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["mask_mode"] = 0
 		init_mask = None
@@ -73,6 +78,9 @@ class Shortcode():
 		
 		# Get the image stored in the first index
 		img2img_images = img2img_result[0]
+
+		# Re-enable alwayson scripts
+		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
 
 		# Add the new image(s) to our main output
 		if "return_image" in pargs:

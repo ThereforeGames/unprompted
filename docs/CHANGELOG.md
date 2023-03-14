@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.8.0 - 13 March 2023</summary>
+
+### Added
+- The `[zoom_enhance]` shortcode now accepts multiple values for `replacement` and `negative_replacement`, using `Unprompted.Config.syntax.delimiter` (vertical pipe by default)
+- The `[zoom_enhance]` shortcode now supports `mask_sort_method` which determines the order of multiple matching regions, defaults to `left-to-right`
+- The `[zoom_enhance]` shortcode will now adjust CFG scale dynamically, in the same fashion as denoising strength
+- The `[zoom_enhance]` Wizard GUI now lets you override `denoising_strength` and `cfg_scale` with arbitary values, bypassing the "dynamic" mechanism
+- Every `[zoom_enhance]` argument now supports advanced expressions
+- Improved console logging for `[zoom_enhance]`
+
+### Changed
+- The `[img2img]` shortcode temporarily bypasses `alwayson_scripts` to avoid errors with many extensions
+- Fixed an issue related to `[zoom_enhance]` not responding after a previously interrupted generation or error
+- Fixed a minor issue related to the `[zoom_enhance]` sigmoid curve evaluation
+- Speculative fix for an issue related to `[txt2mask]` on non-CUDA devices
+
+</details>
+
 <details><summary>7.7.2 - 13 March 2023</summary>
 
 ### Added
