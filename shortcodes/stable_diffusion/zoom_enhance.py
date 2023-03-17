@@ -5,6 +5,14 @@ class Shortcode():
 		self.is_fixing = False
 		self.wizard_prepend = Unprompted.Config.syntax.tag_start + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start_alt + "zoom_enhance"
 		self.wizard_append = Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end
+		self.resample_methods = {}
+		self.resample_methods["Nearest Neighbor"] = 0
+		self.resample_methods["Box"] = 4
+		self.resample_methods["Bilinear"] = 2
+		self.resample_methods["Hamming"] = 5
+		self.resample_methods["Bicubic"] = 3
+		self.resample_methods["Lanczos"] = 1
+
 
 	def run_atomic(self, pargs, kwargs, context):
 		import cv2
@@ -21,6 +29,11 @@ class Shortcode():
 		save = True if "save" in pargs else False
 		use_workaround = True if "use_workaround" in pargs else False
 		mask_sort_method = self.Unprompted.parse_alt_tags(kwargs["mask_sort_method"],context) if "mask_sort_method" in kwargs else "left-to-right"
+		downscale_method = self.Unprompted.parse_alt_tags(kwargs["downscale_method"],context) if "downscale_method" in kwargs else "Lanczos"
+		downscale_method = self.resample_methods[downscale_method]
+		upscale_method = self.Unprompted.parse_alt_tags(kwargs["upscale_method"],context) if "downscale_method" in kwargs else "Nearest Neighbor"
+		upscale_method = self.resample_methods[upscale_method]
+
 
 		all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"],context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)
 		all_negative_replacements = (self.Unprompted.parse_alt_tags(kwargs["negative_replacement"],context) if "negative_replacement" in kwargs else "").split(self.Unprompted.Config.syntax.delimiter)
@@ -29,6 +42,13 @@ class Shortcode():
 		self.Unprompted.shortcode_user_vars["height"] = upscale_height
 		# Ensure standard img2img mode
 		self.Unprompted.shortcode_user_vars["mode"] = 0
+		self.Unprompted.shortcode_user_vars["image_mask"] = None
+		self.Unprompted.shortcode_user_vars["mask"] = None
+		self.Unprompted.shortcode_user_vars["init_img_with_mask"] = None
+		self.Unprompted.shortcode_user_vars["init_mask"] = None
+		self.Unprompted.shortcode_user_vars["mask_mode"] = 0
+		self.Unprompted.shortcode_user_vars["init_mask_inpaint"] = None
+		self.Unprompted.shortcode_user_vars["inpaint_full_res"] = False
 		# Prevent batch from breaking
 		batch_size_orig = self.Unprompted.shortcode_user_vars["batch_size"]
 		n_iter_orig = self.Unprompted.shortcode_user_vars["n_iter"]
@@ -154,7 +174,7 @@ class Shortcode():
 
 					sub_img=Image.fromarray(image[y1:y2,x1:x2])
 					sub_mask=Image.fromarray(mask_image[y1:y2,x1:x2])
-					sub_img_big = sub_img.resize((upscale_width,upscale_height))
+					sub_img_big = sub_img.resize((upscale_width,upscale_height),resample=upscale_method)
 					if save: sub_img_big.save("zoom_enhance_2.png")
 
 					# blur radius is relative to canvas size, should be odd integer
@@ -166,13 +186,17 @@ class Shortcode():
 
 					self.Unprompted.shortcode_user_vars["img2img_init_image"] = sub_img_big
 					fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
+					if not fixed_image:
+						self.Unprompted.log("An error occurred! Perhaps the user interrupted the operation?")
+						return ""
+
 					# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
 					if save: fixed_image.save("zoom_enhance_4.png")
 					# Downscale fixed image back to original size
-					fixed_image = fixed_image.resize((w + padding*2,h + padding*2))
+					fixed_image = fixed_image.resize((w + padding*2,h + padding*2),resample=downscale_method)
 					
 					# Slap our new image back onto the original
-					image_pil.paste(fixed_image, (x - padding, y - padding),sub_mask)
+					image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask)
 
 					# self.Unprompted.shortcode_user_vars["init_images"].append(image_pil)
 					if use_workaround: append_originals.append(image_pil.copy())
@@ -203,15 +227,19 @@ class Shortcode():
 		gr.Text(label="Replacement 🡢 replacement",value="face")
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
 		gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
-		gr.Slider(label="Blur edges size 🡢 blur_size",value=0.03,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-		gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=3.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
-		gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-		gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.3,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-		gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
-		gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
-		gr.Number(label="Mask minimum number of pixels 🡢 min_area",value=50,interactive=True)
-		gr.Number(label="Contour padding in pixels 🡢 contour_padding",value=0,interactive=True)
-		gr.Number(label="Upscale width 🡢 upscale_width",value=512,interactive=True)
-		gr.Number(label="Upscale height 🡢 upscale_height",value=512,interactive=True)
 		gr.Checkbox(label="Include original image in output window 🡢 include_original")
 		gr.Checkbox(label="Save debug images to WebUI folder 🡢 save")
+		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")
+		with gr.Accordion("⚙️ Advanced Options", open=False):
+			gr.Dropdown(label="Upscale method 🡢 upscale_method",value="Nearest Neighbor",choices=list(self.resample_methods.keys()),interactive=True)
+			gr.Dropdown(label="Downscale method 🡢 downscale_method",value="Lanczos",choices=list(self.resample_methods.keys()),interactive=True)
+			gr.Slider(label="Blur edges size 🡢 blur_size",value=0.03,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=3.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
+			gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.3,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
+			gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
+			gr.Number(label="Mask minimum number of pixels 🡢 min_area",value=50,interactive=True)
+			gr.Number(label="Contour padding in pixels 🡢 contour_padding",value=0,interactive=True)
+			gr.Number(label="Upscale width 🡢 upscale_width",value=512,interactive=True)
+			gr.Number(label="Upscale height 🡢 upscale_height",value=512,interactive=True)

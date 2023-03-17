@@ -2,3 +2,4 @@ details summary {font-size:20px;font-weight:bold;cursor:pointer;}
 details > *:not(summary) {padding:0 20px;}
 #unprompted_result {font-size:18px;padding:10px;font-family:IBM Plex Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;}
 #unprompted_result strong {font-family:Source Sans Pro,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";display:block;margin-bottom:10px;letter-spacing:0.02em;font-size:20px;}
+#promo {display:block;}

@@ -3,6 +3,26 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.9.0 - 17 March 2023</summary>
+
+### Added
+- New `match_main_seed` setting that synchronizes the Unprompted seed with the WebUI seed
+- The `[txt2mask]` shortcode will now cache its model to improve performance (for reference, this saves about 3 seconds per run on my 3090)
+- New `[txt2mask]` setting `unload_model` to disable the above behavior
+- The `[zoom_enhance]` Wizard UI now includes `unload_model`
+- New `[zoom_enhance]` setting `upscale_method`
+- The `[zoom_enhance]` default upscaling method is now Nearest Neighbor which should result in a more accurate final image
+- New `[zoom_enhance]` setting `downscale_method` which controls the resample filter used with the final image
+- The `[zoom_enhance]` default downscaling method is now Lanczos, which should result in sharper images
+
+### Changed
+- Fixed an issue related to `[img2img]` and a previously interrupted generation
+- The `[zoom_enhance]` shortcode does a better job of ensuring that img2img settings are correct
+- Most of the `[zoom_enhance]` Wizard settings have been moved into an "Advanced Options" accordion menu
+- Fixed a CSS issue related to the promo box and the newest version of the WebUI
+
+</details>
+
 <details><summary>7.8.0 - 13 March 2023</summary>
 
 ### Added

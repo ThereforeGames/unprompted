@@ -5,6 +5,8 @@ class Shortcode():
 		self.image_mask = None
 		self.show = False
 		self.description = "Creates an image mask from the content for use with inpainting."
+		self.cached_model = -1
+		self.cached_transform = -1
 
 	def run_block(self, pargs, kwargs, context, content):
 		from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
@@ -19,7 +21,8 @@ class Shortcode():
 		from modules.shared import opts
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
-		if "txt2mask_init_image" in kwargs: self.init_image = kwargs["txt2mask_init_image"]
+		if "txt2mask_init_image" in kwargs:
+			self.init_image = kwargs["txt2mask_init_image"]
 		elif "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
 		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0]
@@ -96,9 +99,8 @@ class Shortcode():
 			return(final_img)
 			
 		def get_mask():
-			# load model
-			model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
 			model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
+			
 			os.makedirs(model_dir, exist_ok=True)
 
 			d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
@@ -111,15 +113,29 @@ class Shortcode():
 				self.Unprompted.download_file(d64_file,f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
 				self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
 
-			# non-strict, because we only stored decoder weights (not CLIP weights)
-			model.load_state_dict(torch.load(d64_file, map_location=device), strict=False)
-			model = model.eval().to(device=device)
+			# load model
+			if self.cached_model == -1:
+				self.Unprompted.log("Loading clipseg model...")
+				model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
 
-			transform = transforms.Compose([
-				transforms.ToTensor(),
-				transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-				transforms.Resize((512, 512)),
-			])
+				# non-strict, because we only stored decoder weights (not CLIP weights)
+				model.load_state_dict(torch.load(d64_file, map_location=device), strict=False)
+				model = model.eval().to(device=device)
+
+				transform = transforms.Compose([
+					transforms.ToTensor(),
+					transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+					transforms.Resize((512, 512)),
+				])
+
+				# Cache for future runs
+				self.cached_model = model
+				self.cached_transform = transform
+			else:
+				self.Unprompted.log("Using cached clipseg model.")
+				model = self.cached_model
+				transform = self.cached_transform
+
 			flattened_input = flatten(self.init_image, opts.img2img_background_color)
 			img = transform(flattened_input).unsqueeze(0)
 
@@ -205,6 +221,10 @@ class Shortcode():
 
 			else: self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
 
+			if "unload_model" in pargs:
+				self.model = -1
+				self.cached_model = -1
+
 			return final_img
 
 		# Set up processor parameters correctly
@@ -255,3 +275,4 @@ class Shortcode():
 		gr.Textbox(label="Mask color, enables Inpaint Sketch mode 🡢 sketch_color",max_lines=1,placeholder="e.g. tan or 127,127,127")
 		gr.Number(label="Mask alpha, must be used in conjunction with mask color 🡢 sketch_alpha",value=0,interactive=True)
 		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)
+		gr.Checkbox(label="Unload model after inference (for low memory devices) 🡢 unload_model")

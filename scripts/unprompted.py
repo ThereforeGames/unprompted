@@ -185,14 +185,18 @@ class Scripts(scripts.Script):
 			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
 				is_enabled = gr.Checkbox(label="Enabled",value=gradio_enabled_checkbox_workaround)
 
+				match_main_seed = gr.Checkbox(label="Synchronize Unprompted seed to main seed",value=True)
+				setattr(match_main_seed,"do_not_save_to_config",True)
+
 				unprompted_seed = gr.Number(label="Unprompted Seed",value=-1)
 				setattr(unprompted_seed,"do_not_save_to_config",True)
+
 
 				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/demoncrawl_avatar_generator_v0.0.1/main{Unprompted.Config.txt_format}")): is_open = False
 				else: is_open = True
 				
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug",value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
+					plug = gr.HTML(label="plug",elem_id="promo",value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -354,11 +358,18 @@ class Scripts(scripts.Script):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
 				
-		return [is_enabled,unprompted_seed]
+		return [is_enabled,unprompted_seed,match_main_seed]
 	
-	def process(self, p, is_enabled=True, unprompted_seed=-1, *args):
+	def process(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args):
 		if not is_enabled:
 			return p
+
+		if match_main_seed: 
+			if p.seed == -1:
+				from modules.processing import get_fixed_seed
+				p.seed = get_fixed_seed(-1)
+			Unprompted.log(f"Synchronizing seed with WebUI: {p.seed}")
+			unprompted_seed = p.seed
 
 		if unprompted_seed != -1:
 			import random
@@ -447,7 +458,7 @@ class Scripts(scripts.Script):
 		if unprompted_seed != -1: random.seed()
 
 	# After routines
-	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1):
+	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
 		if not self.allow_postprocess or not is_enabled: return False # Prevents endless loop with some shortcodes
 		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")
