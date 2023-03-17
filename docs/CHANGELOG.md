@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>7.9.1 - 17 March 2023</summary>
+
+### Changed
+- Hotfix for `[zoom_enhance]` "Advanced Options" menu
+
+</details>
+
 <details><summary>7.9.0 - 17 March 2023</summary>
 
 ### Added

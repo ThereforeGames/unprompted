@@ -77,7 +77,7 @@ def wizard_generate_function(option,is_img2img,prepend="",append=""):
 			for gr_obj in obj.children:
 				block_name = gr_obj.get_block_name()
 
-				if block_name == "form":
+				if block_name == "form" or block_name == "accordion":
 					result = parse_children(gr_obj,result)
 				else:
 					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue # Skip empty fields
@@ -112,7 +112,7 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 			for gr_obj in obj.children:
 				block_name = gr_obj.get_block_name()
 
-				if block_name == "form":
+				if block_name == "form" or block_name == "accordion":
 					results = parse_children(gr_obj,result)
 					block_content = results[0]
 					result = results[1]
