@@ -223,7 +223,7 @@ class Scripts(scripts.Script):
 									obj = gr.Checkbox(label=this_label,value=bool(int(content)))
 								elif (block_name == "number"): obj = gr.Number(label=this_label,value=int(content),interactive=True)
 								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,value=content,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter))
-								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(Unprompted.Config.syntax_delimiter),interactive=True)
+								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter),interactive=True)
 								elif (block_name == "slider"):
 									obj = gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"])
 							
