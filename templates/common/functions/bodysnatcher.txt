@@ -60,4 +60,4 @@ Always bodysnatch responsibly.
 
 
 
-[img2img_autosize][txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask][after]{zoom_enhance_beta [if use_workaround=1]use_workaround[/if] sharpen_amount=3.0 mode="subtract" debug mask="[get class] [get fix_bodypart]" replacement="[get prefix] [get subject] [get fix_bodypart] [get simple_description _before=' ']" cfg_scale=10 denoising_max="[get zoom_enhance_denoising_max]"}[/after][get prefix] [get subject][get simple_description _before=" "]
+[img2img_autosize][txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask][after]{zoom_enhance [if use_workaround=1]use_workaround[/if] sharpen_amount=3.0 mode="subtract" debug mask="[get class] [get fix_bodypart]" replacement="[get prefix] [get subject] [get fix_bodypart] [get simple_description _before=' ']" cfg_scale=10 denoising_max="[get zoom_enhance_denoising_max]"}[/after][get prefix] [get subject][get simple_description _before=" "]

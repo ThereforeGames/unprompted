@@ -175,7 +175,7 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 
 def get_local_file_dir(filename=None):
 	unp_dir = os.path.basename(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-	if filename: filepath = "/" + Path(os.path.relpath(filename,f"{base_dir}")).parent
+	if filename: filepath = "/" + str(Path(os.path.relpath(filename,f"{base_dir}")).parent)
 	else: filepath = ""
 	return(f"file/extensions/{unp_dir}{filepath}")
 

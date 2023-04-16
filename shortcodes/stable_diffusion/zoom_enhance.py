@@ -1,3 +1,13 @@
+from modules.processing import process_images_inner, StableDiffusionProcessingImg2Img, StableDiffusionProcessing
+import gc
+from modules import devices
+
+old_sample = StableDiffusionProcessingImg2Img.sample
+old_init = StableDiffusionProcessingImg2Img.init
+
+def process_images_inner_(p):
+	return(process_images_inner(p))
+
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
@@ -15,54 +25,83 @@ class Shortcode():
 
 
 	def run_atomic(self, pargs, kwargs, context):
+
+		if not self.Unprompted.Config.beta_features:
+			self.Unprompted.log(f"This thing ain't ready yet. Please enable Unprompted.Config.beta_features to use it anyway.",True,"ERROR")
+			return ""
+
 		import cv2
 		import numpy
-		from PIL import Image, ImageFilter
+		from PIL import Image, ImageFilter, ImageChops, ImageOps
 		import math
+		from modules import shared
 
 		def sigmoid(x):
 			return 1 / (1 + math.exp(-x))
 
+		def unsharp_mask(image, amount=1.0, kernel_size=(5, 5), sigma=1.0, threshold=0):
+			"""Return a sharpened version of the image, using an unsharp mask."""
+			image = numpy.array(image)
+			blurred = cv2.GaussianBlur(image, kernel_size, sigma)
+			sharpened = float(amount + 1) * image - float(amount) * blurred
+			sharpened = numpy.maximum(sharpened, numpy.zeros(sharpened.shape))
+			sharpened = numpy.minimum(sharpened, 255 * numpy.ones(sharpened.shape))
+			sharpened = sharpened.round().astype(numpy.uint8)
+			if threshold > 0:
+				low_contrast_mask = numpy.absolute(image - blurred) < threshold
+				numpy.copyto(sharpened, image, where=low_contrast_mask)
+			return Image.fromarray(sharpened)
+
 		blur_radius_orig = float(self.Unprompted.parse_advanced(kwargs["blur_size"],context)) if "blur_size" in kwargs else 0.03
 		upscale_width = int(float(self.Unprompted.parse_advanced(kwargs["upscale_width"],context))) if "upscale_width" in kwargs else 512
 		upscale_height = int(float(self.Unprompted.parse_advanced(kwargs["upscale_height"],context))) if "upscale_height" in kwargs else 512
-		save = True if "save" in pargs else False
+		hires_size_max = int(float(self.Unprompted.parse_advanced(kwargs["hires_size_max"],context))) if "hires_size_max" in kwargs else 1024
+
+		sharpen_amount = int(float(self.Unprompted.parse_advanced(kwargs["sharpen_amount"],context))) if "sharpen_amount" in kwargs else 1.0
+
+		debug = True if "debug" in pargs else False
 		use_workaround = True if "use_workaround" in pargs else False
+		manual_mask_mode = self.Unprompted.parse_alt_tags(kwargs["mode"],context) if "mode" in kwargs else "subtract"
 		mask_sort_method = self.Unprompted.parse_alt_tags(kwargs["mask_sort_method"],context) if "mask_sort_method" in kwargs else "left-to-right"
 		downscale_method = self.Unprompted.parse_alt_tags(kwargs["downscale_method"],context) if "downscale_method" in kwargs else "Lanczos"
 		downscale_method = self.resample_methods[downscale_method]
 		upscale_method = self.Unprompted.parse_alt_tags(kwargs["upscale_method"],context) if "downscale_method" in kwargs else "Nearest Neighbor"
 		upscale_method = self.resample_methods[upscale_method]
 
-
 		all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"],context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)
 		all_negative_replacements = (self.Unprompted.parse_alt_tags(kwargs["negative_replacement"],context) if "negative_replacement" in kwargs else "").split(self.Unprompted.Config.syntax.delimiter)
-		
-		self.Unprompted.shortcode_user_vars["width"] = upscale_width
-		self.Unprompted.shortcode_user_vars["height"] = upscale_height
+
 		# Ensure standard img2img mode
+		if (hasattr(self.Unprompted.p_copy,"image_mask")):
+			image_mask_orig = self.Unprompted.p_copy.image_mask
+		else: image_mask_orig = None
+		self.Unprompted.p_copy.mode = 0
+		self.Unprompted.p_copy.image_mask = None
+		self.Unprompted.p_copy.mask = None
+		self.Unprompted.p_copy.init_img_with_mask = None
+		self.Unprompted.p_copy.init_mask = None
+		self.Unprompted.p_copy.mask_mode = 0
+		self.Unprompted.p_copy.init_mask_inpaint = None
+		self.Unprompted.p_copy.batch_size = 1
+		self.Unprompted.p_copy.n_iter = 1
+
+		# for [txt2mask]
 		self.Unprompted.shortcode_user_vars["mode"] = 0
+		# self.Unprompted.shortcode_user_vars["width"] = upscale_width
+		# self.Unprompted.shortcode_user_vars["height"] = upscale_height
 		self.Unprompted.shortcode_user_vars["image_mask"] = None
-		self.Unprompted.shortcode_user_vars["mask"] = None
-		self.Unprompted.shortcode_user_vars["init_img_with_mask"] = None
-		self.Unprompted.shortcode_user_vars["init_mask"] = None
-		self.Unprompted.shortcode_user_vars["mask_mode"] = 0
-		self.Unprompted.shortcode_user_vars["init_mask_inpaint"] = None
-		self.Unprompted.shortcode_user_vars["inpaint_full_res"] = False
-		# Prevent batch from breaking
-		batch_size_orig = self.Unprompted.shortcode_user_vars["batch_size"]
-		n_iter_orig = self.Unprompted.shortcode_user_vars["n_iter"]
-		self.Unprompted.shortcode_user_vars["batch_size"] = 1
-		self.Unprompted.shortcode_user_vars["n_iter"] = 1
 		
-		if "denoising_strength" in kwargs: self.Unprompted.shortcode_user_vars["denoising_strength"] = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"],context))
-		if "cfg_scale" in kwargs: self.Unprompted.shortcode_user_vars["cfg_scale"] = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"],context))
+		if "denoising_strength" in kwargs:
+			self.Unprompted.p_copy.denoising_strength = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"],context))
+		if "cfg_scale" in kwargs:
+			self.Unprompted.p_copy.cfg_scale = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"],context))
 
 		# vars for dynamic settings
 		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"],context)) if "denoising_max" in kwargs else 0.65
 		cfg_min = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_min"],context)) if "cfg_scale_min" in kwargs else 7.0
-		target_size_max = float(self.Unprompted.parse_advanced(kwargs["mask_size_max"],context)) if "mask_size_max" in kwargs else 0.3	
-		cfg_max = self.Unprompted.shortcode_user_vars["cfg_scale"] - cfg_min
+		target_size_max = float(self.Unprompted.parse_advanced(kwargs["mask_size_max"],context)) if "mask_size_max" in kwargs else 0.5	
+		target_size_max_orig = target_size_max
+		cfg_max = self.Unprompted.p_copy.cfg_scale - cfg_min
 
 		padding_original = int(float(self.Unprompted.parse_advanced(kwargs["contour_padding"],context))) if "contour_padding" in kwargs else 0
 		min_area = int(float(self.Unprompted.parse_advanced(kwargs["min_area"],context))) if "min_area" in kwargs else 50
@@ -70,22 +109,47 @@ class Shortcode():
 
 		set_pargs = pargs
 		set_kwargs = kwargs
-		set_pargs.insert(0,"return_image")
+		set_pargs.insert(0,"return_image") # for [txt2mask]
 
 		if context == "after":
 			all_images = self.Unprompted.after_processed.images
-		else: all_images = self.Unprompted.shortcode_user_vars["init_images"]
+		else: 
+			all_images = self.Unprompted.shortcode_user_vars["init_images"]
 
 		append_originals = []
 		
 		# Batch support yo
 		for image_idx, image_pil in enumerate(all_images):
 			# Workaround for compatibility between [after] block and batch processing
-			if "width" not in self.Unprompted.shortcode_user_vars: return ""
+			if "width" not in self.Unprompted.shortcode_user_vars:
+				self.Unprompted.log("Width variable not set - bypassing shortcode")
+				return ""
+
+			
+			if "bypass_adaptive_hires" not in pargs:
+				total_pixels = image_pil.size[0] * image_pil.size[1]
+				
+				self.Unprompted.log(f"Image size: {image_pil.size[0]}x{image_pil.size[1]} ({total_pixels}px)")
+				target_multiplier = max(image_pil.size[0],image_pil.size[1]) / max(self.Unprompted.shortcode_user_vars["width"],self.Unprompted.shortcode_user_vars["height"])
+				self.Unprompted.log(f"Target multiplier is {target_multiplier}")
+				target_size_max = target_size_max_orig * target_multiplier
+				sd_unit = 64
+
+				upscale_size_test = upscale_width * target_multiplier
+				while (upscale_width < upscale_size_test):
+					upscale_width += sd_unit
+					upscale_height += sd_unit
+				upscale_width = min(hires_size_max,upscale_width)
+				upscale_height = min(hires_size_max,upscale_height)
+
+				self.Unprompted.log(f"Target size max scaled for image size: {target_size_max}")
+				self.Unprompted.log(f"Upscale size, accounting for original image: {upscale_width}")
+
+
 
 			image = numpy.array(image_pil)
 
-			if save: image_pil.save("zoom_enhance_0.png")
+			if debug: image_pil.save("zoom_enhance_0.png")
 
 			if "include_original" in pargs:
 				append_originals.append(image_pil.copy())
@@ -93,7 +157,32 @@ class Shortcode():
 			set_kwargs["txt2mask_init_image"] = image_pil
 			
 			mask_image = self.Unprompted.shortcode_objects["txt2mask"].run_block(set_pargs,set_kwargs,None,target_mask)
-			if save: mask_image.save("zoom_enhance_1.png")
+			
+			if debug: mask_image.save(f"zoom_enhance_1_{image_idx}.png")
+			if (image_mask_orig):
+				self.Unprompted.log("Original image mask detected")
+				prep_orig = image_mask_orig.resize((mask_image.size[0],mask_image.size[1])).convert("L")
+				bg_color = 0
+				if (manual_mask_mode == "subtract"):
+					prep_orig = ImageOps.invert(prep_orig)
+					bg_color = 255
+
+				prep_orig = prep_orig.convert("RGBA")
+			
+				# Make background of original mask transparent
+				mask_data = prep_orig.load()
+				width, height = prep_orig.size
+				for y in range(height):
+					for x in range(width):
+						if mask_data[x, y] == (bg_color, bg_color, bg_color, 255): mask_data[x, y] = (0, 0, 0, 0)
+
+				prep_orig.convert("RGBA") # just in case
+
+				# Overlay mask
+				mask_image.paste(prep_orig, (0, 0), prep_orig)
+
+						
+			if debug: mask_image.save(f"zoom_enhance_2_{image_idx}.png")
 			# Make it grayscale
 			mask_image = cv2.cvtColor(numpy.array(mask_image),cv2.COLOR_BGR2GRAY)
 
@@ -120,11 +209,9 @@ class Shortcode():
 					i = 0
 					# handle if we need to sort in reverse
 					if mask_sort_method == "right-to-left" or mask_sort_method == "bottom-to-top": reverse = True
-					# handle if we are sorting against the y-coordinate rather than
-					# the x-coordinate of the bounding box
+					# handle if we are sorting against the y-coordinate rather than the x-coordinate of the bounding box
 					if mask_sort_method == "top-to-bottom" or mask_sort_method == "bottom-to-top": i = 1
-					# construct the list of bounding boxes and sort them from top to
-					# bottom
+					# construct the list of bounding boxes and sort them from top to bottom
 					boundingBoxes = [cv2.boundingRect(c) for c in cnts]
 					(cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
 						key=lambda b:b[1][i], reverse=reverse))
@@ -144,24 +231,24 @@ class Shortcode():
 					padding = min(padding_original,x,y) 
 
 					if "denoising_strength" not in kwargs or "cfg_scale" not in kwargs:
-						target_size = (w * h) / (self.Unprompted.shortcode_user_vars["width"] * self.Unprompted.shortcode_user_vars["height"])
+						target_size = (w * h) / (self.Unprompted.shortcode_user_vars["width"] * self.Unprompted.shortcode_user_vars["height"] * target_multiplier)
 						self.Unprompted.log(f"Masked region size is {target_size}")
 						if target_size < target_size_max:
 							sig = sigmoid(-6 + (target_size / target_size_max) * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
 							self.Unprompted.log(f"Sigmoid value: {sig}")
 							if "denoising_strength" not in kwargs:
-								self.Unprompted.shortcode_user_vars["denoising_strength"] = (1 - sig) * denoising_max
-								self.Unprompted.log(f"Denoising strength is {self.Unprompted.shortcode_user_vars['denoising_strength']}")
+								self.Unprompted.p_copy.denoising_strength = (1 - sig) * denoising_max
+								self.Unprompted.log(f"Denoising strength is {self.Unprompted.p_copy.denoising_strength}")
 							if "cfg_scale" not in kwargs:
-								self.Unprompted.shortcode_user_vars["cfg_scale"] = cfg_min + sig * cfg_max
+								self.Unprompted.p_copy.cfg_scale = cfg_min + sig * cfg_max
 								self.Unprompted.log(f"CFG Scale is {self.Unprompted.shortcode_user_vars['cfg_scale']} (min {cfg_min}, max {cfg_min+cfg_max})")									
 						else:
 							self.Unprompted.log("Humongous target detected. Skipping zoom_enhance...")
 							continue
 
 					# Set prompt with multi-subject support
-					self.Unprompted.shortcode_user_vars["prompt"] = all_replacements[min(c_idx,len(all_replacements)-1)]
-					self.Unprompted.shortcode_user_vars["negative_prompt"] = all_negative_replacements[min(c_idx,len(all_negative_replacements)-1)]
+					self.Unprompted.p_copy.prompt = all_replacements[min(c_idx,len(all_replacements)-1)]
+					self.Unprompted.p_copy.negative_prompt = all_negative_replacements[min(c_idx,len(all_negative_replacements)-1)]
 
 					y1 = max(0,y-padding)
 					y2 = min(image.shape[0],y+h+padding)
@@ -175,23 +262,44 @@ class Shortcode():
 					sub_img=Image.fromarray(image[y1:y2,x1:x2])
 					sub_mask=Image.fromarray(mask_image[y1:y2,x1:x2])
 					sub_img_big = sub_img.resize((upscale_width,upscale_height),resample=upscale_method)
-					if save: sub_img_big.save("zoom_enhance_2.png")
+					if debug: sub_img_big.save("zoom_enhance_3.png")
 
 					# blur radius is relative to canvas size, should be odd integer
 					blur_radius = math.ceil(w * blur_radius_orig) // 2 * 2 + 1
 					if blur_radius > 0:
 						sub_mask = sub_mask.filter(ImageFilter.GaussianBlur(radius = blur_radius))
 					
-					if save: sub_mask.save("zoom_enhance_3.png")
+					if debug: sub_mask.save("zoom_enhance_4.png")
 
-					self.Unprompted.shortcode_user_vars["img2img_init_image"] = sub_img_big
-					fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
+					self.Unprompted.p_copy.init_images = [sub_img_big]
+					self.Unprompted.p_copy.width = upscale_width
+					self.Unprompted.p_copy.height = upscale_height
+
+					# Ensure standard img2img mode again... JUST IN CASE
+					self.Unprompted.p_copy.mode = 0
+					self.Unprompted.p_copy.image_mask = None
+					self.Unprompted.p_copy.mask = None
+					self.Unprompted.p_copy.init_img_with_mask = None
+					self.Unprompted.p_copy.init_mask = None
+					self.Unprompted.p_copy.mask_mode = 0
+					self.Unprompted.p_copy.init_mask_inpaint = None
+					self.Unprompted.p_copy.latent_mask = None
+					self.Unprompted.p_copy.batch_size = 1
+					self.Unprompted.p_copy.n_iter = 1
+
+					fixed_image = process_images_inner_(self.Unprompted.p_copy) # self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
+					fixed_image =  fixed_image.images[0]
 					if not fixed_image:
 						self.Unprompted.log("An error occurred! Perhaps the user interrupted the operation?")
 						return ""
 
 					# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
-					if save: fixed_image.save("zoom_enhance_4.png")
+					if debug: fixed_image.save("zoom_enhance_5.png")
+
+					if sharpen_amount > 0:
+						self.Unprompted.log(f"Sharpening the fixed image by {sharpen_amount}")
+						fixed_image = unsharp_mask(fixed_image,sharpen_amount)
+
 					# Downscale fixed image back to original size
 					fixed_image = fixed_image.resize((w + padding*2,h + padding*2),resample=downscale_method)
 					
@@ -210,14 +318,9 @@ class Shortcode():
 
 				else: self.Unprompted.log(f"Countour area ({area}) is less than the minimum ({min_area}) - skipping")
 		
-		# Add original images
+		# Add original image to output window
 		for appended_image in append_originals:
 			self.Unprompted.after_processed.images.append(appended_image)
-		
-
-		self.Unprompted.shortcode_user_vars["batch_size"] = batch_size_orig
-		self.Unprompted.shortcode_user_vars["n_iter"] = n_iter_orig
-
 
 		return ""
 
@@ -228,7 +331,7 @@ class Shortcode():
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
 		gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
 		gr.Checkbox(label="Include original image in output window 🡢 include_original")
-		gr.Checkbox(label="Save debug images to WebUI folder 🡢 save")
+		gr.Checkbox(label="Save debug images to WebUI folder 🡢 debug")
 		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")
 		with gr.Accordion("⚙️ Advanced Options", open=False):
 			gr.Dropdown(label="Upscale method 🡢 upscale_method",value="Nearest Neighbor",choices=list(self.resample_methods.keys()),interactive=True)
@@ -236,7 +339,7 @@ class Shortcode():
 			gr.Slider(label="Blur edges size 🡢 blur_size",value=0.03,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
 			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=3.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
 			gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-			gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.3,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.5,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
 			gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
 			gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
 			gr.Number(label="Mask minimum number of pixels 🡢 min_area",value=50,interactive=True)
