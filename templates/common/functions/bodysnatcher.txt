@@ -1,0 +1,63 @@
+[template name="Bodysnatcher v0.0.1"]
+![Preview]([base_dir]/bodysnatcher.png)
+## ⚠️ Important info, please read carefully:
+
+This template works best with multiple ControlNet units, or at least an inpainting model.
+
+To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically. Restart the WebUI after making this change.
+
+<details><summary>Recommended inference settings</summary>
+
+Use the img2img inpainting tab.
+
+- **Mask blur and mask padding:** 10
+- **Only masked padding:** 0
+- **Sampler:** Euler A @ 25 steps
+- **CFG Scale:** 7
+- **Denoising strength:** 0.75 *(In some cases, you can go all the way up to 1.)*
+- **Prompt:** Empty. *(Anything added to the prompt box influences the body swap but not the face upscale step.)*
+- **Restore Faces:** Off. *(Turning it on generally decreases likeness, but may be helpful for undercooked/overcooked models.)*
+
+**Tip:** For images with multiple subjects, roughly mask out the subject(s) you *don't* want to process and they will be subtracted from the final mask.
+</details>
+
+<details><summary>"Secret Sauce" ControlNet Units</summary>
+
+You can load these units in any order. That said, I am listing them in order of importance for those who don't have enough memory to enable so many units at once.
+
+- **hed / controlnet11Models_softedge:** In my opinion, this is the best unit for capturing general linework and composition of realistic images. However, it has a fairly strong effect on body type so you may need to lower the weight (all the way down to ~0.25 in some cases.) A more forgiving alternative is **fake_scribble / controlnet11Models_scribble**, but that one produces anatomical errors from time to time.
+- **color / coadapter-color-sd15v1:** Very helpful for maintaining the clothing and general lighting of the original subject. Do note however that the stock **t2iadapter_color_sd14v1** model is not a suitable alternative.
+- **mediapipe_face / control_mediapipe_face_sd15_v2**: Maintains the facial expression of the subject. Must be installed via PR.
+- **openpose / controlnet11Models_openpose**: Can help keep the swap coherent with certain postures or angles. Also, the new openpose_full model may outperform mediapipe_face, but I have not tested it yet.
+
+</details>
+ 
+
+Always bodysnatch responsibly.
+[/template]
+
+[set prefix _new _label="Prefix" _info="For example, the visual medium"]photo of[/set]
+[set subject _new _label="New subject"]mona lisa[/set]
+[set simple_description _new _label="Simple Description" _info="These terms will apply to both the full image and the cropped face, less is more"][/set]
+[set class _new _label="Class" _info="The search term that determines the inpainting mask"]woman[/set]
+
+[set use_workaround _new _label="Use workaround" _ui="checkbox" _info="Enable this if the final image isn't showing up in your output window"]0[/set]
+
+[set keep_hands _new _label="Keep original hands" _ui="checkbox" _info="You don't really want Stable Diffusion to remake those hands, do you?"]1[/set]
+[set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
+
+[wizard_ui_accordion _label="⚙️ Advanced Options"]
+{set fix_bodypart _new _label="Fix a body part"}face{/set}
+{set mask_method _new _label="Masking method (sam requires manual setup)" _ui="radio" _choices="clipseg|sam"}clipseg{/set}
+{set manual_mask_mode _new _label="Manual masking mode" _ui="radio" _choices="add|subtract|discard"}subtract{/set}
+{set mask_precision _new _label="Mask precision"}75{/set}
+{set zoom_enhance_denoising_max _new}0.35{/set}
+[/wizard_ui_accordion]
+
+[sets neg_mask=""]
+[if keep_hands=1]{set neg_mask}fingers{/set}[/if]
+[if keep_feet=1]{set neg_mask _append}|feet{/set}[/if]
+
+
+
+[img2img_autosize][txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask][after]{zoom_enhance_beta [if use_workaround=1]use_workaround[/if] sharpen_amount=3.0 mode="subtract" debug mask="[get class] [get fix_bodypart]" replacement="[get prefix] [get subject] [get fix_bodypart] [get simple_description _before=' ']" cfg_scale=10 denoising_max="[get zoom_enhance_denoising_max]"}[/after][get prefix] [get subject][get simple_description _before=" "]

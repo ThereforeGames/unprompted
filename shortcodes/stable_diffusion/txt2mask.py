@@ -9,7 +9,6 @@ class Shortcode():
 		self.cached_transform = -1
 
 	def run_block(self, pargs, kwargs, context, content):
-		from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 		from PIL import ImageChops, Image, ImageOps
 		import os.path
 		import torch
@@ -24,13 +23,27 @@ class Shortcode():
 		if "txt2mask_init_image" in kwargs:
 			self.init_image = kwargs["txt2mask_init_image"]
 		elif "init_images" not in self.Unprompted.shortcode_user_vars:
+			self.Unprompted.log("No init_images found...")
 			return
 		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0]
+
+		method = self.Unprompted.parse_advanced(kwargs["method"],context) if "method" in kwargs else "clipseg"
+
+		if method == "clipseg":
+			mask_width = 512
+			mask_height = 512
+		elif method == "sam":
+			mask_width = self.Unprompted.shortcode_user_vars["width"]
+			mask_height = self.Unprompted.shortcode_user_vars["height"]
 
 		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 		brush_mask_mode = self.Unprompted.parse_advanced(kwargs["mode"],context) if "mode" in kwargs else "add"
 		self.show = True if "show" in pargs else False
+
+
+		box_thresh = float(self.Unprompted.parse_advanced(kwargs["box_threshold"],context)) if "box_threshold" in kwargs else 0.3
+		text_thresh = float(self.Unprompted.parse_advanced(kwargs["text_threshold"],context)) if "text_threshold" in kwargs else 0.25
 
 		self.legacy_weights = True if "legacy_weights" in pargs else False
 		smoothing = int(self.Unprompted.parse_advanced(kwargs["smoothing"],context)) if "smoothing" in kwargs else 20
@@ -58,8 +71,11 @@ class Shortcode():
 		prompt_parts = len(prompts)
 
 		if "negative_mask" in kwargs:
-			negative_prompts = (self.Unprompted.parse_advanced(kwargs["negative_mask"],context)).split(self.Unprompted.Config.syntax.delimiter)
-			negative_prompt_parts = len(negative_prompts)
+			neg_parsed = self.Unprompted.parse_advanced(kwargs["negative_mask"],context)
+			if len(neg_parsed) < 1: negative_prompts = None
+			else:
+				negative_prompts = neg_parsed.split(self.Unprompted.Config.syntax.delimiter)
+				negative_prompt_parts = len(negative_prompts)
 		else: negative_prompts = None
 
 		mask_precision = min(255,int(self.Unprompted.parse_advanced(kwargs["precision"],context) if "precision" in kwargs else 100))
@@ -75,11 +91,18 @@ class Shortcode():
 
 		def process_mask_parts(masks, mode, final_img = None, mask_precision=100, mask_padding=0, padding_dilation_kernel=None, smoothing_kernel=None):
 			for i, mask in enumerate(masks):
+				
 				filename = f"mask_{mode}_{i}.png"
-				plt.imsave(filename,torch.sigmoid(mask[0]))
-
+				if method == "clipseg":
+					plt.imsave(filename,torch.sigmoid(mask[0]))
+					img = cv2.imread(filename)
 				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
-				img = cv2.imread(filename)
+				else:
+					plt.imsave(filename,mask)
+					img = cv2.imread(filename)
+					img = cv2.resize(img,(mask_width,mask_height))
+					
+
 
 				if padding_dilation_kernel is not None:
 					if (mask_padding > 0): img = cv2.dilate(img,padding_dilation_kernel,iterations=1)
@@ -99,55 +122,202 @@ class Shortcode():
 			return(final_img)
 			
 		def get_mask():
-			model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
-			
-			os.makedirs(model_dir, exist_ok=True)
+			image_pil = flatten(self.init_image, opts.img2img_background_color)
 
-			d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
-			d64_file = f"{model_dir}/{d64_filename}"
-			d16_file = f"{model_dir}/rd16-uni.pth"
+			if method == "sam":
+				# Grounding DINO
+				import GroundingDINO.groundingdino.datasets.transforms as T
+				from GroundingDINO.groundingdino.models import build_model
+				from GroundingDINO.groundingdino.util import box_ops
+				from GroundingDINO.groundingdino.util.slconfig import SLConfig
+				from GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 
-			# Download model weights if we don't have them yet
-			if not os.path.exists(d64_file):
-				print("Downloading clipseg model weights...")
-				self.Unprompted.download_file(d64_file,f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
-				self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
+				# segment anything
+				from segment_anything import build_sam, SamPredictor 
+				import cv2
+				import numpy as np
+				import matplotlib.pyplot as plt
 
-			# load model
-			if self.cached_model == -1:
-				self.Unprompted.log("Loading clipseg model...")
-				model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
+				def get_grounding_output(model, image, caption, box_threshold, text_threshold, with_logits=True, device="cpu"):
+					caption = caption.lower()
+					caption = caption.strip()
+					if not caption.endswith("."):
+						caption = caption + "."
+					model = model.to(device)
+					image = image.to(device)
+					with torch.no_grad():
+						outputs = model(image[None], captions=[caption])
+					logits = outputs["pred_logits"].cpu().sigmoid()[0]  # (nq, 256)
+					boxes = outputs["pred_boxes"].cpu()[0]  # (nq, 4)
+					logits.shape[0]
 
-				# non-strict, because we only stored decoder weights (not CLIP weights)
-				model.load_state_dict(torch.load(d64_file, map_location=device), strict=False)
-				model = model.eval().to(device=device)
+					# filter output
+					logits_filt = logits.clone()
+					boxes_filt = boxes.clone()
+					filt_mask = logits_filt.max(dim=1)[0] > box_threshold
+					logits_filt = logits_filt[filt_mask]  # num_filt, 256
+					boxes_filt = boxes_filt[filt_mask]  # num_filt, 4
+					logits_filt.shape[0]
 
-				transform = transforms.Compose([
-					transforms.ToTensor(),
-					transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-					transforms.Resize((512, 512)),
-				])
+					# get phrase
+					tokenlizer = model.tokenizer
+					tokenized = tokenlizer(caption)
+					# build pred
+					pred_phrases = []
+					for logit, box in zip(logits_filt, boxes_filt):
+						pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
+						if with_logits:
+							pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
+						else:
+							pred_phrases.append(pred_phrase)
 
-				# Cache for future runs
-				self.cached_model = model
-				self.cached_transform = transform
+					return boxes_filt, pred_phrases
+
+				sam_model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/segment_anything/weights"
+				os.makedirs(sam_model_dir, exist_ok=True)
+				sam_filename = "sam_vit_h_4b8939.pth"
+				sam_file = f"{sam_model_dir}/{sam_filename}"
+
+				# Download model weights if we don't have them yet
+				if not os.path.exists(sam_file):
+					print("Downloading SAM model weights...")
+					self.Unprompted.download_file(sam_file,f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
+				
+				dino_model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/GroundingDINO/weights"
+				os.makedirs(dino_model_dir, exist_ok=True)
+				dino_filename = "groundingdino_swint_ogc.pth"
+				dino_file = f"{dino_model_dir}/{dino_filename}"
+
+				if not os.path.exists(dino_file):
+					print("Downloading GroundingDINO model weights...")
+					self.Unprompted.download_file(dino_file,f"https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/{dino_filename}")
+
+				model_config_path = f"{self.Unprompted.base_dir}/lib_unprompted/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+
+				# load model
+				if self.cached_model == -1:
+					args = SLConfig.fromfile(model_config_path)
+					args.device = device
+					model = build_model(args)
+					checkpoint = torch.load(dino_file, map_location="cpu")
+					load_res = model.load_state_dict(clean_state_dict(checkpoint["model"]), strict=False)
+					print(load_res)
+					_ = model.eval()
+
+					transform = T.Compose(
+						[
+							T.RandomResize([800], max_size=1333),
+							T.ToTensor(),
+							T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+						]
+					)
+					self.cached_model = model
+					self.cached_transform = transform
+
+				else:
+					self.Unprompted.log("Using cached GroundingDINO model.")
+					model = self.cached_model
+					transform = self.cached_transform
+
+
+				def sam_infer(boxes_filt):
+					for i in range(boxes_filt.size(0)):
+						boxes_filt[i] = boxes_filt[i] * torch.Tensor([W, H, W, H])
+						boxes_filt[i][:2] -= boxes_filt[i][2:] / 2
+						boxes_filt[i][2:] += boxes_filt[i][:2]
+
+					boxes_filt = boxes_filt.cpu()
+					transformed_boxes = predictor.transform.apply_boxes_torch(boxes_filt, img.shape[:2]).to(device)
+
+					masks, _, _ = predictor.predict_torch(
+						point_coords = None,
+						point_labels = None,
+						boxes = transformed_boxes.to(device),
+						multimask_output = False,
+					)
+					
+					preds = []
+					value = 0
+					mask_img = torch.zeros(masks.shape[-2:])
+					for idx, mask in enumerate(masks):
+						mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
+					preds.append(mask_img.numpy())
+
+					return(preds)
+
+				# run grounding dino model
+				img, _ = transform(image_pil,None)
+				boxes_filt, pred_phrases = get_grounding_output(model, img, prompts[0], box_thresh, text_thresh, device=device)
+				if (negative_prompts):
+					neg_boxes_filt, pred_phrases = get_grounding_output(model, img, negative_prompts[0], box_thresh, text_thresh, device=device)
+
+				# initialize SAM
+				predictor = SamPredictor(build_sam(checkpoint=sam_file).to(device))
+				img = numpy.array(image_pil) # cv2.imread(image_path)
+				img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+				predictor.set_image(img)
+
+				size = image_pil.size
+				H, W = size[0], size[1]
+
+				preds = sam_infer(boxes_filt)
+				if (negative_prompts): negative_preds = sam_infer(neg_boxes_filt)		
+
+			# clipseg method
 			else:
-				self.Unprompted.log("Using cached clipseg model.")
-				model = self.cached_model
-				transform = self.cached_transform
+				from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
-			flattened_input = flatten(self.init_image, opts.img2img_background_color)
-			img = transform(flattened_input).unsqueeze(0)
+				model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
+				
+				os.makedirs(model_dir, exist_ok=True)
 
-			# predict
-			with torch.no_grad():
-				preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0].cpu()
-				if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0].cpu()
+				d64_filename = "rd64-uni.pth" if self.legacy_weights else "rd64-uni-refined.pth"
+				d64_file = f"{model_dir}/{d64_filename}"
+				d16_file = f"{model_dir}/rd16-uni.pth"
+
+				# Download model weights if we don't have them yet
+				if not os.path.exists(d64_file):
+					print("Downloading clipseg model weights...")
+					self.Unprompted.download_file(d64_file,f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
+					self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
+
+
+				# load model
+				if self.cached_model == -1:
+					self.Unprompted.log("Loading clipseg model...")
+					model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
+
+					# non-strict, because we only stored decoder weights (not CLIP weights)
+					model.load_state_dict(torch.load(d64_file, map_location=device), strict=False)
+					model = model.eval().to(device=device)
+
+					transform = transforms.Compose([
+						transforms.ToTensor(),
+						transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+						transforms.Resize((512, 512)),
+					])
+
+					# Cache for future runs
+					self.cached_model = model
+					self.cached_transform = transform
+				else:
+					self.Unprompted.log("Using cached clipseg model.")
+					model = self.cached_model
+					transform = self.cached_transform
+
+				img = transform(image_pil).unsqueeze(0)
+
+				# predict
+				with torch.no_grad():
+					preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0].cpu()
+					if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0].cpu()
+
+			# All of the below logic applies to both clipseg and sam
 
 			if "image_mask" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["image_mask"] = None
-			
+				
 			if (brush_mask_mode == "add" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
-				final_img = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((512,512))
+				final_img = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((mask_width,mask_height))
 			else: final_img = None
 
 			# process masking
@@ -156,7 +326,7 @@ class Shortcode():
 			# process negative masking
 			if (brush_mask_mode == "subtract" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
 				self.Unprompted.shortcode_user_vars["image_mask"] = ImageOps.invert(self.Unprompted.shortcode_user_vars["image_mask"])
-				self.Unprompted.shortcode_user_vars["image_mask"] = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((512,512))
+				self.Unprompted.shortcode_user_vars["image_mask"] = self.Unprompted.shortcode_user_vars["image_mask"].convert("RGBA").resize((mask_width,mask_height))
 				final_img = overlay_mask_part(final_img,self.Unprompted.shortcode_user_vars["image_mask"],"discard")
 			if (negative_prompts): final_img = process_mask_parts(negative_preds,"discard",final_img, neg_mask_precision,neg_mask_padding, neg_padding_dilation_kernel, neg_smoothing_kernel)
 
@@ -164,9 +334,9 @@ class Shortcode():
 				img_data = final_img.load()
 				# Count number of transparent pixels
 				black_pixels = 0
-				total_pixels = 512 * 512
-				for y in range(512):
-					for x in range(512):
+				total_pixels = mask_width * mask_height
+				for y in range(mask_height):
+					for x in range(mask_width):
 						pixel_data = img_data[x,y]
 						if (pixel_data[0] == 0 and pixel_data[1] == 0 and pixel_data[2] == 0): black_pixels += 1
 				subject_size = 1 - black_pixels / total_pixels
@@ -190,7 +360,7 @@ class Shortcode():
 						if mask_data[x, y] == (0, 0, 0, 255): mask_data[x, y] = (0, 0, 0, 0)
 
 				# Match size just in case
-				paste_mask = paste_mask.resize((flattened_input.size[0],flattened_input.size[1]))
+				paste_mask = paste_mask.resize((image_pil.size[0],image_pil.size[1]))
 
 				# Workaround for A1111 not including mask_alpha in p object
 				if "sketch_alpha" in kwargs:
@@ -206,20 +376,27 @@ class Shortcode():
 					self.Unprompted.shortcode_user_vars["mask_blur"] = 0
 
 				# Paste mask on
-				flattened_input.paste(paste_mask,box=None,mask=paste_mask)
+				image_pil.paste(paste_mask,box=None,mask=paste_mask)
 				
-				self.Unprompted.shortcode_user_vars["init_images"][0] = flattened_input
+				self.Unprompted.shortcode_user_vars["init_images"][0] = image_pil
 				# not used by SD, just used to append to our GUI later
 				self.Unprompted.shortcode_user_vars["colorized_mask"] = paste_mask
 
 				# Assign webui vars, note - I think it should work this way but A1111 doesn't appear to store some of these in p obj
 				# note: inpaint_color_sketch = flattened image with mask on top
-				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch"] = flattened_input
+				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch"] = image_pil
 				# note: inpaint_color_sketch_orig = the init image
 				# self.Unprompted.shortcode_user_vars["inpaint_color_sketch_orig"] = self.Unprompted.shortcode_user_vars["init_images"][0]
-				# return flattened_input
+				# return image_pil
 
-			else: self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
+			else: 
+				self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
+				if (self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
+					from PIL import ImageFilter
+					blur = ImageFilter.GaussianBlur(self.Unprompted.shortcode_user_vars["mask_blur"])
+					final_img = final_img.filter(blur)
+					self.Unprompted.shortcode_user_vars["mask_blur"] = 0
+
 
 			if "unload_model" in pargs:
 				self.model = -1
@@ -263,8 +440,9 @@ class Shortcode():
 	
 	def ui(self,gr):
 		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
+		gr.Radio(label="Masking tech method 🡢 method",choices=["sam","clipseg"],value="sam",interactive=True)
 		gr.Checkbox(label="Show mask in output 🡢 show")
-		gr.Checkbox(label="Use legacy weights 🡢 legacy_weights")
+		gr.Checkbox(label="Use clipseg legacy weights 🡢 legacy_weights")
 		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
 		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
 		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)

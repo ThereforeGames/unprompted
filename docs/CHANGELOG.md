@@ -3,6 +3,47 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>8.0.0 - 16 April 2023</summary>
+
+### Added
+- New `Bodysnatcher` GUI template
+- New option `Unprompted.Config.beta_features` to opt into unfinished doodads
+- Unprompted now creates a copy of the `p` object at the beginning of the `process()` routine named `Unprompted.p_copy`, which allows for greater compatibility with extensions that hijack the inference pipeline (e.g. ControlNet)
+- With the help of the above change, `[zoom_enhance]` is now compatible with ControlNet
+- The `[zoom_enhance]` shortcode now applies a sharpening filter to the final image as determined by the `sharpen_amount` arg
+- The `[zoom_enhance]` shortcode now supports manual mask behavior `mode` similar to `[txt2mask]`
+- The `[zoom_enhance]` shortcode seeks to improve support with `Only Masked` mode by scaling up some settings to account for your original image resolution
+- The `[zoom_enhance]` shortcode supports `bypass_adaptive_hires` to disable the above behavior
+- The `[zoom_enhance]` shortcode now supports `hires_size_max` which limits the adaptive resolution to avoid OOM errors (defaults to 1024)
+- Wizard Templates now support `[wizard_ui_accordion]` to group a collection of settings into a collapsible menu
+- Wizard Template UI elements now support `_info` for showing descriptive text
+- New `Known Issues` section in the manual
+- The `[txt2mask]` shortcode now supports the Segment Anything Model with GroundingRINO (set `method="sam"`), although you need to install the latter manually--it doesn't work with pip at the time of writing--and I'm not particularly impressed by its results compared to clipseg (after installing manually: you'll need to move GroundingRINO into your `venv` folder and replace any `import groundingrino` calls with relative imports e.g. `import ...utils.something`)
+- CSS style for prose hyperlinks so I can actually see the darn things
+
+### Changed
+- Wizard Functions have been renamed to Wizard Templates
+- The `[zoom_enhance]` shortcode now runs the native `process_images_inner()` function as opposed to piggybacking the `[img2img]` shortcode
+- The `[zoom_enhance]` `save` parg has been renamed to `debug`
+- Increased the `[zoom_enhance]` `mask_size_max` default value from 0.3 to 0.5
+- A bit of UI polish
+- Fixed a crash related to calling `Unprompted.parse_alt_tags()` with an empty string
+- Fixed typo related to Wizard Template radio buttons
+- Fixed CSS padding of list elements in the latest version of WebUI
+- Fixed CSS spacing between `<detail>` elements
+- Fixed Wizard Template radio button default value
+- Fixed an issue with nested Wizard UI event listeners
+- Wizard UI values are updated on Gradio's unfocus event due to the unreliable nature of the `change()` event as demonstrated here: https://github.com/gradio-app/gradio/issues/3876
+- Improved logging in various places
+- Wizard Templates are now explicitly loaded as `utf8` (compatible with emoji 😎)
+
+### Removed
+- The `settings` placeholder UI files for the time being, although I would like to implement a UI for `config_user.json` eventually
+
+
+
+</details>
+
 <details><summary>7.9.1 - 17 March 2023</summary>
 
 ### Changed
