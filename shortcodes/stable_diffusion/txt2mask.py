@@ -391,7 +391,7 @@ class Shortcode():
 
 			else: 
 				self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
-				if (self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
+				if ("mask_blur" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
 					from PIL import ImageFilter
 					blur = ImageFilter.GaussianBlur(self.Unprompted.shortcode_user_vars["mask_blur"])
 					final_img = final_img.filter(blur)
