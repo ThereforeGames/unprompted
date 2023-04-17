@@ -384,16 +384,15 @@ class Scripts(scripts.Script):
 		if not is_enabled:
 			return p	
 
-		if Unprompted.Config.beta_features:
-			# test compatibility with controlnet
-			import copy
-			Unprompted.p_copy = copy.copy(p)
-			# update the controlnet script args with a list of 0 units
-			try:
-				import importlib
-				external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
-				external_code.update_cn_script_in_processing(Unprompted.p_copy, []) 
-			except: pass
+		# test compatibility with controlnet
+		import copy
+		Unprompted.p_copy = copy.copy(p)
+		# update the controlnet script args with a list of 0 units
+		try:
+			import importlib
+			external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
+			external_code.update_cn_script_in_processing(Unprompted.p_copy, []) 
+		except: pass
 
 		if match_main_seed: 
 			if p.seed == -1:
