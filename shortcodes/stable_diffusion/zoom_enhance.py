@@ -25,11 +25,6 @@ class Shortcode():
 
 
 	def run_atomic(self, pargs, kwargs, context):
-
-		if not self.Unprompted.Config.beta_features:
-			self.Unprompted.log(f"This thing ain't ready yet. Please enable Unprompted.Config.beta_features to use it anyway.",True,"ERROR")
-			return ""
-
 		import cv2
 		import numpy
 		from PIL import Image, ImageFilter, ImageChops, ImageOps
