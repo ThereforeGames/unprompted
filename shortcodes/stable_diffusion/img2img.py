@@ -23,14 +23,14 @@ class Shortcode():
 		for i in range(len(sd_samplers.samplers_for_img2img)):
 			if sd_samplers.samplers_for_img2img[i].name == self.Unprompted.shortcode_user_vars["sampler_name"]:
 				sampler_index = i
-				break
+				print(sd_samplers.samplers_for_img2img[i].name) #break
 
 		if "img2img_init_image" in self.Unprompted.shortcode_user_vars:
 			init_img = self.Unprompted.shortcode_user_vars["img2img_init_image"]
 		else:
 			init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.shortcode_user_vars["init_images"]) - 1]			
 		init_img_with_mask = self.Unprompted.shortcode_user_vars["init_img_with_mask"] if "init_img_with_mask" in self.Unprompted.shortcode_user_vars else None
-
+		
 		try:
 			img2img_result = modules.img2img.img2img(
 				"unprompted_img2img", #id_task
@@ -67,7 +67,7 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars["width"],
 				self.Unprompted.shortcode_user_vars["resize_mode"] if "resize_mode" in self.Unprompted.shortcode_user_vars else 1,
 				self.Unprompted.shortcode_user_vars["inpaint_full_res"] if "inpaint_full_res" in self.Unprompted.shortcode_user_vars else True, # p.inpaint_full_res
-				self.Unprompted.shortcode_user_vars["inpaint_full_res_padding"] if "inpaint_full_res_pdding" in self.Unprompted.shortcode_user_vars else 1, # p.inpaint_full_res_padding
+				self.Unprompted.shortcode_user_vars["inpaint_full_res_padding"] if "inpaint_full_res_padding" in self.Unprompted.shortcode_user_vars else 1, # p.inpaint_full_res_padding
 				0, # p.inpainting_mask_invert
 				"", #p.batch_input_directory
 				"", #p.batch_output_directory

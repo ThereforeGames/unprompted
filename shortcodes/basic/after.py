@@ -15,6 +15,7 @@ class Shortcode():
 	
 	def after(self,p=None,processed=None):
 		self.last_index = -1
+
 		if self.after_content:
 			if processed:
 				# Share variable with other shortcodes

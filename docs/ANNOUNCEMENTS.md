@@ -1,6 +1,60 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Introducing the "Bodysnatcher" Template — 16 April 2023</summary>
+
+The latest version of the Unprompted extension includes **a GUI template for full-body swaps!** To my knowledge, it is the first of its kind. Let me explain what makes it a potentially interesting addition to your workflow:
+
+Bodysnatcher leverages an assortment of shortcodes as well as ControlNet to replace (or "recast") a subject **without affecting the background or other objects in your image.**
+
+![tony_soprano_to_brad_pitt]([base_dir]/images/bodysnatcher_example_1.png)
+
+When you enable the template and press Generate, it sets off the following chain of events:
+
+- First, Bodysnatcher calculates the canvas size automatically, so you do not have to specify width or height.
+- It creates an inpainting mask of the desired subject (i.e. "man") using txt2mask.
+- It runs the main img2img swap.
+- Finally, it improves face details on the resulting image with [zoom_enhance].
+
+Here's a visual representation of the process:
+
+![bodysnatcher_process]([base_dir]/images/bodysnatcher_example_2.png)
+
+Imagine doing all of that by hand. No thank you!
+
+## Use Cases
+
+With txt2video breakthroughs happening left and right, you could soon use Bodysnatcher to recast actors in a live production or video game.
+
+![bodysnatcher_process]([base_dir]/images/bodysnatcher_example_3.png)
+
+Additionally, this template can help with creating more variety in a dataset. Let's say you wanted to finetune an embedding on an article of clothing - you need pictures of said clothing worn in different contexts. If all of your training images show the same person in the same clothes, you risk cooking the wrong data into your embedding.
+
+Using Bodysnatcher and the right ControlNet units, you can stretch a limited set of data a lot further. Leveraging AI to improve AI models has a lot of untapped potential.
+
+## Obligatory "Does It Work On Waifus?"
+
+Sort of. The initial image must have some shading and depth to it, otherwise you are going to have a rough time achieving consistent style in your swaps. Finding a good balance between likeness and style is more difficult with anime. Character Loras just aren't built for this kind of thing - possibly because they're trained on relatively few parameters. Lycoris and Textual Inversion seem to fare better. But Dreambooth is still unrivaled in terms of quality and flexibility.
+
+Also, you will need to find a different ControlNet "loadout" for anime. I got okay results with the new lineart_anime model, openpose_full and color. Dial the weight back to 0.25-0.5 and set denoising strength quite high (>=0.9), otherwise your character likeness will go out the window.
+
+![bodysnatcher_process]([base_dir]/images/bodysnatcher_example_4.png)
+
+## More Features
+
+Bodysnatcher has a few other bells and whistles I haven't mentioned yet:
+
+- There's an option to "keep original hands and feet" which helps cut down on the nightmare fuel. Assuming both actors share a similar body type and skin tone, you don't really need to regenerate their extremities.
+- You can use loras and embeddings within the subject field.
+- Compatible with batch size and batch count.
+- Compatible with "Only masked" mode if you want to make high res stuff.
+- It's primarily intended for photos that depict a single subject of the given class. If your class is "woman" and the picture contains two women, both of them are gonna get bodysnatched. You can, however, draw a mask on the content you want to "lock in" - anything you mask manually will not change.
+- It's remarkably consistent once you set it up. I haven't cherrypicked any of the example images. Of course, that has a lot to do with using ControlNet (the GOAT) and quality models.
+
+Have fun!
+
+</details>
+
 <details><summary>Enhance! CSI Magic Brought to Life — 12 March 2023</summary>
 
 I'm pleased to announce the latest addition to Unprompted: the `[zoom_enhance]` shortcode.

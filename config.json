@@ -1,6 +1,7 @@
 {
 	"_about":"STOP! Instead of modifying this file, create config_user.json and make your changes there.",
 	"app":"unprompted",
+	"beta_features":false,
 	"debug":false,
 	"advanced_expressions":true,
 	"template_directory":"templates",
