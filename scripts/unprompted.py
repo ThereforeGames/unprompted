@@ -242,16 +242,9 @@ class Scripts(scripts.Script):
 									else: this_placeholder = str(content)
 									obj = gr.Textbox(label=this_label,max_lines=1,placeholder=this_placeholder,info=_info)
 								elif (block_name == "checkbox"):
-<<<<<<< HEAD
 									obj = gr.Checkbox(label=this_label,value=bool(int(content)),info=_info)
 								elif (block_name == "number"):
 									obj = gr.Number(label=this_label,value=int(content),interactive=True,info=_info,minimum=kwargs["_minimum"] if "_minimum" in kwargs else None,maximum=kwargs["_maximum"] if "_maximum" in kwargs else None)
-
-=======
-
-								obj = gr.Checkbox(label=this_label,value=bool(int(content)),info=_info)
-								elif (block_name == "number"): obj = gr.Number(label=this_label,value=int(content),interactive=True,info=_info)
->>>>>>> 42f4aadb17592d08170df270502bea1ccdaa1523
 								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,value=content,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter),info=_info)
 								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter),interactive=True,value=content)
 								elif (block_name == "slider"):
