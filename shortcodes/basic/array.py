@@ -28,8 +28,6 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars[parg].append("")
 			self.Unprompted.shortcode_user_vars[parg][int(kwarg)] = self.Unprompted.parse_advanced(val,context)
 
-		if "_shuffle" in pargs:
-			random.shuffle(self.Unprompted.shortcode_user_vars[pargs[0]])
 		if "_append" in kwargs:
 			split_append =self.Unprompted.parse_advanced(kwargs["_append"],context).split(delimiter)
 			for idx,item in enumerate(split_append):
@@ -49,6 +47,8 @@ class Shortcode():
 		if "_find" in kwargs:
 			for item in kwargs["_find"].split(delimiter):
 				result_list.append(self.Unprompted.shortcode_user_vars[pargs[0]].index(self.Unprompted.parse_advanced(item,context)))
+		if "_shuffle" in pargs:
+			random.shuffle(self.Unprompted.shortcode_user_vars[pargs[0]])
 		
 		return(delimiter.join(str(x) for x in result_list))
 
