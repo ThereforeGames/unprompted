@@ -34,21 +34,21 @@ class Shortcode():
 			split_append =self.Unprompted.parse_advanced(kwargs["_append"],context).split(delimiter)
 			for idx,item in enumerate(split_append):
 				split_append[idx] = self.Unprompted.parse_advanced(item,context)
-			self.Unprompted.shortcode_user_vars[parg].extend(split_append)
+			self.Unprompted.shortcode_user_vars[pargs[0]].extend(split_append)
 		if "_prepend" in kwargs:
 			split_prepend = kwargs["_prepend"].split(delimiter)
 			for idx,item in enumerate(split_prepend):
 				split_prepend[idx] = self.Unprompted.parse_advanced(item,context)
-			self.Unprompted.shortcode_user_vars[parg] = split_prepend.extend(self.Unprompted.shortcode_user_vars[parg])
+			self.Unprompted.shortcode_user_vars[pargs[0]] = split_prepend.extend(self.Unprompted.shortcode_user_vars[parg])
 		if "_del" in kwargs:
 			for item in kwargs["_del"].split(delimiter):
-				del self.Unprompted.shortcode_user_vars[parg][int(self.Unprompted.parse_advanced(item,context))]
+				del self.Unprompted.shortcode_user_vars[pargs[0]][int(self.Unprompted.parse_advanced(item,context))]
 		if "_remove" in kwargs:
 			for item in kwargs["_remove"].split(delimiter):
-				self.Unprompted.shortcode_user_vars[parg].remove(self.Unprompted.parse_advanced(item,context))
+				self.Unprompted.shortcode_user_vars[pargs[0]].remove(self.Unprompted.parse_advanced(item,context))
 		if "_find" in kwargs:
 			for item in kwargs["_find"].split(delimiter):
-				result_list.append(self.Unprompted.shortcode_user_vars[parg].index(self.Unprompted.parse_advanced(item,context)))
+				result_list.append(self.Unprompted.shortcode_user_vars[pargs[0]].index(self.Unprompted.parse_advanced(item,context)))
 		
 		return(delimiter.join(str(x) for x in result_list))
 
