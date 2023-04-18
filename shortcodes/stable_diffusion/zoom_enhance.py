@@ -392,6 +392,7 @@ class Shortcode():
 		gr.Checkbox(label="Include original, unenhanced image in output window? 🡢 show_original")
 		gr.Text(label="Mask to find 🡢 mask",value="face")
 		gr.Text(label="Replacement 🡢 replacement",value="face")
+		gr.Text(label="Negative mask 🡢 negative_mask",value="")
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
 		gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
 		gr.Checkbox(label="Include original image in output window 🡢 include_original")

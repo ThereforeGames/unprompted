@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>8.2.0 - 18 April 2023</summary>
+
+### Added
+- `[substring]`: you can now pass strings into the `start` and `end` arguments and it will find the index of those strings within the content
+- `[zoom_enhance]`: included `negative_mask` in the Wizard UI
+
+### Changed
+- `[txt2mask]`: setting `method="sam"` will attempt to install the required GroundingDINO library automatically, YMMV
+- `[array]`: fixed crash related to `_shuffle`
+- Unprompted will now store downloaded models into `models` rather than `lib_unprompted`
+- On startup, Unprompted will move its models to the new location
+
+</details>
+
 <details><summary>8.1.0 - 17 April 2023</summary>
 
 ### Added
@@ -12,7 +26,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 - `[zoom_enhance]`: implements the `color-matcher` library for higher quality swaps
 - `[zoom_enhance]`: supports `color_correct_method` to choose from different grading algorithms, or disable color correction by setting this to `none`
 - `[zoom_enhance]`: supports `color_correct_strength` which is an integer that determines how many times to run the `color_correct_method`
-- `[zoom_enhance]`: the `adaptive_hires` feature will now scale up denoising strength
+- `[zoom_enhance]`: the `adaptive_hires` feature will now ajdust CFG scale and apply a bit of sharpening
 - Wizard UI `number` elements can now specify `_minimum` and `_maximum` value range (however, this isn't supported by Gradio yet)
 - Specified default values for Wizard UI `slider` elements to prevent crashing
 

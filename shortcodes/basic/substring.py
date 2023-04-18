@@ -4,8 +4,15 @@ class Shortcode():
 		self.description = "Slices up the content."
 
 	def run_block(self, pargs, kwargs, context,content):
-		start = int(self.Unprompted.parse_advanced(kwargs["start"],context)) if "start" in kwargs else 0
-		end = int(self.Unprompted.parse_advanced(kwargs["end"],context))  if "end" in kwargs else 0
+		start = self.Unprompted.parse_advanced(kwargs["start"],context) if "start" in kwargs else 0
+		end = self.Unprompted.parse_advanced(kwargs["end"],context) if "end" in kwargs else 0
+
+		# Support strings to search for
+		if self.Unprompted.is_int(start): start = int(start)
+		else: start = content.find(start)
+		if self.Unprompted.is_int(end): end = int(end)
+		else: start = content.find(end)
+
 		step = int(self.Unprompted.parse_advanced(kwargs["step"],context))  if "step" in kwargs else 1
 		unit = kwargs["unit"] if "unit" in kwargs else "characters"
 

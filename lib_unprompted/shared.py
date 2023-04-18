@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "8.1.0"
+		self.VERSION = "8.2.0"
 
 		print(f"Loading Unprompted v{self.VERSION} by Therefore Games")
 		self.log("Initializing Unprompted object...",False,"SETUP")

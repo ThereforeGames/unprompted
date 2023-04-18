@@ -75,7 +75,7 @@ Always bodysnatch responsibly.
 {{sets controlnet_0_enabled=1 controlnet_0_module=softedge_hed controlnet_0_model=controlnet11Models_softedge controlnet_0_weight=0.25 controlnet_1_enabled=1 controlnet_1_module=mediapipe_face controlnet_1_model=control_mediapipe_face_sd15_v2 controlnet_1_weight=1.0 controlnet_2_enabled=1 controlnet_2_enabled=1 controlnet_2_module=openpose_full controlnet_2_model=controlnet11Models_openpose}}
 {/case}
 {case "dev"}
-{{sets controlnet_0_enabled=1 controlnet_0_module=softedge_hed controlnet_0_model=controlnet11Models_softedge controlnet_0_weight=0.25 controlnet_1_enabled=1 controlnet_1_module=mediapipe_face controlnet_1_model=control_mediapipe_face_sd15_v2 controlnet_1_weight=1.0 controlnet_2_enabled=1 controlnet_2_module=t2ia_color_grid controlnet_2_model=coadapter-color-sd15v1 controlnet_2_weight=1.0 controlnet_3_enabled=1 controlnet_3_module=openpose_full controlnet_3_model=controlnet11Models_openpose}}
+{{sets controlnet_0_enabled=1 controlnet_0_module=softedge_hed controlnet_0_model=controlnet11Models_softedge controlnet_0_weight=0.5 controlnet_1_enabled=1 controlnet_1_module=mediapipe_face controlnet_1_model=control_mediapipe_face_sd15_v2 controlnet_1_weight=1.0 controlnet_2_enabled=1 controlnet_2_module=t2ia_color_grid controlnet_2_model=coadapter-color-sd15v1 controlnet_2_weight=1.0 controlnet_3_enabled=1 controlnet_3_module=openpose_full controlnet_3_model=controlnet11Models_openpose controlnet_3_weight=1.0}}
 {/case}
 [/switch]
 

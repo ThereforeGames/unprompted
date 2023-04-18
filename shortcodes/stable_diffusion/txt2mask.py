@@ -33,6 +33,16 @@ class Shortcode():
 			mask_width = 512
 			mask_height = 512
 		elif method == "sam":
+			import launch
+			if not launch.is_installed("groundingdino"):
+				self.Unprompted.log("Attempting to install GroundingDINO library. Buckle up bro")
+				try:
+					launch.run_pip("install git+https://github.com/IDEA-Research/GroundingDINO","requirements for Unprompted - txt2mask SAM method")
+				except Exception as e:
+					self.Unprompted.log(f"GroundingDINO problem: {e}",context="ERROR")
+					self.Unprompted.log(f"Please open an issue on their repo, not mine.",context="ERROR")
+					return ""
+
 			mask_width = self.Unprompted.shortcode_user_vars["width"]
 			mask_height = self.Unprompted.shortcode_user_vars["height"]
 
@@ -126,11 +136,11 @@ class Shortcode():
 
 			if method == "sam":
 				# Grounding DINO
-				import GroundingDINO.groundingdino.datasets.transforms as T
-				from GroundingDINO.groundingdino.models import build_model
-				from GroundingDINO.groundingdino.util import box_ops
-				from GroundingDINO.groundingdino.util.slconfig import SLConfig
-				from GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
+				import groundingdino.datasets.transforms as T
+				from groundingdino.models import build_model
+				from groundingdino.util import box_ops
+				from groundingdino.util.slconfig import SLConfig
+				from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 
 				# segment anything
 				from segment_anything import build_sam, SamPredictor 
@@ -173,7 +183,7 @@ class Shortcode():
 
 					return boxes_filt, pred_phrases
 
-				sam_model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/segment_anything/weights"
+				sam_model_dir = f"{self.Unprompted.base_dir}/models/segment_anything"
 				os.makedirs(sam_model_dir, exist_ok=True)
 				sam_filename = "sam_vit_h_4b8939.pth"
 				sam_file = f"{sam_model_dir}/{sam_filename}"
@@ -183,7 +193,7 @@ class Shortcode():
 					print("Downloading SAM model weights...")
 					self.Unprompted.download_file(sam_file,f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
 				
-				dino_model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/GroundingDINO/weights"
+				dino_model_dir = f"{self.Unprompted.base_dir}/models/groundingdino"
 				os.makedirs(dino_model_dir, exist_ok=True)
 				dino_filename = "groundingdino_swint_ogc.pth"
 				dino_file = f"{dino_model_dir}/{dino_filename}"
@@ -192,7 +202,7 @@ class Shortcode():
 					print("Downloading GroundingDINO model weights...")
 					self.Unprompted.download_file(dino_file,f"https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/{dino_filename}")
 
-				model_config_path = f"{self.Unprompted.base_dir}/lib_unprompted/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+				model_config_path = f"{self.Unprompted.base_dir}/lib_unprompted/groundingdino/config/GroundingDINO_SwinT_OGC.py"
 
 				# load model
 				if self.cached_model == -1:
@@ -267,7 +277,7 @@ class Shortcode():
 			else:
 				from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
-				model_dir = f"{self.Unprompted.base_dir}/lib_unprompted/stable_diffusion/clipseg/weights"
+				model_dir = f"{self.Unprompted.base_dir}/models/clipseg"
 				
 				os.makedirs(model_dir, exist_ok=True)
 
