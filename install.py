@@ -24,4 +24,6 @@ if not launch.is_installed("segment_anything"):
 	launch.run_pip("install segment_anything","requirements for Unprompted - txt2mask")
 #if not launch.is_installed("GroundingDINO"):
 #	launch.git_clone("https://github.com/IDEA-Research/GroundingDINO.git", "venv", "GroundingDINO")
-	
+
+if not launch.is_installed("color-matcher"):
+	launch.run_pip("install color-matcher","requirements for Unprompted - zoom_enhance")

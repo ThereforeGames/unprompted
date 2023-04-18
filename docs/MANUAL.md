@@ -144,7 +144,7 @@ Photo of a `[cat|dog]
 
 </details>
 
-<details><summary>System Variables</summary>
+<details><summary>Special Variables</summary>
 
 In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
 
@@ -155,6 +155,40 @@ An integer that correponds to your progress in a batch run. For example, if your
 ### sd_model
 
 You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
+
+### controlnet_*
+
+You can use `[set]` to manage ControlNet settings in this format:
+
+```
+[sets controlnet_unit_property=value]
+```
+
+Where **unit** is an integer that corresponds to the index of a ControlNet unit (between 0 and your maximum number of units).
+
+Here is a list of valid properties at the time of writing:
+
+- enabled
+- module
+- model
+- weight
+- image (loads a file from a filepath string)
+- invert_image
+- resize_mode
+- rgbbgr_mode
+- low_vram
+- processor_res
+- threshold_a
+- threshold_b
+- guidance_start
+- guidance_end
+- guess_mode
+
+For example, we can enable units #0 and #3 and set the weight of unit #3 to 0.5 as follows:
+
+```
+[sets controlnet_0_enabled=1 controlnet_3_enabled=1 controlnet_3_weight=0.5]
+```
 
 </details>
 

@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details><summary>8.1.0 - 17 April 2023</summary>
+
+### Added
+- You can now use `[set]` to manage various ControlNet settings
+- Bodysnatcher: new setting `use_optimized_inference_settings`
+- Bodysnatcher: new setting `use_controlnet_preset`
+- `[zoom_enhance]`: implements the `color-matcher` library for higher quality swaps
+- `[zoom_enhance]`: supports `color_correct_method` to choose from different grading algorithms, or disable color correction by setting this to `none`
+- `[zoom_enhance]`: supports `color_correct_strength` which is an integer that determines how many times to run the `color_correct_method`
+- `[zoom_enhance]`: the `adaptive_hires` feature will now scale up denoising strength
+- Wizard UI `number` elements can now specify `_minimum` and `_maximum` value range (however, this isn't supported by Gradio yet)
+- Specified default values for Wizard UI `slider` elements to prevent crashing
+
+### Changed
+- `[zoom_enhance]`: speculative fix for final image not showing up in the output window
+- `[zoom_enhance]`: the `use_workaround` parg has been renamed to `show_original`
+- `[zoom_enhance]`: hotfix for broken txt2img mode
+- `[case]`: fixed an issue with default case always firing
+- Bodysnatcher: decreased the default value of `zoom_enhance_denoising_max` from 0.35 to 0.30
+- Bodysnatcher: debug images are no longer saved by default, but you can toggle them in the UI
+
+</details>
+
 <details><summary>8.0.0 - 16 April 2023</summary>
 
 ### Added

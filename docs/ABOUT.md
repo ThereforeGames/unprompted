@@ -3,7 +3,7 @@
 Unprompted is a powerful templating language written in Python. Unlike most templating languages, Unprompted was designed for **maximum readibility with natural language.** It is built around `[shortcodes]` and inspired by the likes of BBCode.
 
 **Online resources:**
-- 🏠 [Github Project Page](https://github.com/ThereforeGames/unprompted) *(*⭐ *for visibility!)*
+- 🏠 [Github Project Page](https://github.com/ThereforeGames/unprompted) *(* ⭐ *for visibility!)*
 - 💬 [Discussion Board](https://github.com/ThereforeGames/unprompted/discussions)
 - 🔧 [Issue Tracker](https://github.com/ThereforeGames/unprompted/issues)
 

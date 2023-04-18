@@ -2,9 +2,6 @@ from modules.processing import process_images_inner, StableDiffusionProcessingIm
 import gc
 from modules import devices
 
-old_sample = StableDiffusionProcessingImg2Img.sample
-old_init = StableDiffusionProcessingImg2Img.init
-
 def process_images_inner_(p):
 	return(process_images_inner(p))
 
@@ -26,8 +23,10 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		import cv2
+		from scipy import mean, interp, ravel, array
 		import numpy
 		from PIL import Image, ImageFilter, ImageChops, ImageOps
+		from blendmodes.blend import blendLayers, BlendType
 		import math
 		from modules import shared
 
@@ -55,7 +54,10 @@ class Shortcode():
 		sharpen_amount = int(float(self.Unprompted.parse_advanced(kwargs["sharpen_amount"],context))) if "sharpen_amount" in kwargs else 1.0
 
 		debug = True if "debug" in pargs else False
-		use_workaround = True if "use_workaround" in pargs else False
+		show_original = True if "show_original" in pargs else False
+		color_correct_method = self.Unprompted.parse_alt_tags(kwargs["color_correct_method"],context) if "color_correct_method" in kwargs else "mkl"
+		color_correct_timing = self.Unprompted.parse_alt_tags(kwargs["color_correct_timing"],context) if "color_correct_timing" in kwargs else "pre"
+		color_correct_strength = int(float(self.Unprompted.parse_advanced(kwargs["color_correct_strength"],context))) if "color_correct_strength" in kwargs else 1
 		manual_mask_mode = self.Unprompted.parse_alt_tags(kwargs["mode"],context) if "mode" in kwargs else "subtract"
 		mask_sort_method = self.Unprompted.parse_alt_tags(kwargs["mask_sort_method"],context) if "mask_sort_method" in kwargs else "left-to-right"
 		downscale_method = self.Unprompted.parse_alt_tags(kwargs["downscale_method"],context) if "downscale_method" in kwargs else "Lanczos"
@@ -79,12 +81,22 @@ class Shortcode():
 		self.Unprompted.p_copy.init_mask_inpaint = None
 		self.Unprompted.p_copy.batch_size = 1
 		self.Unprompted.p_copy.n_iter = 1
+		self.Unprompted.p_copy.mask_for_overlay = None
+
+		try:
+			starting_image = self.Unprompted.p_copy.init_images[0]
+			is_img2img = True
+		except:
+			starting_image = self.Unprompted.after_processed.images[0]
+			is_img2img = False
 
 		# for [txt2mask]
 		self.Unprompted.shortcode_user_vars["mode"] = 0
-		# self.Unprompted.shortcode_user_vars["width"] = upscale_width
-		# self.Unprompted.shortcode_user_vars["height"] = upscale_height
-		self.Unprompted.shortcode_user_vars["image_mask"] = None
+
+		if "image_mask" in self.Unprompted.shortcode_user_vars:
+			current_mask = self.Unprompted.shortcode_user_vars["image_mask"]
+			self.Unprompted.shortcode_user_vars["image_mask"] = None
+		else: current_mask = None
 		
 		if "denoising_strength" in kwargs:
 			self.Unprompted.p_copy.denoising_strength = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"],context))
@@ -92,7 +104,7 @@ class Shortcode():
 			self.Unprompted.p_copy.cfg_scale = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"],context))
 
 		# vars for dynamic settings
-		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"],context)) if "denoising_max" in kwargs else 0.65
+		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"],context)) if "denoising_max" in kwargs else 0.35
 		cfg_min = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_min"],context)) if "cfg_scale_min" in kwargs else 7.0
 		target_size_max = float(self.Unprompted.parse_advanced(kwargs["mask_size_max"],context)) if "mask_size_max" in kwargs else 0.5	
 		target_size_max_orig = target_size_max
@@ -119,7 +131,6 @@ class Shortcode():
 			if "width" not in self.Unprompted.shortcode_user_vars:
 				self.Unprompted.log("Width variable not set - bypassing shortcode")
 				return ""
-
 			
 			if "bypass_adaptive_hires" not in pargs:
 				total_pixels = image_pil.size[0] * image_pil.size[1]
@@ -130,10 +141,21 @@ class Shortcode():
 				target_size_max = target_size_max_orig * target_multiplier
 				sd_unit = 64
 
+				denoise_unit = (denoising_max / 2) * 0.125
+				cfg_min_unit = (cfg_min / 2) * 0.125
+				cfg_max_unit = (cfg_max / 2) * 0.125
+				step_unit = math.ceil(self.Unprompted.p_copy.steps * 0.125)
+
 				upscale_size_test = upscale_width * target_multiplier
-				while (upscale_width < upscale_size_test):
+				while (upscale_width < min(upscale_size_test,hires_size_max)):
 					upscale_width += sd_unit
 					upscale_height += sd_unit
+					# denoising_max = min(1.0,denoising_max+denoise_unit)
+					cfg_min += cfg_min_unit
+					cfg_max += cfg_max_unit
+					sharpen_amount += 0.125
+					self.Unprompted.p_copy.steps += step_unit
+					
 				upscale_width = min(hires_size_max,upscale_width)
 				upscale_height = min(hires_size_max,upscale_height)
 
@@ -141,8 +163,8 @@ class Shortcode():
 				self.Unprompted.log(f"Upscale size, accounting for original image: {upscale_width}")
 
 
-
 			image = numpy.array(image_pil)
+			if starting_image: starting_image = starting_image.resize((image_pil.size[0],image_pil.size[1]))
 
 			if debug: image_pil.save("zoom_enhance_0.png")
 
@@ -150,7 +172,6 @@ class Shortcode():
 				append_originals.append(image_pil.copy())
 
 			set_kwargs["txt2mask_init_image"] = image_pil
-			
 			mask_image = self.Unprompted.shortcode_objects["txt2mask"].run_block(set_pargs,set_kwargs,None,target_mask)
 			
 			if debug: mask_image.save(f"zoom_enhance_1_{image_idx}.png")
@@ -255,6 +276,10 @@ class Shortcode():
 					if (x2 - x1 < size): x1 -= size - (x2 - x1)
 
 					sub_img=Image.fromarray(image[y1:y2,x1:x2])
+					if starting_image:
+						if debug: starting_image.save("zoom_enhance_2b_this is the starting image.png")
+						starting_image_face=Image.fromarray(numpy.array(starting_image)[y1:y2,x1:x2])
+						starting_image_face_big=starting_image_face.resize((upscale_width,upscale_height),resample=upscale_method)
 					sub_mask=Image.fromarray(mask_image[y1:y2,x1:x2])
 					sub_img_big = sub_img.resize((upscale_width,upscale_height),resample=upscale_method)
 					if debug: sub_img_big.save("zoom_enhance_3.png")
@@ -265,6 +290,9 @@ class Shortcode():
 						sub_mask = sub_mask.filter(ImageFilter.GaussianBlur(radius = blur_radius))
 					
 					if debug: sub_mask.save("zoom_enhance_4.png")
+
+					if color_correct_timing == "pre" and color_correct_method != "none" and starting_image:
+						sub_img_big = self.Unprompted.color_match(starting_image_face_big,sub_img_big,color_correct_method,color_correct_strength)
 
 					self.Unprompted.p_copy.init_images = [sub_img_big]
 					self.Unprompted.p_copy.width = upscale_width
@@ -282,14 +310,54 @@ class Shortcode():
 					self.Unprompted.p_copy.batch_size = 1
 					self.Unprompted.p_copy.n_iter = 1
 
-					fixed_image = process_images_inner_(self.Unprompted.p_copy) # self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
-					fixed_image =  fixed_image.images[0]
-					if not fixed_image:
-						self.Unprompted.log("An error occurred! Perhaps the user interrupted the operation?")
-						return ""
+
+					# run img2img now to improve face
+					if is_img2img:
+						fixed_image = process_images_inner_(self.Unprompted.p_copy)
+						fixed_image = fixed_image.images[0]
+					else:
+						#workaround for txt2img
+						for att in dir(self.Unprompted.p_copy):
+							if not att.startswith("__") and att != "sd_model":
+								self.Unprompted.shortcode_user_vars[att] = getattr(self.Unprompted.p_copy,att)							
+						fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs,None,None)
+					if debug: fixed_image.save("zoom_enhance_4after.png")
+					
+					if color_correct_method != "none" and starting_image:						
+						try:
+							if color_correct_timing == "post":
+								self.Unprompted.log("Color correcting the face...")
+								if debug:
+									fixed_image.save("zoom_enhance_5a_pre_color_correct.png")
+									starting_image_face_big.save("zoom_enhance_5b_using_this_face_mask.png")
+									starting_image.save("zoom_enhance_5c_main_starting_image.png")
+								
+								fixed_image =  blendLayers(self.Unprompted.color_match(starting_image_face_big,fixed_image,color_correct_method,color_correct_strength), fixed_image.images, BlendType.LUMINOSITY)
+							
+							self.Unprompted.log("Color correcting the main image to the init image...")
+							corrected_main_img  = self.Unprompted.color_match(starting_image,image_pil,color_correct_method,color_correct_strength)
+							width, height = image_pil.size
+							corrected_main_img = corrected_main_img.resize((width,height))
+							# prevent changes to background
+							if current_mask:
+								current_mask.convert("RGBA")
+								mask_data = current_mask.load()
+								width, height = current_mask.size
+								for y in range(height):
+									for x in range(width):
+										if mask_data[x, y] != (255, 255, 255, 255): mask_data[x, y] = (0, 0, 0, 0)
+								if blur_radius > 0:
+									current_mask = current_mask.filter(ImageFilter.GaussianBlur(radius = blur_radius))
+								width, height = corrected_main_img.size
+								current_mask = current_mask.resize((width,height))
+								if debug: current_mask.save("zoom_enhance_5d_current_main_mask.png")
+								image_pil.paste(corrected_main_img,(0,0),current_mask)
+								image_pil.save("zoom_enhance_5e_corrected_main_image.png")
+						except Exception as e:
+							self.Unprompted.log(f"{e}",context="ERROR")
 
 					# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
-					if debug: fixed_image.save("zoom_enhance_5.png")
+					if debug: fixed_image.save("zoom_enhance_5f.png")
 
 					if sharpen_amount > 0:
 						self.Unprompted.log(f"Sharpening the fixed image by {sharpen_amount}")
@@ -302,9 +370,10 @@ class Shortcode():
 					image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask)
 
 					# self.Unprompted.shortcode_user_vars["init_images"].append(image_pil)
-					if use_workaround: append_originals.append(image_pil.copy())
+					if show_original: append_originals.append(image_pil.copy())
+					else: self.Unprompted.after_processed.images[image_idx] = image_pil
 
-					# test outside after block, WIP pls don't use
+					# test outside after block, WIP pls don't use yet
 					if context != "after":
 						self.Unprompted.shortcode_user_vars["init_images"] = image_pil
 
@@ -320,7 +389,7 @@ class Shortcode():
 		return ""
 
 	def ui(self,gr):
-		gr.Checkbox(label="Final image not showing up? Try using this workaround 🡢 use_workaround")
+		gr.Checkbox(label="Include original, unenhanced image in output window? 🡢 show_original")
 		gr.Text(label="Mask to find 🡢 mask",value="face")
 		gr.Text(label="Replacement 🡢 replacement",value="face")
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")

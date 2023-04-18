@@ -7,7 +7,7 @@ class Shortcode():
 		_var = self.Unprompted.shortcode_objects["switch"].switch_var
 
 		# Default case
-		if len(pargs) == 0:
+		if len(pargs) == 0 and _var != "":
 			return(self.Unprompted.parse_alt_tags(content,context))
 		# Matching case
 		elif self.Unprompted.is_equal(_var,self.Unprompted.parse_advanced(pargs[0],context)):

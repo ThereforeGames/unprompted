@@ -1,4 +1,4 @@
-[template name="Bodysnatcher v0.0.1"]
+[template name="Bodysnatcher v1.0.0"]
 ![Preview]([base_dir]/bodysnatcher.png)
 ## ⚠️ Important info, please read carefully:
 
@@ -9,6 +9,8 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 <details><summary>Recommended inference settings</summary>
 
 Use the img2img inpainting tab.
+
+Choose a model with strong knowledge of human anatomy, such as Deliberate or RealisticVision.
 
 - **Mask blur and mask padding:** 10
 - **Only masked padding:** 0
@@ -41,23 +43,40 @@ Always bodysnatch responsibly.
 [set simple_description _new _label="Simple Description" _info="These terms will apply to both the full image and the cropped face, less is more"][/set]
 [set class _new _label="Class" _info="The search term that determines the inpainting mask"]woman[/set]
 
-[set use_workaround _new _label="Use workaround" _ui="checkbox" _info="Enable this if the final image isn't showing up in your output window"]0[/set]
-
 [set keep_hands _new _label="Keep original hands" _ui="checkbox" _info="You don't really want Stable Diffusion to remake those hands, do you?"]1[/set]
 [set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
 
+[set use_optimized_inference_settings _new _label="Use optimized inference settings" _ui="checkbox" _info="Locks CFG scale, denoising strength, etc. to recommended values"]1[/set]
+[set use_controlnet_preset _new _info="Loads multiple ControlNet units, make sure you have 'Allow other scripts to control this extension' enabled" _label="ControlNet preset" _ui="dropdown" _choices="none|photo_general_v1|dev"]none[/set]
+
 [wizard_ui_accordion _label="⚙️ Advanced Options"]
 {set fix_bodypart _new _label="Fix a body part"}face{/set}
+{set color_correct_method _new _label="Color correct method" _ui="dropdown" _choices="none|hm|mvgd|mkl|hm-mvgd-hm|hm-mkl-hm"}hm-mkl-hm{/set}
+{set color_correct_timing _new _label="Color correct timing" _info="Post may produce more accurate colors, but it tends to look a bit posterized" _ui="dropdown" _choices="pre|post"}pre{/set}
+{set color_correct_strength _new _label="Color correct strength" _ui="slider" _minimum=1 _maximum=5}1{/set}
 {set mask_method _new _label="Masking method (sam requires manual setup)" _ui="radio" _choices="clipseg|sam"}clipseg{/set}
 {set manual_mask_mode _new _label="Manual masking mode" _ui="radio" _choices="add|subtract|discard"}subtract{/set}
 {set mask_precision _new _label="Mask precision"}75{/set}
-{set zoom_enhance_denoising_max _new}0.35{/set}
+{set zoom_enhance_denoising_max _new}0.30{/set}
+{set zoom_enhance_base_cfg _new _ui="slider" _minimum="1" _maximum="30"}10{/set}
+{set show_original _new _label="Show unenhanced image in output window" _ui="checkbox"}0{/set}
+{set debug _new _label="Save debug images" _ui="checkbox"}0{/set}
 [/wizard_ui_accordion]
 
 [sets neg_mask=""]
 [if keep_hands=1]{set neg_mask}fingers{/set}[/if]
 [if keep_feet=1]{set neg_mask _append}|feet{/set}[/if]
 
+[if use_optimized_inference_settings=1]
+{sets cfg_scale=7.5 sampler_name="Euler a" steps=25 denoising_strength=0.75 mask_blur=10}
+[/if]
+[switch use_controlnet_preset]
+{case "photo_general_v1"}
+{{sets controlnet_0_enabled=1 controlnet_0_module=softedge_hed controlnet_0_model=controlnet11Models_softedge controlnet_0_weight=0.25 controlnet_1_enabled=1 controlnet_1_module=mediapipe_face controlnet_1_model=control_mediapipe_face_sd15_v2 controlnet_1_weight=1.0 controlnet_2_enabled=1 controlnet_2_enabled=1 controlnet_2_module=openpose_full controlnet_2_model=controlnet11Models_openpose}}
+{/case}
+{case "dev"}
+{{sets controlnet_0_enabled=1 controlnet_0_module=softedge_hed controlnet_0_model=controlnet11Models_softedge controlnet_0_weight=0.25 controlnet_1_enabled=1 controlnet_1_module=mediapipe_face controlnet_1_model=control_mediapipe_face_sd15_v2 controlnet_1_weight=1.0 controlnet_2_enabled=1 controlnet_2_module=t2ia_color_grid controlnet_2_model=coadapter-color-sd15v1 controlnet_2_weight=1.0 controlnet_3_enabled=1 controlnet_3_module=openpose_full controlnet_3_model=controlnet11Models_openpose}}
+{/case}
+[/switch]
 
-
-[img2img_autosize][txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask][after]{zoom_enhance [if use_workaround=1]use_workaround[/if] sharpen_amount=3.0 mode="subtract" debug mask="[get class] [get fix_bodypart]" replacement="[get prefix] [get subject] [get fix_bodypart] [get simple_description _before=' ']" cfg_scale=10 denoising_max="[get zoom_enhance_denoising_max]"}[/after][get prefix] [get subject][get simple_description _before=" "]
+[img2img_autosize][txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask][after]{zoom_enhance color_correct_method="[get color_correct_method]" color_correct_timing="[get color_correct_timing]" color_correct_strength="[get color_correct_strength]" [if show_original=1]show_original[/if] sharpen_amount=0.0 mode="subtract" [if debug=1]debug[/if] mask="[get class] [get fix_bodypart]" replacement="[get prefix] [get subject] [get fix_bodypart] [get simple_description _before=' ']" cfg_scale="[get zoom_enhance_base_cfg]" denoising_max="[get zoom_enhance_denoising_max]"}[/after][get prefix] [get subject][get simple_description _before=" "]

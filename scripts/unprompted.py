@@ -242,12 +242,20 @@ class Scripts(scripts.Script):
 									else: this_placeholder = str(content)
 									obj = gr.Textbox(label=this_label,max_lines=1,placeholder=this_placeholder,info=_info)
 								elif (block_name == "checkbox"):
+<<<<<<< HEAD
 									obj = gr.Checkbox(label=this_label,value=bool(int(content)),info=_info)
+								elif (block_name == "number"):
+									obj = gr.Number(label=this_label,value=int(content),interactive=True,info=_info,minimum=kwargs["_minimum"] if "_minimum" in kwargs else None,maximum=kwargs["_maximum"] if "_maximum" in kwargs else None)
+
+=======
+
+								obj = gr.Checkbox(label=this_label,value=bool(int(content)),info=_info)
 								elif (block_name == "number"): obj = gr.Number(label=this_label,value=int(content),interactive=True,info=_info)
+>>>>>>> 42f4aadb17592d08170df270502bea1ccdaa1523
 								elif (block_name == "dropdown"): obj = gr.Dropdown(label=this_label,value=content,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter),info=_info)
 								elif (block_name == "radio"): obj = gr.Radio(label=this_label,choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter),interactive=True,value=content)
 								elif (block_name == "slider"):
-									obj = gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"],maximum=kwargs["_maximum"],step=kwargs["_step"],info=_info)
+									obj = gr.Slider(label=this_label,value=int(content),minimum=kwargs["_minimum"] if "_minimum" in kwargs else 1,maximum=kwargs["_maximum"] if "_maximum" in kwargs else 10,step=kwargs["_step"] if "_step" in kwargs else 1,info=_info)
 							
 								setattr(obj,"do_not_save_to_config",True)
 							return("")
@@ -438,7 +446,6 @@ class Scripts(scripts.Script):
 		for att in dir(p):
 			if not att.startswith("__") and att != "sd_model":
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
-
 		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
 		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
 
@@ -447,11 +454,30 @@ class Scripts(scripts.Script):
 			if not att.startswith("__") and att != "sd_model":
 				setattr(p,att,Unprompted.shortcode_user_vars[att])	
 
-		# Support loading a new checkpoint by name
-		if "sd_model" in Unprompted.shortcode_user_vars:
-			info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
-			if (info): sd_models.load_model(info,None,None) # reload_model_weights(None,info)
+		# Special handling of vars
+		for att in Unprompted.shortcode_user_vars:
+			# change models
+			if att == "sd_model":
+				info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
+				if (info): sd_models.load_model(info,None,None)
+			# control controlnet
+			elif att.startswith("controlnet"):
+				Unprompted.log(f"Setting ControlNet value: {att}")
+				try:
+					import importlib
+					cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
+					all_units = cnet.get_all_units_in_processing(p)
+					att_split = att.split("_") # e.g. controlnet_0_enabled
+					if att_split[2] == "image":
+						from pil import Image
+						this_val = Image.open(Unprompted.shortcode_user_vars[att])
+					else: 
+						this_val = Unprompted.shortcode_user_vars[att]
+					setattr(all_units[int(att_split[1])],att_split[2],this_val)
+					cnet.update_cn_script_in_processing(p, all_units)
 
+				except Exception as e:
+					Unprompted.log(f"Could not set ControlNet value: {e}",context="ERROR")
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
