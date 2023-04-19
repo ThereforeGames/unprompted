@@ -11,7 +11,7 @@ class Shortcode():
 		if self.Unprompted.is_int(start): start = int(start)
 		else: start = content.find(start)
 		if self.Unprompted.is_int(end): end = int(end)
-		else: start = content.find(end)
+		else: end = content.find(end)
 
 		step = int(self.Unprompted.parse_advanced(kwargs["step"],context))  if "step" in kwargs else 1
 		unit = kwargs["unit"] if "unit" in kwargs else "characters"
