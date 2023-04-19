@@ -351,7 +351,7 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 
 This section describes all of the included basic shortcodes and their functionality.
 
-<details><summary>[#]</summary>
+<details><summary><a name="#comment">[#]</a></summary>
 
 Use this to write comments in your templates. Comments are ultimately discarded by Unprompted and will not affect your final output.
 
@@ -394,7 +394,7 @@ Photo of a cat
 
 </details>
 
-<details><summary>[antonyms]</summary>
+<details><summary><a name="#antonyms">[antonyms]</a></summary>
 
 Replaces the content with one or more random antonyms. This shortcode is powered by a combination of WordNet and Moby Thesaurus II. Does not require an online connection after first use (word databases are downloaded to disk.)
 
