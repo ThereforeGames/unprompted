@@ -351,7 +351,9 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 
 This section describes all of the included basic shortcodes and their functionality.
 
-<details><summary><a href="#comment">[#]</a></summary>
+<details><summary>[#]</summary>
+
+## Comment
 
 Use this to write comments in your templates. Comments are ultimately discarded by Unprompted and will not affect your final output.
 
