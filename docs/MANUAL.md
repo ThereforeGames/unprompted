@@ -289,7 +289,7 @@ Pressing **"Generate Shortcode"** will assemble a ready-to-use block of code tha
 
 Alternatively, you can enable `Auto-include this in prompt` which will add the shortcode to your prompts behind the scenes. This essentially lets you use Unprompted shortcodes as if they were standalone scripts. You can enable/disable this setting on a per-shortcode basis.
 
-The Wizard includes two distinct modes: Shortcodes and Functions.
+The Wizard includes two distinct modes: Shortcodes and Templates.
 
 </details>
 
@@ -323,17 +323,17 @@ There are a few reserved argument names that will modify the Wizard's behavior:
 
 </details>
 
-<details><summary>Functions Mode</summary>
+<details><summary>Templates Mode</summary>
 
 This mode presents you with a list of txt files inside your `Unprompted/templates` directory that begin with a `[template]` block.
 
 By including this block in your file, Unprompted will parse the file for its `[set x _new]` statements and adapt those into a custom Wizard UI.
 
-The `_new` argument means "only set this variable if it doesn't already exist," which are generally the variables we want to show in a UI.
+The `_new` argument means *"only set this variable if it doesn't already exist,"* which are generally the variables we want to show in a UI.
 
-The `[template]` block supports the optional `name` argument which is a friendly name for your function shown in the functions dropdown menu.
+The `[template]` block supports the optional `name` argument which is a friendly name for your function shown in the Templates dropdown menu.
 
-The content of `[template]` is a description of your function to be rendered with [Markdown](https://www.markdownguide.org/basic-syntax/), which means you can include rich content like pictures or links. It will show up at the top of your UI.
+The content of `[template]` is a description of your script to be rendered with [Markdown](https://www.markdownguide.org/basic-syntax/), which means you can include rich content like pictures or links. It will show up at the top of your UI.
 
 The `[set]` block supports `_ui` which determines the type of UI element to render your variable as. Defaults to `textbox`. Here are the possible types:
 
@@ -342,6 +342,10 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 - `radio`: A list of radio buttons that are determined by the `_choices` argument, constructed as a delimited list.
 - `dropdown`: A dropdown menu that is populated by the `_choices` argument, constructed as a delimited list.
 - `slider`: Limits selection to a range of numbers. You must also specify `_minimum`, `_maximum` and `_step` (step size, normally 1) for this element to work properly.
+
+The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
+
+Supports the `[wizard_ui_accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
 
 </details>
 
@@ -639,7 +643,7 @@ RESULT: She said
 
 <details><summary>[do until(str)]</summary>
 
-Do-until style loop. The content is processed, then the `until` expression is evaluated - if it's true, the content is processed again. Repeat until `until` is false.
+Do-until style loop. The content is processed, then the `until` expression is evaluated - if it's false, the content is processed again. Repeat until `until` is true.
 
 ```
 [sets my_var=0]
@@ -1028,6 +1032,8 @@ Returns a slice of the content as determined by the keyword arguments.
 
 `end` is the last position of the slice. Defaults to 0.
 
+Alternatively, you can pass a string into `start` or `end` and it will find the index of that string within the `content`.
+
 `step` is the skip interval. Defaults to 1 (in other words, a continuous substring.)
 
 `unit` is either `characters` or `words` and refers to the unit of the aforementioned arguments. Defaults to `characters`.
@@ -1128,38 +1134,6 @@ Note that variables are automatically deleted at the end of each run - you do **
 <details><summary>Stable Diffusion Shortcodes</summary>
 
 This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
-
-<details><summary>[controlnet]</summary>
-
-Enables support for [ControlNet](https://github.com/lllyasviel/ControlNet) models in img2img mode. ControlNet is a neural network structure to control diffusion models by adding extra conditions.
-
-**NOTE:** This is a "wrapper" implementation of the original ControlNet code. For a more robust solution, you can check out [the dedicated ControlNet extension by Mikubill](https://github.com/Mikubill/sd-webui-controlnet).
-
-You need a bare minimum of 8 GB of VRAM to use this shortcode, although 12 GB is recommended.
-
-Supports the `model` argument, which is the name of a ControlNet checkpoint in your `models/Stable-diffusion` directory (do not include the file extension.) You can download ControlNet checkpoints from [the official HuggingFace page](https://huggingface.co/lllyasviel/ControlNet/tree/main/models).
-
-For each model, you also need a copy of the [cldm_v15.yaml](https://github.com/lllyasviel/ControlNet/tree/main/models) config file. Rename it to match the name of the ControlNet model, e.g. `control_sd15_normal.yaml`.
-
-For each model, you also need the associated [annotator files available here](https://huggingface.co/lllyasviel/ControlNet/tree/main/annotator/ckpts). Place these into your  `extensions/unprompted/lib_unprompted/stable_diffusion/controlnet/annotator/ckpts` folder.
-
-If you run into any errors, please triple-check your filepaths before opening a bug report.
-
-You can use ControlNet with custom SD 1.5 models [by merging checkpoints as described here](https://github.com/lllyasviel/ControlNet/issues/4#issuecomment-1426877944).
-
-Please be aware that the last part of your model's filename indicates which type of ControlNet model it is. The following ControlNet model types are supported: `openpose`, `scribble`, `mlsd`, `depth`, `normal`, `hed`, `canny`, `seg`
-
-ControlNet models should **not** be loaded manually from your WebUI dropdown.
-
-Supports the `save_memory` argument to minimize VRAM requirements.
-
-Supports the `detect_resolution` argument which is the size of the detected map. Defaults to 512. Some models may perform better at 384. Lowering this value to 256 may help with VRAM requirements.
-
-Supports the `eta` argument.
-
-Supports the following model-specific arguments: `value_threshold`, `distance_threshold`, `bg_threshold`, `low_threshold`, `high_threshold`
-
-</details>
 
 <details><summary>[file2mask]</summary>
 
@@ -1391,6 +1365,8 @@ This is a helper shortcode that should be used if multiple init images, multiple
 
 A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
 
+Supports the `method` argument which determines the technology to use for masking. Defaults to `clipseg`. Can be changed to `sam` which will utilize [Segment Anything](https://segment-anything.com/) instead.
+
 Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
 - `add` will overlay the two masks. This is the default value.
 - `discard` will ignore the brush mask entirely.
@@ -1424,6 +1400,8 @@ Supports the optional `show` positional argument which will append the final mas
 
 Supports the optional `legacy_weights` positional argument which will utilize the original CLIPseg weights. By default, `[txt2mask]` will use the [refined weights](https://github.com/timojl/clipseg#new-fine-grained-weights).
 
+Supports the `unload_model` argument, which will unload the clipseg model after processing. On my GTX 3090, this adds about 3 seconds to inference time. Defaults to `False`, and should only be enabled on devices with low memory.
+
 The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
 
 ```
@@ -1434,7 +1412,7 @@ The content and `negative_mask` both support the vertical pipe delimiter (`|`) w
 
 <details><summary>[zoom_enhance]</summary>
 
-Upscales a selected portion of an image via `[img2img]` and `[txt2mask]`.
+Upscales a selected portion of an image via `[img2img]` and `[txt2mask]`, then pastes it seamlessly back onto the original.
 
 Greatly improves low-resolution details like faces and hands. It is significantly faster than Hires Fix and more flexible than the "Restore Faces" option.
 
@@ -1446,11 +1424,23 @@ Supports the `replacement` keyword argument which is the prompt that will be use
 
 Supports the `negative_replacement` keyword argument, which is the negative prompt that will be used on the mask region via `[img2img]`. Defaults to an empty string.
 
+Both `replacement` and `negative_replacement` support multiple, delimited search terms via `Unprompted.config.syntax.delimiter`.
+
+Supports `mask_sort_method` which is used when multiple, non-contiguous masks are detected. Defaults to `left-to-right`. Options include: `left-to-right`, `right-to-left`, `top-to-bottom`, `bottom-to-top`, `big-to-small`, `small-to-big`, `unsorted`.
+
+Supports the `mode` keyword argument, which determines how the shortcode will interact with a pre-existing image mask. Defaults to `subtract`, which will remove your masked pixels from the shortcode's calculations. Options include: `add`, `subtract`, `discard`.
+
+Supports the `bypass_adaptive_hires` positional argument. By default, the shortcode will scale up some inference settings such as CFG scale and sharpness depending on the resolution of the init image. Include this argument to disable that behavior.
+
+Supports the `hires_size_max` keyword argument which is a hard limit on the size of the upscaled image, in order to avoid OOM errors. Defaults to 1024.
+
 Supports the `blur_size` keyword argument, which corresponds to the radius of the gaussian blur that will be applied to the mask of the upscaled image - this helps it blend seamlessly back into your original image. Defaults to `0.03`. Note: this is a float that is a percentage of the total canvas size; 0.03 means 3% of the total canvas.
+
+Supports the `sharpen_amount` argument, which is a float that determines the strength of the unsharp filter that is applied in post-processing.
 
 Supports the `denoising_max` keyword argument. The `[zoom_enhance]` shortcode is equipped with **dynamic denoising strength** based on a simple idea: the smaller the mask region, the higher denoise we should apply. This argument lets you set the upper limit of that feature.
 
-Supports the `mask_size_max` keyword argument. Defaults to `0.3`. If a mask region is determined to be greater than this value, it will not be processed by `[zoom_enhance]`. The reason is that large objects generally do not benefit from upscaling.
+Supports the `mask_size_max` keyword argument. Defaults to `0.5`. If a mask region is determined to be greater than this value, it will not be processed by `[zoom_enhance]`. The reason is that large objects generally do not benefit from upscaling.
 
 Supports the `min_area` keyword argument. Defaults to `50`. If the pixel area of a mask is smaller than this, it may be a false-positive mask selection or at least not worth upscaling.
 
@@ -1459,6 +1449,16 @@ Supports the `contour_padding` keyword argument. This is the radius in pixels to
 Supports the `upscale_width` and `upscale_height` arguments. Default to `512`. This is the resolution to use with `[img2img]` and should usually match the native resolution of your Stable Diffusion model.
 
 Supports the `include_original` positional argument. This will append the original, "non-zoom-enhanced" image to your output window. Useful for before-after comparisons.
+
+Supports the `upscale_method` and `downscale_method` arguments which determine the algorithms for image rescaling. Upscale defaults to `Nearest Neighbor`. Downscale defaults to `Lanczos`. Options include: `Nearest Neighbor`, `Box`, `Bilinear`, `Hamming`, `Bicubic`, `Lanczos`.
+
+Supports the `color_correction_method` argument which will attempt to match the color grading of the upscaled image to the original. Defaults to `none`. Options include: `none`,`mvgd`,`mkl`,`hm-mvgd-hm`,`hm-mkl-hm`.
+
+Supports the `color_correct_strength` argument which is an integer that determines how many times to run the color correction algorithm. Defaults to 1.
+
+Supports the `color_correct_timing` argument which determines when to run the color correction algorithm. Defaults to `pre`, which will run color correction before upscaling. Options include `pre` and `post`.
+
+Supports the `debug` positional argument, which will output a series of images to your WebUI folder over the course of processing.
 
 This shortcode is compatible with batch count and batch size.
 
@@ -1508,5 +1508,51 @@ Positional and keyword arguments are passed as strings. The function itself shou
 The `cleanup` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
 
 For more details, please examine the code of the stock shortcodes.
+
+</details>
+
+<details><summary>Legacy Shortcodes</summary>
+
+Legacy shortcodes are those which are no longer officially supported. Please be aware that they may not work as expected and could be removed from future versions of Unprompted without warning.
+
+<details><summary>[controlnet]</summary>
+
+**Reason for legacy status:** The popular [ControlNet extension by Mikubill](https://github.com/Mikubill/sd-webui-controlnet) was released less than 24 hours after this shortcode and is much more robust. ControlNet is a complicated, time-consuming feature to support and I cannot justify further development when the alternative software is already so good.
+
+Enables support for [ControlNet](https://github.com/lllyasviel/ControlNet) models in img2img mode. ControlNet is a neural network structure to control diffusion models by adding extra conditions.
+
+You need a bare minimum of 8 GB of VRAM to use this shortcode, although 12 GB is recommended.
+
+Supports the `model` argument, which is the name of a ControlNet checkpoint in your `models/Stable-diffusion` directory (do not include the file extension.) You can download ControlNet checkpoints from [the official HuggingFace page](https://huggingface.co/lllyasviel/ControlNet/tree/main/models).
+
+For each model, you also need a copy of the [cldm_v15.yaml](https://github.com/lllyasviel/ControlNet/tree/main/models) config file. Rename it to match the name of the ControlNet model, e.g. `control_sd15_normal.yaml`.
+
+For each model, you also need the associated [annotator files available here](https://huggingface.co/lllyasviel/ControlNet/tree/main/annotator/ckpts). Place these into your  `extensions/unprompted/lib_unprompted/stable_diffusion/controlnet/annotator/ckpts` folder.
+
+If you run into any errors, please triple-check your filepaths before opening a bug report.
+
+You can use ControlNet with custom SD 1.5 models [by merging checkpoints as described here](https://github.com/lllyasviel/ControlNet/issues/4#issuecomment-1426877944).
+
+Please be aware that the last part of your model's filename indicates which type of ControlNet model it is. The following ControlNet model types are supported: `openpose`, `scribble`, `mlsd`, `depth`, `normal`, `hed`, `canny`, `seg`
+
+ControlNet models should **not** be loaded manually from your WebUI dropdown.
+
+Supports the `save_memory` argument to minimize VRAM requirements.
+
+Supports the `detect_resolution` argument which is the size of the detected map. Defaults to 512. Some models may perform better at 384. Lowering this value to 256 may help with VRAM requirements.
+
+Supports the `eta` argument.
+
+Supports the following model-specific arguments: `value_threshold`, `distance_threshold`, `bg_threshold`, `low_threshold`, `high_threshold`
+
+</details>
+
+<details><summary>[pix2pix_zero]</summary>
+
+**Reason for legacy status:** the pix2pix-zero method [was not what I originally thought](https://github.com/AUTOMATIC1111/stable-diffusion-webui/discussions/7711#discussioncomment-4952579) which was sort of a buzzkill. As it stands, I believe ControlNet is better suited at most tasks, but I can't make any definitive claims about that - pix2pix-zero went under the radar and does merit further testing.
+
+If you wish to use this shortcode, you will need to modify the hardcoded path to a diffusers model on line 33.
+
+</details>
 
 </details>

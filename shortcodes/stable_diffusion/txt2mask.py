@@ -5,8 +5,16 @@ class Shortcode():
 		self.image_mask = None
 		self.show = False
 		self.description = "Creates an image mask from the content for use with inpainting."
+		try:
+			del self.cached_model
+			del self.cached_transform
+			del self.cached_model_method
+			del self.cached_predictor
+		except: pass
 		self.cached_model = -1
 		self.cached_transform = -1
+		self.cached_model_method = ""
+		self.cached_predictor = -1
 
 	def run_block(self, pargs, kwargs, context, content):
 		from PIL import ImageChops, Image, ImageOps
@@ -16,44 +24,79 @@ class Shortcode():
 		from matplotlib import pyplot as plt
 		import cv2
 		import numpy
+		import gc
 		from modules.images import flatten
 		from modules.shared import opts
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
+		gc.collect()
+		
+
 		if "txt2mask_init_image" in kwargs:
-			self.init_image = kwargs["txt2mask_init_image"]
+			self.init_image = kwargs["txt2mask_init_image"].copy()
 		elif "init_images" not in self.Unprompted.shortcode_user_vars:
 			self.Unprompted.log("No init_images found...")
 			return
-		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0]
+		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0].copy()
 
 		method = self.Unprompted.parse_advanced(kwargs["method"],context) if "method" in kwargs else "clipseg"
 
 		if method == "clipseg":
 			mask_width = 512
 			mask_height = 512
-		elif method == "sam":
-			import launch
-			if not launch.is_installed("groundingdino"):
-				self.Unprompted.log("Attempting to install GroundingDINO library. Buckle up bro")
-				try:
-					launch.run_pip("install git+https://github.com/IDEA-Research/GroundingDINO","requirements for Unprompted - txt2mask SAM method")
-				except Exception as e:
-					self.Unprompted.log(f"GroundingDINO problem: {e}",context="ERROR")
-					self.Unprompted.log(f"Please open an issue on their repo, not mine.",context="ERROR")
-					return ""
+		else:
+			if method == "grounded_sam":
+				import launch
+				if not launch.is_installed("groundingdino"):
+					self.Unprompted.log("Attempting to install GroundingDINO library. Buckle up bro")
+					try:
+						launch.run_pip("install git+https://github.com/IDEA-Research/GroundingDINO","requirements for Unprompted - txt2mask SAM method")
+					except Exception as e:
+						self.Unprompted.log(f"GroundingDINO problem: {e}",context="ERROR")
+						self.Unprompted.log(f"Please open an issue on their repo, not mine.",context="ERROR")
+						return ""
 
-			mask_width = self.Unprompted.shortcode_user_vars["width"]
-			mask_height = self.Unprompted.shortcode_user_vars["height"]
+			mask_width = self.init_image.size[0]
+			mask_height = self.init_image.size[1]
 
 		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+		if device == "cuda": torch.cuda.empty_cache()
+
+		if "stamp" in kwargs:
+			stamps = (self.Unprompted.parse_advanced(kwargs["stamp"],context)).split(self.Unprompted.Config.syntax.delimiter)
+
+			stamp_x = int(float(self.Unprompted.parse_advanced(kwargs["stamp_x"],context))) if "stamp_x" in kwargs else 0
+			stamp_y = int(float(self.Unprompted.parse_advanced(kwargs["stamp_y"],context))) if "stamp_y" in kwargs else 0
+			stamp_x_orig = stamp_x
+			stamp_y_orig = stamp_y
+			stamp_method = self.Unprompted.parse_advanced(kwargs["stamp_method"],context) if "stamp_method" in kwargs else "stretch"
+
+			for stamp in stamps:
+				# Checks for file in images/stamps, otherwise assumes absolute path
+				stamp_path = f"{self.Unprompted.base_dir}/images/stamps/{stamp}.png"
+				if not os.path.exists(stamp_path): stamp_path = stamp
+				if not os.path.exists(stamp_path):
+					self.Unprompted.log(f"Stamp not found: {stamp_path}",context="ERROR")
+					continue
+
+				stamp_img = Image.open(stamp_path).convert("RGBA")
+				
+				if stamp_method == "stretch":
+					stamp_img = stamp_img.resize((self.init_image.size[0],self.init_image.size[1]))
+				elif stamp_method == "center":
+					stamp_x = stamp_x_orig + int((mask_width - stamp_img.size[0]) / 2)
+					stamp_y = stamp_y_orig + int((mask_height - stamp_img.size[1]) / 2)
+
+				stamp_blur = int(float(self.Unprompted.parse_advanced(kwargs["stamp_blur"],context))) if "stamp_blur" in kwargs else 0
+				if stamp_blur:
+					from PIL import ImageFilter
+					blur = ImageFilter.GaussianBlur(stamp_blur)
+					stamp_img = stamp_img.filter(blur)
+
+				self.init_image.paste(stamp_img,(stamp_x,stamp_y),stamp_img)
 
 		brush_mask_mode = self.Unprompted.parse_advanced(kwargs["mode"],context) if "mode" in kwargs else "add"
 		self.show = True if "show" in pargs else False
-
-
-		box_thresh = float(self.Unprompted.parse_advanced(kwargs["box_threshold"],context)) if "box_threshold" in kwargs else 0.3
-		text_thresh = float(self.Unprompted.parse_advanced(kwargs["text_threshold"],context)) if "text_threshold" in kwargs else 0.25
 
 		self.legacy_weights = True if "legacy_weights" in pargs else False
 		smoothing = int(self.Unprompted.parse_advanced(kwargs["smoothing"],context)) if "smoothing" in kwargs else 20
@@ -103,15 +146,16 @@ class Shortcode():
 			for i, mask in enumerate(masks):
 				
 				filename = f"mask_{mode}_{i}.png"
+
 				if method == "clipseg":
 					plt.imsave(filename,torch.sigmoid(mask[0]))
 					img = cv2.imread(filename)
 				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
 				else:
 					plt.imsave(filename,mask)
+					import random
 					img = cv2.imread(filename)
 					img = cv2.resize(img,(mask_width,mask_height))
-					
 
 
 				if padding_dilation_kernel is not None:
@@ -119,7 +163,11 @@ class Shortcode():
 					else: img = cv2.erode(img,padding_dilation_kernel,iterations=1)
 				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
 
+				#if method == "clip_surgery":
+					#gray_image = cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_BGR2LUV), cv2.COLOR_BGR2GRAY)
+				#else: gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+				Image.fromarray(gray_image).save("mask_gray_test.png")
 				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
 
 				if (mode == "discard"): bw_image = numpy.invert(bw_image)
@@ -132,9 +180,140 @@ class Shortcode():
 			return(final_img)
 			
 		def get_mask():
+			preds = []
+			negative_preds = []
 			image_pil = flatten(self.init_image, opts.img2img_background_color)
 
-			if method == "sam":
+			if method == "clip_surgery":
+				from lib_unprompted import clip_surgery as clip
+				import cv2
+				import numpy as np
+				from PIL import Image
+				from  matplotlib import pyplot as plt
+				from torchvision.transforms import Compose, Resize, ToTensor, Normalize
+				from torchvision.transforms import InterpolationMode
+				BICUBIC = InterpolationMode.BICUBIC
+				from segment_anything import sam_model_registry, SamPredictor
+
+				# default imagenet redundant features
+				redundants = ['a bad photo of a {}.', 'a photo of many {}.', 'a sculpture of a {}.', 'a photo of the hard to see {}.', 'a low resolution photo of the {}.', 'a rendering of a {}.', 'graffiti of a {}.', 'a bad photo of the {}.', 'a cropped photo of the {}.', 'a tattoo of a {}.', 'the embroidered {}.', 'a photo of a hard to see {}.', 'a bright photo of a {}.', 'a photo of a clean {}.', 'a photo of a dirty {}.', 'a dark photo of the {}.', 'a drawing of a {}.', 'a photo of my {}.', 'the plastic {}.', 'a photo of the cool {}.', 'a close-up photo of a {}.', 'a black and white photo of the {}.', 'a painting of the {}.', 'a painting of a {}.', 'a pixelated photo of the {}.', 'a sculpture of the {}.', 'a bright photo of the {}.', 'a cropped photo of a {}.', 'a plastic {}.', 'a photo of the dirty {}.', 'a jpeg corrupted photo of a {}.', 'a blurry photo of the {}.', 'a photo of the {}.', 'a good photo of the {}.', 'a rendering of the {}.', 'a {} in a video game.', 'a photo of one {}.', 'a doodle of a {}.', 'a close-up photo of the {}.', 'a photo of a {}.', 'the origami {}.', 'the {} in a video game.', 'a sketch of a {}.', 'a doodle of the {}.', 'a origami {}.', 'a low resolution photo of a {}.', 'the toy {}.', 'a rendition of the {}.', 'a photo of the clean {}.', 'a photo of a large {}.', 'a rendition of a {}.', 'a photo of a nice {}.', 'a photo of a weird {}.', 'a blurry photo of a {}.', 'a cartoon {}.', 'art of a {}.', 'a sketch of the {}.', 'a embroidered {}.', 'a pixelated photo of a {}.', 'itap of the {}.', 'a jpeg corrupted photo of the {}.', 'a good photo of a {}.', 'a plushie {}.', 'a photo of the nice {}.', 'a photo of the small {}.', 'a photo of the weird {}.', 'the cartoon {}.', 'art of the {}.', 'a drawing of the {}.', 'a photo of the large {}.', 'a black and white photo of a {}.', 'the plushie {}.', 'a dark photo of a {}.', 'itap of a {}.', 'graffiti of the {}.', 'a toy {}.', 'itap of my {}.', 'a photo of a cool {}.', 'a photo of a small {}.', 'a tattoo of the {}.', 'there is a {} in the scene.', 'there is the {} in the scene.', 'this is a {} in the scene.', 'this is the {} in the scene.', 'this is one {} in the scene.']
+
+				if "redundant_features" in kwargs: redundants.extend(kwargs["redundant_features"].split(self.Unprompted.Config.syntax.delimiter))
+				self.bypass_sam = True if "bypass_sam" in pargs else False
+
+				### Init CLIP and data
+				if self.cached_model == -1 or self.cached_model_method != method:
+					model, preprocess = clip.load("CS-ViT-B/16", device=device)
+					model.eval()
+					# Cache for future runs
+					self.cached_model = model
+					self.cached_transform = preprocess
+				else:
+					self.Unprompted.log("Using cached model(s) for CLIP_Surgery method")
+					model = self.cached_model
+					preprocess = self.cached_transform
+
+				image = preprocess(image_pil).unsqueeze(0).to(device)
+				cv2_img = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
+
+				### CLIP Surgery for a single text, without fixed label sets
+				with torch.no_grad():
+					# CLIP architecture surgery acts on the image encoder
+					image_features = model.encode_image(image)
+					image_features = image_features / image_features.norm(dim=1, keepdim=True)
+
+					# Prompt ensemble for text features with normalization
+					text_features = clip.encode_text_with_prompt_ensemble(model, prompts, device)
+
+					if (negative_prompts):
+						negative_text_features = clip.encode_text_with_prompt_ensemble(model, negative_prompts, device)
+
+					# Extract redundant features from an empty string
+					redundant_features = clip.encode_text_with_prompt_ensemble(model, [""], device, redundants)
+				
+					# no sam
+					if self.bypass_sam:
+						def reg_inference(text_features):
+							preds = []
+							# Apply feature surgery for single text
+							similarity = clip.clip_feature_surgery(image_features, text_features, redundant_features)
+							similarity_map = clip.get_similarity_map(similarity[:, 1:, :], cv2_img.shape[:2])
+							
+							# Draw similarity map
+							for b in range(similarity_map.shape[0]):
+								for n in range(similarity_map.shape[-1]):
+									vis = (similarity_map[b, :, :, n].cpu().numpy() * 255).astype('uint8')
+									preds.append(vis)
+							return(preds)
+						preds = reg_inference(text_features)
+						if (negative_prompts): negative_preds = reg_inference(negative_text_features)
+					else:
+						point_thresh = float(self.Unprompted.parse_advanced(kwargs["point_threshold"],context)) if "point_threshold" in kwargs else 0.98
+						multimask_output = True if "multimask_output" in pargs else False
+
+						# Init SAM
+						if self.cached_predictor == -1 or self.cached_model_method != method:
+							sam_model_dir = f"{self.Unprompted.base_dir}/models/segment_anything"
+							os.makedirs(sam_model_dir, exist_ok=True)
+							sam_filename = "sam_vit_h_4b8939.pth"
+							sam_file = f"{sam_model_dir}/{sam_filename}"
+							# Download model weights if we don't have them yet
+							if not os.path.exists(sam_file):
+								print("Downloading SAM model weights...")
+								self.Unprompted.download_file(sam_file,f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
+							
+							model_type = "vit_h"
+							sam = sam_model_registry[model_type](checkpoint=sam_file)
+							sam.to(device=device)
+							predictor = SamPredictor(sam)
+
+							self.cached_predictor = predictor
+						else:
+							predictor = self.cached_predictor
+
+						predictor.set_image(np.array(image_pil))
+						self.cached_model_method = method
+
+						def sam_inference(text_features):
+							preds = []
+							
+							# Combine features after removing redundant features and min-max norm
+							sm = clip.clip_feature_surgery(image_features, text_features, redundant_features)[0, 1:, :]
+							sm_norm = (sm - sm.min(0, keepdim=True)[0]) / (sm.max(0, keepdim=True)[0] - sm.min(0, keepdim=True)[0])
+							sm_mean = sm_norm.mean(-1, keepdim=True)
+							# get positive points from individual maps, and negative points from the mean map
+							p, l = clip.similarity_map_to_points(sm_mean, cv2_img.shape[:2], t=point_thresh)
+							num = len(p) // 2
+							points = p[num:] # negatives in the second half
+							labels = [l[num:]]
+							for i in range(sm.shape[-1]):
+								p, l = clip.similarity_map_to_points(sm[:, i], cv2_img.shape[:2], t=point_thresh)
+								num = len(p) // 2
+								points = points + p[:num] # positive in first half
+								labels.append(l[:num])
+							labels = np.concatenate(labels, 0)							
+							
+							# Inference SAM with points from CLIP Surgery
+							masks, scores, logits = predictor.predict(point_labels=labels, point_coords=np.array(points), multimask_output=multimask_output)
+							mask = masks[np.argmax(scores)]
+							mask = mask.astype('uint8')			
+							
+							vis = cv2_img.copy()
+							vis[mask > 0] = np.array([255, 255, 255], dtype=np.uint8)
+							vis[mask == 0] = np.array([0, 0, 0], dtype=np.uint8)
+							preds.append(vis)
+							if self.show:
+								for idx,mask in enumerate(masks):
+									plt.imsave(f"mask{idx}.png",mask)
+
+							return(preds)
+					
+						preds = sam_inference(text_features)
+						if negative_prompts: negative_preds = sam_inference(negative_text_features)
+
+			elif method == "grounded_sam":
+				box_thresh = float(self.Unprompted.parse_advanced(kwargs["box_threshold"],context)) if "box_threshold" in kwargs else 0.3
+				text_thresh = float(self.Unprompted.parse_advanced(kwargs["text_threshold"],context)) if "text_threshold" in kwargs else 0.25
 				# Grounding DINO
 				import groundingdino.datasets.transforms as T
 				from groundingdino.models import build_model
@@ -205,7 +384,7 @@ class Shortcode():
 				model_config_path = f"{self.Unprompted.base_dir}/lib_unprompted/groundingdino/config/GroundingDINO_SwinT_OGC.py"
 
 				# load model
-				if self.cached_model == -1:
+				if self.cached_model == -1 or self.cached_model_method != method:
 					args = SLConfig.fromfile(model_config_path)
 					args.device = device
 					model = build_model(args)
@@ -223,6 +402,7 @@ class Shortcode():
 					)
 					self.cached_model = model
 					self.cached_transform = transform
+					self.cached_model_method = method
 
 				else:
 					self.Unprompted.log("Using cached GroundingDINO model.")
@@ -248,10 +428,13 @@ class Shortcode():
 					
 					preds = []
 					value = 0
-					mask_img = torch.zeros(masks.shape[-2:])
+					mask_img = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
 					for idx, mask in enumerate(masks):
-						mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
-					preds.append(mask_img.numpy())
+						# mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
+						mask_img[mask.cpu().numpy()[0] >= 1] = np.array([255, 255, 255], dtype=np.uint8)
+						mask_img[mask.cpu().numpy()[0] < 1] = np.array([0, 0, 0], dtype=np.uint8)
+					# TODO: Figure out if we can take advantage of individual mask layers rather than stacking as composite
+					preds.append(mask_img) 
 
 					return(preds)
 
@@ -293,7 +476,7 @@ class Shortcode():
 
 
 				# load model
-				if self.cached_model == -1:
+				if self.cached_model == -1 or self.cached_model_method != method:
 					self.Unprompted.log("Loading clipseg model...")
 					model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64, complex_trans_conv=not self.legacy_weights)
 
@@ -310,6 +493,7 @@ class Shortcode():
 					# Cache for future runs
 					self.cached_model = model
 					self.cached_transform = transform
+					self.cached_model_method = method
 				else:
 					self.Unprompted.log("Using cached clipseg model.")
 					model = self.cached_model
@@ -319,11 +503,17 @@ class Shortcode():
 
 				# predict
 				with torch.no_grad():
-					preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0].cpu()
+					if "image_prompt" in kwargs:
+						from PIL import Image
+						img_mask = flatten(Image.open(r"A:/inbox/test_mask.png"), opts.img2img_background_color)
+						img_mask = transform(img_mask).unsqueeze(0)
+						preds = model(img.to(device=device), img_mask.to(device=device))[0].cpu()
+					else:
+						preds = model(img.repeat(prompt_parts,1,1,1).to(device=device), prompts)[0].cpu()
+					
 					if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0].cpu()
 
 			# All of the below logic applies to both clipseg and sam
-
 			if "image_mask" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["image_mask"] = None
 				
 			if (brush_mask_mode == "add" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
@@ -411,6 +601,8 @@ class Shortcode():
 			if "unload_model" in pargs:
 				self.model = -1
 				self.cached_model = -1
+				self.cached_model_method = ""
+				self.cached_predictor = -1
 
 			return final_img
 
@@ -450,7 +642,7 @@ class Shortcode():
 	
 	def ui(self,gr):
 		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
-		gr.Radio(label="Masking tech method 🡢 method",choices=["sam","clipseg"],value="sam",interactive=True)
+		gr.Radio(label="Masking tech method 🡢 method",choices=["clipseg","clip_surgery","grounded_sam"],value="clipseg",interactive=True)
 		gr.Checkbox(label="Show mask in output 🡢 show")
 		gr.Checkbox(label="Use clipseg legacy weights 🡢 legacy_weights")
 		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)

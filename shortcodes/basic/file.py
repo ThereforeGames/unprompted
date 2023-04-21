@@ -8,6 +8,9 @@ class Shortcode():
 		self.description = "Processes the file content of 'path.'"
 
 	def run_atomic(self, pargs, kwargs, context):
+		if "_bypass_if" in kwargs:
+			if self.Unprompted.parse_advanced(kwargs["_bypass_if"],context): return ""
+
 		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
 		this_encoding = self.Unprompted.parse_advanced(kwargs["_encoding"],context) if "_encoding" in kwargs else "utf-8"
 		

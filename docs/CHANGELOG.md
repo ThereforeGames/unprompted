@@ -3,6 +3,37 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>8.3.0 - 21 April 2023</summary>
+
+### Added
+- New shortcode `[color_correct]`: provides the same automatic color grading features as Bodysnatcher, but in the form of a standalone block
+- `[color_correct]`: supports the `source` argument, which is a string that processes the initial image with `[txt2mask]` and uses the resulting masked image as a source for color correction, as opposed to the entire image
+- `[txt2mask]`: implemented [CLIP Surgery](https://github.com/xmed-lab/CLIP_Surgery) as a new method type ("clip_surgery") which optionally supports Segment Anything (dev comment: this is better than `clipseg` at certain tasks but worse at others - `clipseg` is still default for the time being)
+- `[txt2mask]`: new argument `stamp` that pastes a temporary PNG onto the init image before running mask processing, useful for redacting a portion of the image for example
+- `[txt2mask]`: supports `stamp_method` to choose sizing and positioning logic
+- `[txt2mask]`: supports `stamp_x` and `stamp_y` for precise positioning of the stamp
+- `[txt2mask]`: supports `stamp_blur` radius to engage optional gaussian filter
+- `[txt2mask]`: 10 basic stamps are included by default
+- `[zoom_enhance]`: now supports `mask_method`
+- `[template]`: any kwargs in the Wizard template block will be passed to the constructed `[file]` block
+- `[file]`: experimental new argument `_bypass_if` that skips file processing if the value returns true (intended to be used with Wizard templates)
+- `[get sd_model]` should now work as expected
+- Bodysnatcher: new option `background_mode` that inverts the mask and disables the zoom_enhance step
+- Bodysnatcher: new setting `stamp`
+
+### Changed
+- `[zoom_enhance]`: the `color_correct_method` default value is now `none`
+- `[zoom_enhance]`: fix for adaptive CFG scaling
+- `[zoom_enhance]`: minor tweaks to the adaptive scaling algorithm
+- `[zoom_enhance]`: speculative fix for an issue with batch processing, which may also resolve an infinite loop that could occur with Bodysnatcher
+- `[txt2mask]`: the "sam" `method` has been renamed to "grounded_sam"
+- `[txt2mask]`: fixed a crash related to switching back and forth between `method` types
+- Moved legacy shortcodes into their own `legacy` folder
+- Fixed a crash related to empty shortcode arguments
+- Updated the manual
+
+</details>
+
 <details><summary>8.2.0 - 18 April 2023</summary>
 
 ### Added

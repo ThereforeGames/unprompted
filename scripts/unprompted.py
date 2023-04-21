@@ -35,6 +35,7 @@ Unprompted.wizard_dropdown = None
 
 Unprompted.wizard_template_files = []
 Unprompted.wizard_template_names = []
+Unprompted.wizard_template_kwargs = []
 
 def do_dry_run(string):
 	Unprompted.log(string)
@@ -108,6 +109,9 @@ def wizard_generate_template(option,is_img2img,prepend="",append=""):
 		return(result)
 	
 	result = parse_children(group,result)
+
+	for kwarg in Unprompted.wizard_template_kwargs[option]:
+		result += f" {kwarg}='{Unprompted.wizard_template_kwargs[option][kwarg]}'"
 
 	# Closing bracket
 	result += Unprompted.Config.syntax.tag_end
@@ -261,6 +265,7 @@ class Scripts(scripts.Script):
 							content = content.replace("\\r\\n", "<br>") + "<br><br>"
 							gr.Label(label="Options",value=f"{self.dropdown_item_name}")
 							gr.Markdown(value=content)
+							self.wizard_template_kwargs = kwargs
 							return("")
 						wizard_shortcode_parser.register(handler,"template",f"{Unprompted.Config.syntax.tag_close}template")	
 
@@ -306,6 +311,7 @@ class Scripts(scripts.Script):
 												wizard_add_template(is_first)
 												Unprompted.wizard_template_names.append(self.dropdown_item_name)
 												Unprompted.wizard_template_files.append(filename)
+												Unprompted.wizard_template_kwargs.append(self.wizard_template_kwargs)
 												if (is_first):
 													templates_dropdown.value = self.dropdown_item_name
 													is_first = False
@@ -435,6 +441,8 @@ class Scripts(scripts.Script):
 
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
+		original_model = opts.sd_model_checkpoint
+		Unprompted.shortcode_user_vars["sd_model"] = opts.sd_model_checkpoint
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
@@ -451,7 +459,7 @@ class Scripts(scripts.Script):
 		# Special handling of vars
 		for att in Unprompted.shortcode_user_vars:
 			# change models
-			if att == "sd_model":
+			if att == "sd_model" and Unprompted.shortcode_user_vars[att] != original_model:
 				info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
 				if (info): sd_models.load_model(info,None,None)
 			# control controlnet
@@ -510,8 +518,8 @@ class Scripts(scripts.Script):
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
 		if not self.allow_postprocess or not is_enabled:
-			Unprompted.log("Bypassing After routine")
-			self.allow_postprocess = True
+			Unprompted.log("Bypassing After routine to avoid infinite loop")
+			# self.allow_postprocess = True
 			return False # Prevents endless loop with some shortcodes
 		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")

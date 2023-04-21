@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "8.2.0"
+		self.VERSION = "8.3.0"
 
 		print(f"Loading Unprompted v{self.VERSION} by Therefore Games")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -113,7 +113,8 @@ class Unprompted:
 
 	def parse_advanced(self,string,context=None):
 		"""First runs the string through parse_alt_tags, the result of which then goes through simpleeval"""
-		if (len(string) < 1): return string
+		if string is None: return ""
+		if (len(string) < 1): return ""
 		string = self.parse_alt_tags(string,context)
 		if self.Config.advanced_expressions:
 			try:
