@@ -10,8 +10,8 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Upscales a selected portion of the image. ENHANCE!"
 		self.is_fixing = False
-		self.wizard_prepend = Unprompted.Config.syntax.tag_start + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start_alt + "zoom_enhance"
-		self.wizard_append = Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end
+		self.wizard_prepend = f"{Unprompted.Config.syntax.tag_start}if batch_index=0{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start_alt}after{Unprompted.Config.syntax.tag_end_alt}{Unprompted.Config.syntax.tag_start_alt}{Unprompted.Config.syntax.tag_start_alt}zoom_enhance"
+		self.wizard_append = Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start_alt + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close  + "if" + Unprompted.Config.syntax.tag_end
 		self.resample_methods = {}
 		self.resample_methods["Nearest Neighbor"] = 0
 		self.resample_methods["Box"] = 4
