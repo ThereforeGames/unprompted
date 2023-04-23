@@ -10,7 +10,7 @@ import sys
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "8.3.0"
+		self.VERSION = "8.3.1"
 
 		print(f"Loading Unprompted v{self.VERSION} by Therefore Games")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -158,13 +158,19 @@ class Unprompted:
 
 		return(parser.parse(string,context))
 	
-	def log(self,string,show_caller=True,context="DEBUG"):
+	def log(self,string,show_caller=True,context="DEBUG",caller=None):
 		if (context != "DEBUG" or self.Config.debug):
 			this_string = f"({context})"
-			if show_caller: this_string += " ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]"
+			if show_caller:
+				if caller is None: caller = " ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]"
+				this_string += caller
 			this_string += f" {string}"
 			print(this_string)
-	
+
+	def log_error(self,e):
+		import traceback
+		self.log(''.join(traceback.TracebackException.from_exception(e).format()),context="ERROR",caller=" ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]")
+
 	def strip_str(self,string,chop):
 		while True:
 			if chop and string.endswith(chop):

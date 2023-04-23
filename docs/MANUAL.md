@@ -12,6 +12,12 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 
 </details>
 
+<details><summary>Xformers v0.0.18 instability</summary>
+
+I have observed multiple glitches while generating images with Xformers v0.0.18. I am not certain whether this has to do with Unprompted specifically, but would advise downgrading to v0.0.17 until further notice.
+
+</details>
+
 ## 🎓 Proficiency
 
 <details><summary>Atomic vs Block Shortcodes</summary>

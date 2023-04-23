@@ -395,12 +395,13 @@ class Scripts(scripts.Script):
 		# test compatibility with controlnet
 		import copy
 		Unprompted.p_copy = copy.copy(p)
-		# update the controlnet script args with a list of 0 units
+		# Update the controlnet script args with a list of 0 units
 		try:
 			import importlib
 			external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
 			external_code.update_cn_script_in_processing(Unprompted.p_copy, []) 
 		except: pass
+
 
 		if match_main_seed: 
 			if p.seed == -1:
@@ -470,13 +471,14 @@ class Scripts(scripts.Script):
 					cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
 					all_units = cnet.get_all_units_in_processing(p)
 					att_split = att.split("_") # e.g. controlnet_0_enabled
-					if att_split[2] == "image":
-						from pil import Image
-						this_val = Image.open(Unprompted.shortcode_user_vars[att])
-					else: 
-						this_val = Unprompted.shortcode_user_vars[att]
-					setattr(all_units[int(att_split[1])],att_split[2],this_val)
-					cnet.update_cn_script_in_processing(p, all_units)
+					if len(att_split) == 3:
+						if att_split[2] == "image":
+							from pil import Image
+							this_val = Image.open(Unprompted.shortcode_user_vars[att])
+						else: 
+							this_val = Unprompted.shortcode_user_vars[att]
+						setattr(all_units[int(att_split[1])],att_split[2],this_val)
+						cnet.update_cn_script_in_processing(p, all_units)
 
 				except Exception as e:
 					Unprompted.log(f"Could not set ControlNet value: {e}",context="ERROR")
@@ -518,8 +520,8 @@ class Scripts(scripts.Script):
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
 		if not self.allow_postprocess or not is_enabled:
-			Unprompted.log("Bypassing After routine to avoid infinite loop")
-			# self.allow_postprocess = True
+			Unprompted.log("Bypassing After routine to avoid infinite loop.")
+			self.allow_postprocess = True
 			return False # Prevents endless loop with some shortcodes
 		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")

@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>8.3.1 - 22 April 2023</summary>
+
+### About
+
+Over the last couple days, I have been experimenting with changes to the adaptive scaling features of `[zoom_enhance]`. I believe it will produce more consistent results across different resolutions, but you should take a backup of the current shortcode if you're happy with its performance - many of the default settings have changed, and I will likely continue finetuning it over the next few weeks. Your feedback is appreciated!
+
+### Changed
+- `[zoom_enhance]`: rewrote most of the adaptive scaling calculations
+- `[zoom_enhance]`: introduced several try-catch blocks for better exception handling
+- `[zoom_enhance]`: fixed a couple issues with `show_original`
+- `[zoom_enhance]`: fixed an issue that caused the shortcode to call Unprompted's `process()` routine a second time
+
+</details>
+
 <details open><summary>8.3.0 - 21 April 2023</summary>
 
 ### Added
