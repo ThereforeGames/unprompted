@@ -17,7 +17,7 @@ Over the last couple days, I have been experimenting with changes to the adaptiv
 
 </details>
 
-<details open><summary>8.3.0 - 21 April 2023</summary>
+<details><summary>8.3.0 - 21 April 2023</summary>
 
 ### Added
 - New shortcode `[color_correct]`: provides the same automatic color grading features as Bodysnatcher, but in the form of a standalone block
