@@ -10,7 +10,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 ### Added
 - Block shortcodes can now implement `preprocess_block()` which allows them to take priority over any inner shortcodes
-- `[if]`, `[else]`, `[elif]`, `[do]`, `[for]`, `[while]`, `[repeat]`, `[switch]`, : now utilize `preprocess_block()` such that you no longer have to write secondary shortcode tags for nested statements
+- `[if]`, `[else]`, `[elif]`, `[do]`, `[for]`, `[while]`, `[repeat]`, `[switch]`: now utilize `preprocess_block()` such that you no longer have to write secondary shortcode tags for nested statements
 - `[choose]`: utilizes the new `preprocess_block()` to temporarily replace the value of `Unprompted.Config.sanitize_after` to `{"\\n":"|"}` which should allow the following syntax to select a random line from another file: `[choose][file some_file][/choose]`
 - `[chance]`, `[do]`, `[for]`, `[while]`, `[set]`: now sanitize the content per the new `Unprompted.Config.syntax.sanitize_block` rules
 - `[chance]`, `[do]`, `[for]`, `[while]`, `[set]`: supports `_raw` to disable content sanitization
