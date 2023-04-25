@@ -221,7 +221,7 @@ class Scripts(scripts.Script):
 				unprompted_seed = gr.Number(label="Unprompted Seed",value=-1)
 				setattr(unprompted_seed,"do_not_save_to_config",True)
 
-				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/demoncrawl_avatar_generator_v0.0.1/main{Unprompted.Config.txt_format}")): is_open = False
+				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/demoncrawl_avatar_generator_v0.0.2/main{Unprompted.Config.txt_format}")): is_open = False
 				else: is_open = True
 				
 				with gr.Accordion("🎉 Promo", open=is_open):
