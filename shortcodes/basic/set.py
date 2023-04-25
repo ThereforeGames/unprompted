@@ -6,11 +6,14 @@ class Shortcode():
 		overrides = self.Unprompted.shortcode_objects["override"]
 		can_set = True
 
+		if (content is None or len(content) < 1): return ""
+
 		# Prep content with override support
 		if (pargs[0] in overrides.shortcode_overrides):
 			content = overrides.shortcode_overrides[pargs[0]]
+		elif "_raw" in pargs: content = self.Unprompted.process_string(content,context)
 		else:
-			content = self.Unprompted.parse_alt_tags(content,context)
+			content = self.Unprompted.process_string(self.Unprompted.sanitize_pre(content,self.Unprompted.Config.syntax.sanitize_block,True),context,False)
 		content = self.Unprompted.autocast(content)
 
 		if "_new" in pargs:
@@ -38,4 +41,5 @@ class Shortcode():
 		gr.Textbox(label="Array of valid values (used in conjunction with _new) 🡢 _choices")
 		gr.Checkbox(label="Append the content to the variable's current value 🡢 _append")
 		gr.Checkbox(label="Prepend the content to the variable's current value 🡢 _prepend")
+		gr.Checkbox(label="Store content without sanitizing 🡢 _raw")
 		gr.Checkbox(label="Print the variable's value 🡢 _out")

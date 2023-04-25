@@ -2,7 +2,7 @@
 	"_about":"STOP! Instead of modifying this file, create config_user.json and make your changes there.",
 	"app":"unprompted",
 	"beta_features":false,
-	"debug":false,
+	"log_contexts":"RESULT,ERROR",
 	"advanced_expressions":true,
 	"template_directory":"templates",
 	"txt_format":".txt",
@@ -15,6 +15,7 @@
 	{
 		"sanitize_before":{"\n":"\\n","\t":""},
 		"sanitize_after":{"\\n":" "},
+		"sanitize_block":{"\n":""},
 		"tag_start":"[",
 		"tag_end":"]",
 		"tag_start_alt":"{",
@@ -31,7 +32,8 @@
 	},
 	"stable_diffusion":
 	{
-		"batch_support":true
+		"batch_support":true,
+		"show_extra_generation_params":true
 	},
 	"ui":
 	{

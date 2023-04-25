@@ -3,7 +3,43 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>8.3.1 - 22 April 2023</summary>
+<details open><summary>9.0.0 - 25 April 2023</summary>
+
+### About
+**Important:** This version features a number of changes to Unprompted's syntax that may break existing templates. Please see the latest announcement for more details.
+
+### Added
+- Block shortcodes can now implement `preprocess_block()` which allows them to take priority over any inner shortcodes
+- `[if]`, `[else]`, `[elif]`, `[do]`, `[for]`, `[while]`, `[repeat]`, `[switch]`, : now utilize `preprocess_block()` such that you no longer have to write secondary shortcode tags for nested statements
+- `[choose]`: utilizes the new `preprocess_block()` to temporarily replace the value of `Unprompted.Config.sanitize_after` to `{"\\n":"|"}` which should allow the following syntax to select a random line from another file: `[choose][file some_file][/choose]`
+- `[chance]`, `[do]`, `[for]`, `[while]`, `[set]`: now sanitize the content per the new `Unprompted.Config.syntax.sanitize_block` rules
+- `[chance]`, `[do]`, `[for]`, `[while]`, `[set]`: supports `_raw` to disable content sanitization
+- New function `shortcode_var_is_true()`: allows shortcodes to check if a given variable key is found in pargs or set to True in kwargs (still needs to be implemented across most shortcodes)
+- `[sets]`: supports advanced expressions
+- Unprompted now includes extra generation paramters in the output window
+- You can disable the above behavior by setting `Unprompted.Config.stable_diffusion.show_extra_generation_params` to 0
+- New config setting `Unprompted.Config.log_contexts`: a comma-delimited string that dictates which types of log messages to include in the console (only shows `ERROR` and `RESULT` messages by default, but can be extended to show `DEBUG` or `ALL`)
+- Debug message displaying startup load time
+- Simple `unprompted_dry.bat` that activates a given conda environment and launches `unprompted_dry.py` (you will need to edit it for your own setup)
+
+### Changed
+- `[zoom_enhance]`: fixed bug with manual mask behavior
+- `[zoom_enhance]`: updated Wizard shortcode generation for compatibility with new syntax
+- `[get]`: the `_before` and `_after` arguments no longer update the variable's stored value
+- Bodysnatcher: updated template for compatibility with new syntax
+- img2img_folder: updated template for compatibility with new syntax
+- txt2img2img: update template for compatibility with new syntax
+- Fixed an issue that prevented `controlnet_x_pixel_perfect` variables from working correctly
+- Moved `import` calls of various Stable Diffusion shortcodes into the `run()` block to prevent issues with the standalone `unprompted_dry.py`
+
+### Removed
+- `Unprompted.Config.debug` in favor of the new `Unprompted.Config.log_contexts`
+- Shortcodes that allow nested statements without use of secondary shortcode tags will no longer parse those secondary tags, unfortunately this means some templates will have to be updated for compatibility
+- Outdated `choose_weighted` example template
+
+</details>
+
+<details><summary>8.3.1 - 22 April 2023</summary>
 
 ### About
 

@@ -5,6 +5,8 @@ class Shortcode():
 		self.description = "Processes arbitrary text following the main output."
 		self.last_index = -1
 
+	def preprocess_block(self,pargs,kwargs,context): return True
+	
 	def run_block(self, pargs, kwargs, context, content):
 		index = int(self.Unprompted.parse_advanced(pargs[0])) if len(pargs) > 0 else 0
 		if self.last_index != index or "allow_dupe_index" in pargs:
@@ -31,7 +33,7 @@ class Shortcode():
 
 			for idx,content in enumerate(self.after_content):
 				self.Unprompted.shortcode_user_vars["after_index"] = idx
-				self.Unprompted.process_string(self.Unprompted.parse_alt_tags(content,"after"))
+				self.Unprompted.process_string(content,"after")
 
 			self.after_content = []
 			return(self.Unprompted.after_processed)

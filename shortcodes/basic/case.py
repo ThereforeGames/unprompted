@@ -3,9 +3,11 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Use within [switch] to run different logic blocks depending on the value of a var."
 
+	def preprocess_block(self,pargs,kwargs,context): return True
+
 	def run_block(self, pargs, kwargs, context, content):
 		_var = self.Unprompted.shortcode_objects["switch"].switch_var
-
+		
 		# Default case
 		if len(pargs) == 0 and _var != "":
 			return(self.Unprompted.parse_alt_tags(content,context))

@@ -49,7 +49,8 @@ class Shortcode():
 					break
 
 			if ((is_true and not _not) or (_not and not is_true)):
-				final_string += self.Unprompted.parse_alt_tags(content,context)
+				if "_raw" in pargs: final_string += self.Unprompted.process_string(content,context)
+				else: final_string += self.Unprompted.process_string(self.Unprompted.sanitize_pre(content,self.Unprompted.Config.syntax.sanitize_block,True),context,False)
 			else:
 				break
 			
@@ -60,3 +61,4 @@ class Shortcode():
 		gr.Dropdown(label="Evaluation method 🡢 _is",choices=["==","!=","<","<=",">",">="],value="==")
 		gr.Checkbox(label="Invert evaluation such that a false condition will end the loop 🡢 _not")
 		gr.Checkbox(label="Return true if any one of multiple conditions are true 🡢 _any")
+		gr.Checkbox(label="Print content without sanitizing 🡢 _raw")

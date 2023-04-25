@@ -12,9 +12,9 @@ class Shortcode():
 				if "_var" in kwargs: parg = self.Unprompted.parse_alt_tags(kwargs["_var"],context)
 			else: return_string += _sep
 			if ("_before" in kwargs):
-				self.Unprompted.shortcode_user_vars[parg] = kwargs["_before"] + str(self.Unprompted.shortcode_user_vars[parg])
+				return_string = f"{kwargs['_before']}{return_string}"
 			if ("_after" in kwargs):
-				self.Unprompted.shortcode_user_vars[parg] = str(self.Unprompted.shortcode_user_vars[parg] + kwargs["_after"])
+				return_string = f"{return_string}{kwargs['_after']}"
 			if (parg in self.Unprompted.shortcode_user_vars):
 				this_var = self.Unprompted.shortcode_user_vars[parg]
 				if (isinstance(this_var,list)): return_string += _sep.join(str(x) for x in this_var)

@@ -7,12 +7,14 @@ import glob
 import importlib
 import inspect
 import sys
+import time
 
 class Unprompted:
 	def __init__(self, base_dir="."):
-		self.VERSION = "8.3.1"
+		start_time = time.time()
+		self.VERSION = "9.0.0"
 
-		print(f"Loading Unprompted v{self.VERSION} by Therefore Games")
+		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
 
 		self.shortcode_modules = {}
@@ -38,7 +40,9 @@ class Unprompted:
 			self.cfg_dict = flat_cfg.as_dict()
 		self.Config = json.loads(json.dumps(self.cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
 
-		self.log(f"Debug mode is {self.Config.debug}",False,"SETUP")
+		self.log(f"Logging enabled for the following message types: {self.Config.log_contexts}",False,"SETUP")
+		self.Config.log_contexts = self.Config.log_contexts.split(",")
+		
 		
 		# Load shortcodes
 		import importlib.util
@@ -60,9 +64,18 @@ class Unprompted:
 				def handler(keyword, pargs, kwargs, context):
 					return(self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 			else:
-				@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}")
-				def handler(keyword, pargs, kwargs, context, content):
-					return(self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
+				# Allow shortcode to run before inner content
+				if hasattr(self.shortcode_objects[shortcode_name],"preprocess_block"):
+					def preprocess(keyword, pargs, kwargs, context):
+						return(self.shortcode_objects[f"{keyword}"].preprocess_block(pargs, kwargs, context))
+					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}", preprocess)
+					def handler(keyword, pargs, kwargs, context, content):
+						return(self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
+				# Normal block
+				else:
+					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}")
+					def handler(keyword, pargs, kwargs, context, content):
+						return(self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 			
 			# Setup extra routines
 			if (hasattr(self.shortcode_objects[shortcode_name],"cleanup")):
@@ -73,24 +86,30 @@ class Unprompted:
 			self.log(f"Loaded shortcode: {shortcode_name}",False)
 
 		self.shortcode_parser = shortcodes.Parser(start=self.Config.syntax.tag_start, end=self.Config.syntax.tag_end, esc=self.Config.syntax.tag_escape, ignore_unknown=True)
+		self.log(f"Unprompted finished loading in {time.time()-start_time} seconds.",False)
 	
 	def shortcode_string_log(self):
 		return("["+os.path.basename(inspect.stack()[1].filename)+"]")
 
-	def process_string(self, string, context=None):
+	def process_string(self, string, context=None, cleanup_extra_spaces=True):
 		# First, sanitize contents
-		for k,v in self.Config.syntax.sanitize_before.__dict__.items():
-			string = string.replace(k,v)
-		string = self.shortcode_parser.parse(string,context)
+		string = self.shortcode_parser.parse(self.sanitize_pre(string,self.Config.syntax.sanitize_before),context)
+		return(self.sanitize_post(string,cleanup_extra_spaces))
 
+	def sanitize_pre(self, string, rules_obj,only_remove_last=False):
+		for k,v in rules_obj.__dict__.items():
+			if only_remove_last: v.join(string.rsplit(k, 1))
+			else: string = string.replace(k,v)
+		return(string)
+	
+	def sanitize_post(self, string, cleanup_extra_spaces=True):
 		# Final sanitization routine
 		sanitization_items = self.Config.syntax.sanitize_after.__dict__.items()
 		for k,v in sanitization_items:
 			string = self.strip_str(string,k)
 		for k,v in sanitization_items:
 			string = string.replace(k,v)
-
-		string = " ".join(string.split()) # Cleanup extra spaces
+		if cleanup_extra_spaces: string = " ".join(string.split()) # Cleanup extra spaces
 		return(string)
 
 	def parse_filepath(self,string,context = ""):
@@ -159,7 +178,7 @@ class Unprompted:
 		return(parser.parse(string,context))
 	
 	def log(self,string,show_caller=True,context="DEBUG",caller=None):
-		if (context != "DEBUG" or self.Config.debug):
+		if (context=="SETUP" or context in self.Config.log_contexts or "ALL" in self.Config.log_contexts):
 			this_string = f"({context})"
 			if show_caller:
 				if caller is None: caller = " ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]"
@@ -238,4 +257,9 @@ class Unprompted:
 		img_src = Normalizer(numpy.array(img_src)).uint8_norm()
 		for i in range(iterations):
 			img_src = cm.transfer(src=img_src, ref=img_ref, method=method)
-		return(Image.fromarray(Normalizer(img_src).uint8_norm()))	
+		return(Image.fromarray(Normalizer(img_src).uint8_norm()))
+
+	def shortcode_var_is_true(self,key,pargs,kwargs,context=None):
+		if key in pargs: return True
+		if key in kwargs and self.parse_advanced(kwargs[key],context): return True
+		return False

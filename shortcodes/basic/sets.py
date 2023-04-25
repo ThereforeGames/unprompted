@@ -15,7 +15,7 @@ class Shortcode():
 				# We create a copy of the pargs list because we need to add 'key' to the start for [set] processing
 				set_pargs = pargs
 				set_pargs.insert(0,key)
-				self.Unprompted.shortcode_objects["set"].run_block(set_pargs,system_kwargs,context,value)
+				self.Unprompted.shortcode_objects["set"].run_block(set_pargs,system_kwargs,context,str(self.Unprompted.parse_advanced(value,context)))
 		
 		return("")
 

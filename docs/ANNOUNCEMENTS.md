@@ -1,6 +1,83 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>The Big Syntax Update — 25 April 2023</summary>
+
+As part of my ongoing effort to transform Unprompted into a full-featured programming language, I have finally addressed one of its biggest pain points: nested shortcode syntax! Writing logic-heavy templates is a whole lot simpler now.
+
+Take, for example, a snippet of Unprompted code in **the old syntax:**
+
+```
+[if my_var=1]
+	{if another_var=2}
+		{{if third_var=3}}
+			{{{sets fourth_var=4}}}
+			{{{sets reaction="ew"}}}
+		{{/if}}
+	{/if}
+[/if]
+```
+
+Keeping track of the number of squiggly brackets to use was a painful affair, and you better pray you didn't have to refactor large swathes of code.
+
+Now, you just write your nested statements like you would in any normal language. Here's **the new syntax:**
+
+```
+[if my_var=1]
+	[if another_var=2]
+		[if third_var=3]
+			[sets fourth_var=4]
+			[sets reaction="wow so clean"]
+		[/if]
+	[/if]
+[/if]
+```
+
+Of course, you could just combine all those `[if]` blocks into a single statement... but I'm trying to show off the nesting functionality!
+
+This works with every block-scope shortcode that needed it, including `[for]` loops, `[swich]` blocks, and more.
+
+## The catch
+
+The catch is, shortcodes that support the new nesting format will no longer parse `{}` like they used to. **Old templates will have to be updated to the new format manually.**
+
+I have already updated the `common/templates/functions` files for you. If you want a closer look at the new syntax, please check `common/templates/functions/bodysnatcher.txt` - it covers a lot of ground.
+
+
+## Are secondary shortcode tags { } still needed? 
+
+There is one situation where you will still need to use secondary shortcode tags: **use {} when you want to pass shortcodes directly into the arguments of other shortcodes.** For example:
+
+```
+[file "{choose}some_file|another_file{/choose}"]
+```
+
+This is one limitation of the shortcode engine that does not bother me much. If anything, it might be easier to read this way as opposed to a shortcode with a bunch of square brackets nested into the arguments. The current implementation is at least visually distinct.
+
+It is also worth noting that the new nesting syntax must be "applied" to the source file of every shortcode that should support it, like so:
+
+```
+def preprocess_block(self,pargs,kwargs,context): return True
+```
+
+I believe I already added this to all the relevant shortcodes, but if there are any I missed, they will default to the old `{}` syntax. Don't forget to use `preprocess_block()` if you're making your own shortcodes.
+
+## Other syntax changes
+
+Unprompted v9.0.0 includes a few other changes to the language:
+
+- The `[choose]` shortcode now pairs much better with `[file]`. Previously, you had to include your `[choose][/choose]` inside of a file itself. Now, you can do this: `[choose][file somefile][/choose]` and it will pick a random line from `somefile`. This makes it easier to import wildcard lists that were made for other extensions.
+- Some shortcodes, such as `[set]` will now sanitize the content with the new `Unprompted.Config.syntax.sanitize_block` rule.
+- You can now use advanced expressions with `[sets]`, e.g. `[sets my_var="1 + 1"]` will set `my_var` to 2.
+
+Please see the changelog for more details.
+
+Thank you for your continued support, and have fun!
+
+[Discuss this post 🡢](https://github.com/ThereforeGames/unprompted/discussions/135)
+
+</details>
+
 <details><summary>Introducing the "Bodysnatcher" Template — 16 April 2023</summary>
 
 The latest version of the Unprompted extension includes **a GUI template for full-body swaps!** To my knowledge, it is the first of its kind. Let me explain what makes it a potentially interesting addition to your workflow:

@@ -30,7 +30,6 @@ class Shortcode():
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
 		gc.collect()
-		
 
 		if "txt2mask_init_image" in kwargs:
 			self.init_image = kwargs["txt2mask_init_image"].copy()

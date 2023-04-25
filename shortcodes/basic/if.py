@@ -4,6 +4,9 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.ops = {"==":self.Unprompted.is_equal,"!=":self.Unprompted.is_not_equal,"<":operator.lt,"<=":operator.le,">":operator.gt,">=":operator.ge}
 		self.description = "Checks whether a variable is equal to a given value."
+
+	def preprocess_block(self,pargs,kwargs,context): return True
+
 	def run_block(self, pargs, kwargs, context, content):
 		_not = "_not" in pargs
 		_any = "_any" in pargs
@@ -13,7 +16,7 @@ class Shortcode():
 		# Normal expressions
 		_is = kwargs["_is"] if "_is" in kwargs else "=="
 		for key, value in kwargs.items():
-			if (key[0] == "_"): continue # Skips system arguments
+			if self.Unprompted.is_system_arg(key): continue # Skips system arguments
 
 			this_value = self.Unprompted.parse_advanced(value,context)
 			
@@ -30,9 +33,9 @@ class Shortcode():
 				is_true = False
 				break
 
-		# Support advanced expressions
+		# Support truthy checks
 		for key in pargs:
-			if (key[0] == "_"): continue # Skips system arguments
+			if self.Unprompted.is_system_arg(key): continue
 			if (self.Unprompted.parse_advanced(key,context) == 1):
 				if _any:
 					is_true = True
@@ -43,10 +46,11 @@ class Shortcode():
 
 		if ((is_true and not _not) or (_not and not is_true)):
 			self.Unprompted.shortcode_objects["else"].do_else = False
-			return(self.Unprompted.parse_alt_tags(content,context))
+			# return(self.Unprompted.parse_alt_tags(content,context))
+			return(self.Unprompted.process_string(content,"after")) # self.Unprompted.parse_alt_tags(content,context)
 		else:
 			self.Unprompted.shortcode_objects["else"].do_else = True
-			return("")
+			return ""
 
 	def ui(self,gr):
 		gr.Textbox(label="Conditional statement 🡢 my_var",max_lines=1)

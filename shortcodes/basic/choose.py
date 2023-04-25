@@ -5,55 +5,67 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Returns one of multiple options, delimited by newline or vertical pipe"
 
+	def preprocess_block(self,pargs,kwargs,context): return True
+
 	def run_block(self, pargs, kwargs, context, content):
+		# Allow inner [file] to return linebreaks
+		temp_syntax_after = getattr(self.Unprompted.Config.syntax.sanitize_after,"\\n"," ")
+		setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",self.Unprompted.Config.syntax.delimiter)
+		
+		# Do not block inner content
 		final_string = ""
 
 		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.syntax.delimiter).split(self.Unprompted.Config.syntax.delimiter)
-
+		
 		# Remove empty lines
 		parts = list(filter(None, parts))
 
-		if ("_weighted" in pargs):
-			weighted_list = []
-			checking_weight = True
-			this_weight = 1
+		try:
+			if ("_weighted" in pargs):
+				weighted_list = []
+				checking_weight = True
+				this_weight = 1
 
-			for idx,part in enumerate(parts):
-				if checking_weight:
-					this_weight = self.Unprompted.autocast(part)
+				for idx,part in enumerate(parts):
+					if checking_weight:
+						this_weight = self.Unprompted.autocast(part)
+						
+						if (isinstance(this_weight,str)):
+							this_weight = 1
+							checking_weight = False
+						elif isinstance(this_weight,float):
+							probability = (this_weight % 1)
+							this_weight = int(this_weight)
+							if (probability >= random.uniform(0,1)): this_weight += 1
 					
-					if (isinstance(this_weight,str)):
-						this_weight = 1
-						checking_weight = False
-					elif isinstance(this_weight,float):
-						probability = (this_weight % 1)
-						this_weight = int(this_weight)
-						if (probability >= random.uniform(0,1)): this_weight += 1
+					if not checking_weight:
+						for x in range(0, this_weight): weighted_list.append(part)
+
+					checking_weight = not checking_weight
 				
-				if not checking_weight:
-					for x in range(0, this_weight): weighted_list.append(part)
+				parts = weighted_list
 
-				checking_weight = not checking_weight
-			
-			parts = weighted_list
+			times = 1
+			for parg in pargs:
+				if self.Unprompted.is_system_arg(parg): continue
+				times = self.Unprompted.parse_advanced(parg,context)
+				break
 
-		times = 1
-		for parg in pargs:
-			if (parg[0] == "_"): continue # Skips system arguments
-			times = self.Unprompted.parse_advanced(parg,context)
-			break
+			_sep = self.Unprompted.parse_advanced(kwargs["_sep"],context) if "_sep" in kwargs else ", "
+			_case = max(min(len(parts)-1, int(self.Unprompted.parse_advanced(kwargs["_case"],context))), 0) if "_case" in kwargs else -1
 
-		_sep = self.Unprompted.parse_advanced(kwargs["_sep"],context) if "_sep" in kwargs else ", "
-		_case = max(min(len(parts)-1, int(self.Unprompted.parse_advanced(kwargs["_case"],context))), 0) if "_case" in kwargs else -1
+			for x in range(0, times):
+				part_index = random.choice(range(len(parts))) if _case == -1 else _case
+				final_string += self.Unprompted.process_string(self.Unprompted.sanitize_pre(parts[part_index],self.Unprompted.Config.syntax.sanitize_block,True),context,False)
+				
+				if (times > 1 and x != times - 1):
+					del parts[part_index] # Prevent the same choice from being made again
+					final_string += _sep
+		except Exception as e:
+			self.Unprompted.log_error(e)
 
-		for x in range(0, times):
-			part_index = random.choice(range(len(parts))) if _case == -1 else _case
-			final_string += self.Unprompted.parse_alt_tags(parts[part_index],context)
-			
-			if (times > 1 and x != times - 1):
-				del parts[part_index] # Prevent the same choice from being made again
-				final_string += _sep
-
+		# reset to original value
+		setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",temp_syntax_after)
 		return final_string
 
 	def ui(self,gr):

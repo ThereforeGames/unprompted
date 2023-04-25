@@ -4,9 +4,12 @@ class Shortcode():
 		self.switch_var = ""
 		self.description = "Use in conjunction with [case] to run different logic blocks depending on the value of a var."
 
-	def run_block(self, pargs, kwargs, context,content):
+	def preprocess_block(self,pargs,kwargs,context):
 		self.switch_var = self.Unprompted.parse_advanced(pargs[0],context)
-		return(self.Unprompted.parse_alt_tags(content,context))
+		return True
+
+	def run_block(self, pargs, kwargs, context,content):
+		return(self.Unprompted.process_string(content,context))
 
 	def cleanup(self):
 		self.switch_var = ""

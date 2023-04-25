@@ -1,9 +1,3 @@
-from torchvision.transforms.functional import to_pil_image, to_tensor
-from torchvision.utils import draw_segmentation_masks
-import torch
-from torchvision.transforms.functional import to_pil_image, pil_to_tensor
-from modules.processing import process_images,Processed, StableDiffusionProcessingImg2Img
-
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
@@ -17,6 +11,11 @@ class Shortcode():
 		from torchvision.models.detection import maskrcnn_resnet50_fpn_v2, MaskRCNN_ResNet50_FPN_V2_Weights
 		from kornia.morphology import dilation, erosion
 		from kornia.filters import box_blur
+		from torchvision.transforms.functional import to_pil_image, to_tensor
+		from torchvision.utils import draw_segmentation_masks
+		import torch
+		from torchvision.transforms.functional import to_pil_image, pil_to_tensor
+		from modules.processing import process_images,Processed, StableDiffusionProcessingImg2Img
 
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			return
@@ -153,7 +152,7 @@ class Shortcode():
 
 		return ""
 	
-	def after(self, p:StableDiffusionProcessingImg2Img, processed:Processed):
+	def after(self, p=None, processed=None):
 		if self.image_masks and self.show:
 			image = pil_to_tensor(p.init_images[-1])
 			

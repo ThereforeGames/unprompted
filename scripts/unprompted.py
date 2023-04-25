@@ -199,6 +199,8 @@ def gradio_enabled_checkbox_workaround():
 
 class Scripts(scripts.Script):
 	allow_postprocess = True
+	# infotext_fields = []
+	# paste_field_names = []
 
 	def title(self):
 		return "Unprompted"
@@ -210,6 +212,8 @@ class Scripts(scripts.Script):
 		with gr.Group():
 			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
 				is_enabled = gr.Checkbox(label="Enabled",value=gradio_enabled_checkbox_workaround)
+				# self.infotext_fields.append((is_enabled,"Unprompted Enabled"))
+				# self.paste_field_names.append("Unprompted Enabled")
 
 				match_main_seed = gr.Checkbox(label="Synchronize with main seed",value=True)
 				setattr(match_main_seed,"do_not_save_to_config",True)
@@ -277,7 +281,9 @@ class Scripts(scripts.Script):
 							with gr.Accordion(kwargs["_label"] if "_label"in kwargs else "More", open=True if "_open" in pargs else False):
 								Unprompted.parse_alt_tags(content,None,wizard_shortcode_parser)
 							return("")
-						wizard_shortcode_parser.register(handler,"wizard_ui_accordion",f"{Unprompted.Config.syntax.tag_close}wizard_ui_accordion")	
+						def preprocess(keyword, pargs, kwargs, context):
+							return True
+						wizard_shortcode_parser.register(handler,"wizard_ui_accordion",f"{Unprompted.Config.syntax.tag_close}wizard_ui_accordion",preprocess)	
 
 						with gr.Tabs():
 							filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
@@ -350,10 +356,8 @@ class Scripts(scripts.Script):
 
 					else: gr.HTML(label="wizard_debug",value="You have disabled the Wizard in your config.")
 
-					# wizard_autoinclude = gr.Checkbox(label="Auto-include in prompt",value=Unprompted.Config.ui.wizard_autoinclude)
-					
 				with gr.Accordion("📝 Dry Run", open=Unprompted.Config.ui.dry_run_open):
-					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False,info="Run arbitrary text through Unprompted to check for syntax problems. Stable Diffusion shortcodes are not well-supported here.")
+					dry_run_prompt = gr.Textbox(lines=2,placeholder="Test prompt",show_label=False,info="Run arbitrary text through Unprompted to check for syntax problems. Note: Stable Diffusion shortcodes are not well-supported here.")
 					dry_run = gr.Button(value="Process Text")
 					dry_run_result = gr.HTML(label="dry_run_result",value="",elem_id="unprompted_result")
 					dry_run.click(fn=do_dry_run,inputs=dry_run_prompt,outputs=dry_run_result)
@@ -390,7 +394,7 @@ class Scripts(scripts.Script):
 	
 	def process(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args):
 		if not is_enabled:
-			return p	
+			return p
 
 		# test compatibility with controlnet
 		import copy
@@ -420,6 +424,8 @@ class Scripts(scripts.Script):
 		# Reset vars
 		original_prompt = p.all_prompts[0]
 
+		# self.infotext_fields.append((None,original_prompt))
+
 		# Process Wizard auto-includes
 		if Unprompted.Config.ui.wizard_enabled and self.allow_postprocess:
 			is_img2img = hasattr(p,"init_images")
@@ -439,6 +445,14 @@ class Scripts(scripts.Script):
 
 		original_negative_prompt = p.all_negative_prompts[0]
 		Unprompted.shortcode_user_vars = {}
+
+		if Unprompted.Config.stable_diffusion.show_extra_generation_params:
+			p.extra_generation_params.update({
+				"Unprompted Enabled": True,
+				"Unprompted Prompt": original_prompt.replace("\"","'"), # Must use single quotes or output will include backslashes
+				"Unprompted Negative Prompt": original_negative_prompt.replace("\"","'"),
+				"Unprompted Seed": unprompted_seed
+			})
 
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
@@ -471,13 +485,13 @@ class Scripts(scripts.Script):
 					cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
 					all_units = cnet.get_all_units_in_processing(p)
 					att_split = att.split("_") # e.g. controlnet_0_enabled
-					if len(att_split) == 3:
+					if len(att_split) >= 3:
 						if att_split[2] == "image":
 							from pil import Image
 							this_val = Image.open(Unprompted.shortcode_user_vars[att])
 						else: 
 							this_val = Unprompted.shortcode_user_vars[att]
-						setattr(all_units[int(att_split[1])],att_split[2],this_val)
+						setattr(all_units[int(att_split[1])],"_".join(att_split[2:]),this_val)
 						cnet.update_cn_script_in_processing(p, all_units)
 
 				except Exception as e:

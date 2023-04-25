@@ -11,13 +11,13 @@ The folder path is parsed with glob, so it should end with `/*.*` if you want to
 [set pre _new _label="String to include before the filename"]A painting of[/set]
 [set post _new _label="String to include after the filename"]in the style of Rene Magritte, masterpiece, best quality[/set]
 [array folder_files _append="{filelist '{{get folder}}'}"]
-[set filecount]{length folder_files}[/set]
+[set filecount][length folder_files][/set]
 [for i=0 "i<filecount" "i+1"]
-{after i}
-	{{set steps}}{{get steps_original}}{{/set}}
-	{{set this_name}}{{info filename}}{{array folder_files after_index}}{{/info}}{{/set}}
-	{{set prompt}}{{get pre this_name post}}{{/set}}
-	{{init_image "{{{array folder_files after_index}}}"}}
-	{{img2img}}
-{/after}
+	[after i]
+		[set steps][get steps_original][/set]
+		[set this_name][info filename][array folder_files after_index][/info][/set]
+		[set prompt][get pre this_name post][/set]
+		[init_image "{array folder_files after_index}"]
+		[img2img]
+	[/after]
 [/for]

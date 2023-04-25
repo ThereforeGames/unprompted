@@ -1,10 +1,3 @@
-from re import sub
-from modules.processing import StableDiffusionProcessingImg2Img, Processed, process_images
-from modules import images
-from torchvision.transforms.functional import to_pil_image, pil_to_tensor
-import torch
-from modules.shared import opts, state
-
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
@@ -15,6 +8,13 @@ class Shortcode():
 		self.description = "Allows to use multiple init_images or multiple masks"
 
 	def run_atomic(self, pargs, kwargs, context):
+		from re import sub
+		from torchvision.transforms.functional import to_pil_image, pil_to_tensor
+		import torch
+		from modules.processing import StableDiffusionProcessingImg2Img, Processed, process_images
+		from modules import images
+		from modules.shared import opts, state
+
 		if self.processing:
 			return ""
 
@@ -37,7 +37,7 @@ class Shortcode():
 
 		return ""
 
-	def after(self, p:StableDiffusionProcessingImg2Img, processed: Processed):
+	def after(self, p=None, processed=None):
 		if not self.processing and self.orginal_n_iter is not None:
 			self.processing = True
 

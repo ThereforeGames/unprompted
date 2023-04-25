@@ -3,6 +3,8 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Shorthand 'else-if.'"
 
+	def preprocess_block(self,pargs,kwargs,context): return True
+
 	def run_block(self, pargs, kwargs, context, content):
 		if (self.Unprompted.shortcode_objects["else"].do_else):
 			# Calls 'if' directly

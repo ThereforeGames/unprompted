@@ -6,4 +6,4 @@ Normally, if you generate say 5 images at once, 'choose' may randomly select the
 Override the random behavior with '_case' and 'batch_index' as shown below and you will get a unique choice for all 5 images.
 [/##]
 
-Photo of a woman wearing a [choose _case="<get batch_index>"]red|blue|yellow|white|green[/choose] shirt
+Photo of a woman wearing a [choose _case="{get batch_index}"]red|blue|yellow|white|green[/choose] shirt

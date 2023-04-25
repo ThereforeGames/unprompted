@@ -1,6 +1,6 @@
-from modules.processing import process_images_inner, StableDiffusionProcessingImg2Img, StableDiffusionProcessing
-import gc
-from modules import devices
+try:
+	from modules.processing import process_images_inner, StableDiffusionProcessingImg2Img, StableDiffusionProcessing
+except: pass # for unprompted_dry
 
 def process_images_inner_(p):
 	return(process_images_inner(p))
@@ -10,8 +10,9 @@ class Shortcode():
 		self.Unprompted = Unprompted
 		self.description = "Upscales a selected portion of the image. ENHANCE!"
 		self.is_fixing = False
-		self.wizard_prepend = f"{Unprompted.Config.syntax.tag_start}if batch_index=0{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start_alt}after{Unprompted.Config.syntax.tag_end_alt}{Unprompted.Config.syntax.tag_start_alt}{Unprompted.Config.syntax.tag_start_alt}zoom_enhance"
-		self.wizard_append = Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start_alt + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close  + "if" + Unprompted.Config.syntax.tag_end
+		self.wizard_prepend = f"{Unprompted.Config.syntax.tag_start}if batch_index=0{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start}after{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start}zoom_enhance"
+
+		self.wizard_append = Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close  + "if" + Unprompted.Config.syntax.tag_end
 		self.resample_methods = {}
 		self.resample_methods["Nearest Neighbor"] = 0
 		self.resample_methods["Box"] = 4
@@ -22,6 +23,8 @@ class Shortcode():
 
 
 	def run_atomic(self, pargs, kwargs, context):
+		import gc
+		from modules import devices
 		import cv2
 		from scipy import mean, interp, ravel, array
 		import numpy
@@ -53,8 +56,8 @@ class Shortcode():
 
 		sharpen_amount = int(float(self.Unprompted.parse_advanced(kwargs["sharpen_amount"],context))) if "sharpen_amount" in kwargs else 1.0
 
-		debug = True if "debug" in pargs else False
-		show_original = True if "show_original" in pargs else False
+		debug = self.Unprompted.shortcode_var_is_true("debug", pargs, kwargs, context)
+		show_original = self.Unprompted.shortcode_var_is_true("show_original", pargs, kwargs, context)
 		color_correct_method = self.Unprompted.parse_alt_tags(kwargs["color_correct_method"],context) if "color_correct_method" in kwargs else "none"
 		color_correct_timing = self.Unprompted.parse_alt_tags(kwargs["color_correct_timing"],context) if "color_correct_timing" in kwargs else "pre"
 		color_correct_strength = int(float(self.Unprompted.parse_advanced(kwargs["color_correct_strength"],context))) if "color_correct_strength" in kwargs else 1
@@ -136,7 +139,7 @@ class Shortcode():
 				self.Unprompted.log("Width variable not set - bypassing shortcode")
 				return ""
 			
-			if "bypass_adaptive_hires" not in pargs:
+			if not self.Unprompted.shortcode_var_is_true("bypass_adaptive_hires",pargs,kwargs):
 				total_pixels = image_pil.size[0] * image_pil.size[1]
 				
 				self.Unprompted.log(f"Image size: {image_pil.size[0]}x{image_pil.size[1]} ({total_pixels}px)")
@@ -158,7 +161,7 @@ class Shortcode():
 					cfg_min += cfg_min_unit
 					cfg_max += cfg_max_unit
 					sharpen_amount += 0.125 # TODO: Calculate blurriness of original image to determine sharpen amount
-					# denoising_max -= denoise_unit
+					denoising_max -= denoise_unit
 					# self.Unprompted.p_copy.steps += step_unit
 					
 				upscale_width = min(hires_size_max,upscale_width)
@@ -175,7 +178,7 @@ class Shortcode():
 
 			#if "include_original" in pargs:
 			#	append_originals.append(image_pil.copy())
-			if "mask_method" in kwargs: set_kwargs["method"] = kwargs["mask_method"]
+			if "mask_method" in kwargs: set_kwargs["method"] = self.Unprompted.parse_alt_tags(kwargs["mask_method"],context)
 
 			set_kwargs["txt2mask_init_image"] = image_pil
 			mask_image = self.Unprompted.shortcode_objects["txt2mask"].run_block(set_pargs,set_kwargs,None,target_mask)
@@ -184,10 +187,10 @@ class Shortcode():
 			if (image_mask_orig):
 				self.Unprompted.log("Original image mask detected")
 				prep_orig = image_mask_orig.resize((mask_image.size[0],mask_image.size[1])).convert("L")
-				bg_color = 0
+				fg_color = 255
 				if (manual_mask_mode == "subtract"):
 					prep_orig = ImageOps.invert(prep_orig)
-					bg_color = 255
+					fg_color = 0
 
 				prep_orig = prep_orig.convert("RGBA")
 			
@@ -196,7 +199,7 @@ class Shortcode():
 				width, height = prep_orig.size
 				for y in range(height):
 					for x in range(width):
-						if mask_data[x, y] == (bg_color, bg_color, bg_color, 255): mask_data[x, y] = (0, 0, 0, 0)
+						if mask_data[x, y] != (fg_color, fg_color, fg_color,255): mask_data[x, y] = (0, 0, 0, 0)
 
 				prep_orig.convert("RGBA") # just in case
 

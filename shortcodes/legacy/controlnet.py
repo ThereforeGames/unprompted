@@ -1,4 +1,3 @@
-from modules.shared import cmd_opts
 class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
@@ -19,6 +18,7 @@ class Shortcode():
 		self.openpose_hands = False
 	
 	def run_atomic(self, pargs, kwargs, context):
+		from modules.shared import cmd_opts
 		if "init_images" not in self.Unprompted.shortcode_user_vars:
 			self.Unprompted.log("This shortcode is only supported in img2img mode.","ERROR")
 
