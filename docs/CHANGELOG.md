@@ -7,6 +7,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 ### Changed
 - `[switch]`, `[case]`: fixed issue with new nested syntax compatibility
+- `[case]`: fixed issue with default case
 - `[zoom_enhance]`: fixed issue with `color_correct_timing` set to `post`
 - `[zoom_enhance]`: speculative fix for crash related to `unsharp_mask()` function
 
