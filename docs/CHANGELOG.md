@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.0.0 - 25 April 2023</summary>
+<details open><summary>9.0.1 - 25 April 2023</summary>
+
+### Changed
+- `[switch]`, `[case]`: fixed issue with new nested syntax compatibility
+- `[zoom_enhance]`: fixed issue with `color_correct_timing` set to `post`
+- `[zoom_enhance]`: speculative fix for crash related to `unsharp_mask()` function
+
+</details>
+
+<details><summary>9.0.0 - 25 April 2023</summary>
 
 ### About
 **Important:** This version features a number of changes to Unprompted's syntax that may break existing templates. Please see the latest announcement for more details.
