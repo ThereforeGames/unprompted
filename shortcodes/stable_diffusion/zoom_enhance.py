@@ -38,7 +38,7 @@ class Shortcode():
 
 		def unsharp_mask(image, amount=1.0, kernel_size=(5, 5), sigma=1.0, threshold=0):
 			"""Return a sharpened version of the image, using an unsharp mask."""
-			image = numpy.array(image)
+			image = numpy.array(image).astype(numpy.uint8)
 			blurred = cv2.GaussianBlur(image, kernel_size, sigma)
 			sharpened = float(amount + 1) * image - float(amount) * blurred
 			sharpened = numpy.maximum(sharpened, numpy.zeros(sharpened.shape))
@@ -58,6 +58,8 @@ class Shortcode():
 
 		debug = self.Unprompted.shortcode_var_is_true("debug", pargs, kwargs, context)
 		show_original = self.Unprompted.shortcode_var_is_true("show_original", pargs, kwargs, context)
+		controlnet_method = self.Unprompted.parse_alt_tags(kwargs["controlnet_method"],context) if "controlnet_method" in kwargs else "none"
+		controlnet_weight = float(self.Unprompted.parse_advanced(kwargs["controlnet_weight"],context)) if "controlnet_weight" in kwargs else 0.5
 		color_correct_method = self.Unprompted.parse_alt_tags(kwargs["color_correct_method"],context) if "color_correct_method" in kwargs else "none"
 		color_correct_timing = self.Unprompted.parse_alt_tags(kwargs["color_correct_timing"],context) if "color_correct_timing" in kwargs else "pre"
 		color_correct_strength = int(float(self.Unprompted.parse_advanced(kwargs["color_correct_strength"],context))) if "color_correct_strength" in kwargs else 1
@@ -323,6 +325,25 @@ class Shortcode():
 					self.Unprompted.p_copy.batch_size = 1
 					self.Unprompted.p_copy.n_iter = 1
 
+					# work in progress, pay no attention to the man behind the curtain
+					if controlnet_method != "none":
+						self.Unprompted.log("Preparing selected ControlNet unit...")
+						import importlib
+						cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
+						np_img = numpy.array(starting_image_face_big)
+						all_units = cnet.get_all_units_in_processing(self.Unprompted.p_copy)
+						setattr(all_units[0],"enabled",True)
+						setattr(all_units[0],"weight",controlnet_weight)
+						setattr(all_units[0],"module",controlnet_method)
+						if controlnet_method == "mediapipe_face": setattr(all_units[0],"model","control_mediapipe_face_sd15_v2")
+						else: setattr(all_units[0],"model","controlnet11Models_openpose")
+						setattr(all_units[1],"enabled",True)
+						setattr(all_units[1],"weight",0.25)
+						setattr(all_units[1],"module","softedge_hed")
+						setattr(all_units[1],"model","controlnet11Models_softedge")
+						setattr(all_units[1],"image",np_img)
+						cnet.update_cn_script_in_processing(self.Unprompted.p_copy, all_units)
+						# color_correct_timing = "post"									
 
 					# run img2img now to improve face
 					try:
@@ -366,7 +387,7 @@ class Shortcode():
 									starting_image_face_big.save("zoom_enhance_5b_using_this_face_mask.png")
 									starting_image.save("zoom_enhance_5c_main_starting_image.png")
 								
-								fixed_image =  blendLayers(self.Unprompted.color_match(starting_image_face_big,fixed_image,color_correct_method,color_correct_strength), fixed_image.images, BlendType.LUMINOSITY)
+								fixed_image = self.Unprompted.color_match(sub_img_big,fixed_image,color_correct_method,color_correct_strength) # starting_image_face_big
 							
 							self.Unprompted.log("Color correcting the main image to the init image...")
 							corrected_main_img  = self.Unprompted.color_match(starting_image,image_pil,color_correct_method,color_correct_strength)
