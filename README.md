@@ -100,7 +100,7 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 <br/>
 <br/>
 <br/>
-**Note:** *Purchases help justify the 100s of hours I have spent developing this free software. For context, I am a solo developer who is not associated with any commercial entities (beyond my own LLC), nor have I received any research grants for this project. Unprompted was funded completely out-of-pocket. Your support is greatly appreciated!*
+<sub>**Note:** *Purchases help justify the 100s of hours I have spent developing this free software. For context, I am a solo developer who is not associated with any commercial entities (beyond my own LLC), nor have I received any research grants for this project. Unprompted was funded completely out-of-pocket. Your support is greatly appreciated! ❤️*</sub>
 
 ---
 
