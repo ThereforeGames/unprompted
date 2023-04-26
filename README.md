@@ -12,11 +12,12 @@ Unlike most templating languages, Unprompted was designed for **maximum readibil
 
 You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as a **superextension** for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
 
-Additionally, it gives you access to **exclusive Stable Diffusion features** such as txt2mask, txt2img2img, img2pez, and more.
+Additionally, it gives you access to **exclusive Stable Diffusion features** such as txt2mask, txt2img2img, zoom_enhance, and more.
 
 ## Features
 
 - **Dozens of shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
+- Yes, you can use it for wildcards, e.g. `[choose]red|blue|yellow[/choose]` or `[choose][file somefile][/choose]` to pick a line at random
 - Easily extendable with **custom shortcodes**
 - Simple creation of `.txt` templates that can be organized according to your preferences
 - Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
@@ -53,7 +54,7 @@ With either method, **please be sure to restart your WebUI after installing.** T
 
 ## Usage
 
-First, try the included demo template by entering the following as your prompt:
+First, try the included demo template by entering the following as your prompt - this will verify that Unprompted was installed correctly:
 
 `[file common/examples/human/main]`
 
@@ -71,6 +72,8 @@ Once you have verified that Unprompted is installed and running correctly, you h
 
 1. You can visit the 🎓 [Starter Guide](./docs/GUIDE.md) for a crash course on creating your own templates
 2. Or dive into the deep end by exploring the comprehensive 📘 [Manual](./docs/MANUAL.md)
+
+---
 
 ## Premium Templates
 
@@ -97,7 +100,9 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 <br/>
 <br/>
 <br/>
-Purchases are not required, but are always greatly appreciated. ❤️
+**Note:** *Purchases help justify the 100s of hours I have spent developing this free software. For context, I am a solo developer who is not associated with any commercial entities (beyond my own LLC), nor have I received any research grants for this project. Unprompted was funded completely out-of-pocket. Your support is greatly appreciated!*
+
+---
 
 ## Acknowledgements
 
@@ -107,12 +112,15 @@ A big "thank you" to the authors of the following libraries that Unprompted depe
 - [Simple Eval](https://github.com/danthedeckie/simpleeval) by @danthedeckie
 - [Casefy](https://github.com/dmlls/python-casefy) by @dmlls
 - [CLIPseg](https://github.com/timojl/clipseg) by uddecke, Timo and Ecker, Alexander
+- [CLIP Surgery](https://github.com/xmed-lab/CLIP_Surgery) by Yi Li and Hualiang Wang and Yiqun Duan and Xiaomeng Li
 - [NLTK](https://github.com/nltk/nltk) by Bird, S., Klein, E., & Loper, E., O'Reilly Media, Inc.
 - [pattern](https://github.com/clips/pattern) by Tom De Smedt and Walter Daelemans
 - [Moby Thesaurus II](http://onlinebooks.library.upenn.edu/webbin/gutbook/lookup?num=3202) by Grady Ward
 
-## 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
+---
 
-## 💬 For discussion and template sharing, use [the Discussion Board.](https://github.com/ThereforeGames/unprompted/discussions)
+### 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
 
-## ⭐ Like my work? Please consider giving the repo a "star" for visibility.
+### 💬 For discussion and template sharing, use [the Discussion Board.](https://github.com/ThereforeGames/unprompted/discussions)
+
+### ⭐ Like my work? Please consider giving the repo a "star" for visibility.
