@@ -29,84 +29,85 @@ Unprompted supports two types of shortcodes:
 
 These are mutually exclusive. Shortcodes must be defined as one or the other.
 
-The type is declared by including one of the following functions in your `.py` file:
+</details>
+
+<details><summary>Creating Your Own Shortcodes</summary>
+
+Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within a subdirectory called `custom`.)
+
+The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
+
+A shortcode is structured as follows:
 
 ```
-def run_block(self, pargs, kwargs, context, content):
+class Shortcode():
+	"""A description of the shortcode goes here."""
+	def __init__(self,Unprompted):
+		self.Unprompted = Unprompted
+
+	def run_block(self, pargs, kwargs, context,content):
+		
+		return("")
+
+	def cleanup(self):
+		
+		return("")
 ```
+
+You can declare an atomic shortcode by replacing `run_block()` with `run_atomic()`:
 
 ```
 def run_atomic(self, pargs, kwargs, context):
 ```
 
-Atomic shortcodes do not receive a `content` variable.
+Unlike Blocks, our Atomic shortcode does not receive a `content` variable.
 
-</details>
+The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
 
-<details><summary>Understanding the Processing Chain</summary>
+The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following list was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
 
-It is important to understand that **inner shortcodes are processed before outer shortcodes**.
+- `pargs`: a list of the shortcode's positional arguments.
+- `kwargs`: a dictionary of the shortcode's keyword arguments.
+- `context`: an optional arbitrary context object supplied by the caller.
+- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
 
-This has a number of advantages, but it does present an unintuitive situation: conditional functions.
+Positional arguments (`pargs`) and keyword arguments (`kwargs`) are passed as strings. The `run_` function itself returns a string which will replace the shortcode in the parsed text.
 
-Consider the following code:
+The `cleanup()` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
+
+Regarding Blocks, it is important to understand that **the parser evalutes inner shortcodes before outer shortcodes.** Sometimes this is not desirable, such as when dealing with a "conditional" shortcode like `[if]`. Let's consider the following example:
 
 ```
 [if my_var=1][set another_var]0[/set][/if]
 ```
 
-Anyone with a background in programming would take this to mean that `another_var` is set to 0 if my_var equals 1... but this is not the case here.
+In this case, we **do not** want to set `another_var` to 0 unless the outer `[if]` statement succeeds. For this reason, the `[if]` shortcode includes a special `preprocess_block()` function:
 
-In Unprompted, `another_var` will equal 0 regardless of the outcome of the `if` statement. This is due to the fact that `[set]` is the innermost shortcode and thus evaluated before `[if]`.
+```
+def preprocess_block(self,pargs,kwargs,context): return True
+```
 
-The following section offers a solution.
+When the parser encounters a block shortcode, it runs the `preprocess_block()` function if it exists. If that function returns True, then any future shortcodes are "blocked" by the parser until it finds the endtag (`[/if]`). This is what allows us to override the normal "inner-before-outer" processing flow.
+
+The `preprocess_block()` function is also useful for executing arbitrary code before parsing the remaining text. Just be aware that the function is not aware of the shortcode's content, and that no `run_...()` functions have executed before this step.
 
 </details>
 
 <details><summary>Secondary Shortcode Tags</summary>
 
-Unprompted allows you to write tags using `{}` instead of `[]` to defer processing.
+You can use shortcodes directly in the arguments of other shortcodes with **secondary tags.**
 
-For example, if you want to set `another_var` to 0 when `my_var` equals 1, you should do it like this:
-
-```
-[if my_var=1]{set another_var}0{/set}[/if]
-```
-
-This way, the inner shortcode is not processed until *after* it is returned by the outer `[if]` statement.
-
-Secondary shortcode tags give us a couple additional benefits:
-
-- If your shortcode is computationally expensive, you can avoid running it unless the outer shortcode succeeds. This is good for performance.
-- **You can pass them as arguments in shortcodes that support it.** For example, if you want to run the `[chance]` shortcode with dynamic probability, you can do it like this: `[chance "{get my_var}"]content[/chance]`
-
-Secondary shortcode tags can have infinite nested depth. The number of `{}` around a shortcode indicates its nested level. Consider this example:
+To do this, simply write your tags with squiggly brackets `{}` instead of square brackets `[]`. Let's look at an example:
 
 ```
-[if my_var=1]
-{if another_var=1}
-{{if third_var=1}}
-{{{if fourth_var=1}}}
-wow
-{{{/if}}}
-{{/if}}
-{/if}
-[/if]
+[file "{choose}some_file|another_file{/choose}"]
 ```
 
-Whenever the `[]` statement succeeds, it will decrease the nested level of the resulting content. Our example returns:
+Instead of passing `[file]` a specific filename, we are using `{choose}` to pick between `some_file` and `another_file`.
 
-```
-[if another_var=1]
-{if third_var=1}
-{{if fourth_var=1}}
-wow
-{{/if}}
-{/if}
-[/if]
-```
+Secondary shortcode tags can have infinite nested depth. The number of `{}` around a shortcode indicates its nested level.
 
-Rinse and repeat until no `{}` remain.
+> **💡 Notice:** As of Unprompted v9.0.0, do not use secondary shortcode tags inside of block content. They are only used within arguments now. Please see the 25 April 2023 announcement for more information.
 
 </details>
 
@@ -399,8 +400,8 @@ You can `[get after_index]` inside of the `[after]` block, which can be useful w
 ```
 Photo of a cat
 [after]
-	{sets prompt="Photo of a dog" denoising_strength=0.75}
-	{img2img}
+	[sets prompt="Photo of a dog" denoising_strength=0.75]
+	[img2img]
 [/after]
 ```
 
@@ -663,7 +664,7 @@ Do-until style loop. The content is processed, then the `until` expression is ev
 
 <details><summary>[elif]</summary>
 
-Shorthand "else if." Equivalent to `[else]{if my_var="something"}content{/if}[/else]`.
+Shorthand "else if." Equivalent to `[else][if my_var="something"]content[/if][/else]`.
 
 ```
 [set my_var]5[/set]
@@ -745,7 +746,7 @@ The result of the `update` argument is set as the value of `var` at the end of e
 
 ```
 [for i=0 "i<10" "i+1"]
-Current value of i: {get i}
+Current value of i: [get i]
 [/for]
 ```
 
@@ -952,7 +953,7 @@ Supports float values as well. For example, `[repeat 4.2]content[/repeat]` will 
 ```
 [set my_var]0[/set]
 [repeat 5]
-Variable is currently: {set my_var _out _append}1</set>
+Variable is currently: [set my_var _out _append]1[/set]
 [/repeat]
 ```
 
@@ -1062,11 +1063,11 @@ Both `[switch]` and `[case]` support advanced expressions.
 ```
 [set my_var]100[/set]
 [switch my_var]
-	{case 1}Does not match{/case}
-	{case 2}Does not match{/case}
-	{case 100}Matches! This content will be returned{/case}
-	{case 4}Does not match{/case}
-	{case}If no other case matches, this content will be returned by default{/case}
+	[case 1]Does not match[/case]
+	[case 2]Does not match[/case]
+	[case 100]Matches! This content will be returned[/case]
+	[case 4]Does not match[/case]
+	[case]If no other case matches, this content will be returned by default[/case]
 [/switch]
 ```
 
@@ -1109,7 +1110,7 @@ Advanced expression demo:
 [set my_var]3[/set]
 [while "my_var < 10"]
 	Output
-	{sets my_var="my_var + 1"}
+	[sets my_var="my_var + 1"]
 [/while]
 ```
 
@@ -1117,7 +1118,7 @@ Advanced expression demo:
 [set my_var]3[/set]
 [while my_var="10" _is="<"]
 	Output
-	{sets my_var="my_var + 1"}
+	[sets my_var="my_var + 1"]
 [/while]
 ```
 
@@ -1169,8 +1170,8 @@ While this shortcode does not take any arguments, most img2img settings can be s
 ```
 Photo of a cat
 [after]
-	{sets prompt="Photo of a dog" denoising_strength=0.75}
-	{img2img}
+	[sets prompt="Photo of a dog" denoising_strength=0.75]
+	[img2img]
 [/after]
 ```
 
@@ -1470,50 +1471,10 @@ This shortcode is compatible with batch count and batch size.
 
 
 ```
-[after]{zoom_enhance}[/after]
+[after][zoom_enhance][/after]
 ```
 
 </details>
-
-</details>
-
-<details><summary>Adding New Shortcodes</summary>
-
-Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within the `/custom` subdirectory.)
-
-The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
-
-A shortcode is structured as follows:
-
-```
-class Shortcode():
-	"""A description of the shortcode goes here."""
-	def __init__(self,Unprompted):
-		self.Unprompted = Unprompted
-
-	def run_block(self, pargs, kwargs, context,content):
-		
-		return("")
-
-	def cleanup(self):
-		
-		return("")
-```
-
-The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
-
-The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following documentation was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
-
-- `pargs`: a list of the shortcode's positional arguments.
-- `kwargs`: a dictionary of the shortcode's keyword arguments.
-- `context`: an optional arbitrary context object supplied by the caller.
-- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
-
-Positional and keyword arguments are passed as strings. The function itself should return a string which will replace the shortcode in the parsed text.
-
-The `cleanup` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
-
-For more details, please examine the code of the stock shortcodes.
 
 </details>
 
