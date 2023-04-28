@@ -20,7 +20,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 - New shortcode `[log]`: prints a message to the console
 - Bodysnatcher v1.2.0: now supports `face_controlnet_preset` which is applied during the `[zoom_enhance]` step
 - New ControlNet preset `photo_fast_v1`: tries to retain as much of the composition as possible with only a single CN unit
-- New ControlNet preset `photo_face_v1` work-in-progress preset that attempts to maximize likeness ofa close-up portrait image
+- New ControlNet preset `photo_face_v1`: work-in-progress preset that attempts to maximize likeness of a close-up portrait image
 - ControlNet variables can be set with the shorthand prefix `cn_` instead of `controlnet_`
 
 ### Changed
