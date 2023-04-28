@@ -3,11 +3,38 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.0.1 - 25 April 2023</summary>
+<details open><summary>9.1.0 - 28 April 2023</summary>
+
+### Added
+- `[choose]`: supports `_sanitize` to override the default content sanitization rules
+- `[filelist]`: now supports `_basename` to return filenames instead of full paths
+- `[filelist]`: now supports `_hide_ext` to discard file extensions from the returned string
+- `[filelist]`: will now substitute `%BASE_DIR%` with an absolute path to the Unprompted extension
+- `[replace]`: now supports `_insensitive` for enabling case-insensitive operations
+- `[replace]`: now supports `_load` for importing from:to replacement directions from one or more external JSON files
+- `[sets]`: now supports `_load` for importing key:value pairs from one or more external JSON files
+- `[zoom_enhance]`: now supports `controlnet_preset`
+- `[zoom_enhance]`: now supports experimental `use_starting_face` which will upscale the initial image's face as opposed to the resulting img2img's face
+- `[zoom_enhance]`: more arguments available in the Wizard UI
+- `[txt2mask]`: more arguments available in the Wizard UI
+- New shortcode `[log]`: prints a message to the console
+- Bodysnatcher v1.2.0: now supports `face_controlnet_preset` which is applied during the `[zoom_enhance]` step
+- New ControlNet preset `photo_fast_v1`: tries to retain as much of the composition as possible with only a single CN unit
+- New ControlNet preset `photo_face_v1` work-in-progress preset that attempts to maximize likeness ofa close-up portrait image
+- ControlNet variables can be set with the shorthand prefix `cn_` instead of `controlnet_`
+
+### Changed
+- Bodysnatcher v1.2.0: now populates the list of ControlNet presets with files from `templates/common/controlnet_presets`
+- Bodysnatcher v1.2.0: enabled `pixel_perfect` for all ControlNet templates
+
+</details>
+
+<details><summary>9.0.1 - 25 April 2023</summary>
 
 ### Changed
 - `[switch]`, `[case]`: fixed issue with new nested syntax compatibility
 - `[case]`: fixed issue with default case
+- `[choose]`: fixed an issue with `[choose][file somefile][/choose]` syntax
 - `[zoom_enhance]`: fixed issue with `color_correct_timing` set to `post`
 - `[zoom_enhance]`: speculative fix for crash related to `unsharp_mask()` function
 

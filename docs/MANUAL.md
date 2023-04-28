@@ -151,6 +151,23 @@ Photo of a `[cat|dog]
 
 </details>
 
+<details><summary>Multi-line Atomic Shortcodes</summary>
+
+In my testing, it appears to be possible to write lengthy atomic shortcodes across multiple lines, provided **the first line has a trailing space** and **each subsequent line has a leading space.** Here is an example:
+
+```
+[sets 
+ cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_module=softedge_hed cn_0_model=controlnet11Models_softedge cn_0_weight=0.25
+ cn_1_enabled=1 cn_1_pixel_perfect=1 cn_1_module=mediapipe_face cn_1_model=control_mediapipe_face_sd15_v2 cn_1_weight=1.0
+ cn_2_enabled=1 cn_2_pixel_perfect=1 cn_2_module=t2ia_color_grid cn_2_model=coadapter-color-sd15v1 cn_2_weight=1.0
+ cn_3_enabled=1 cn_3_pixel_perfect=1 cn_3_module=openpose_full cn_3_model=controlnet11Models_openpose cn_3_weight=1.0
+ ]
+```
+
+Do note, however, that your mileage may vary if you are not using the default sanitization rules.
+
+</details>
+
 <details><summary>Special Variables</summary>
 
 In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
@@ -196,6 +213,8 @@ For example, we can enable units #0 and #3 and set the weight of unit #3 to 0.5 
 ```
 [sets controlnet_0_enabled=1 controlnet_3_enabled=1 controlnet_3_weight=0.5]
 ```
+
+You may also use the shorthand `cn_` in place of `controlnet_`.
 
 </details>
 
@@ -728,6 +747,8 @@ This shortcode is powered by Python's glob module, which means it supports wildc
 
 Supports the optional `_delimiter` argument which lets you specify the separator between each filepath. It defaults to your config's `syntax.delimiter` value (`|`).
 
+Supports the macro `%BASE_DIR%` which will be substituted with an absolute path to the Unprompted extension.
+
 ```
 [filelist "C:/my_pictures/*.*"]
 ```
@@ -867,6 +888,18 @@ Supports the optional `_max` argument which caps the value returned by this shor
 ```
 ```
 Result: 3
+```
+
+</details>
+
+<details><summary>[log]</summary>
+
+Prints a message to the console.
+
+By default, the message context is `DEBUG`. The first positional argument determines the context.
+
+```
+[log ERROR]The value of [get some_variable] is wrong![/log]
 ```
 
 </details>

@@ -10,15 +10,27 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		file_string = self.Unprompted.parse_alt_tags(pargs[0],context)
 		_delimiter = self.Unprompted.parse_advanced(kwargs["_delimiter"],context) if "_delimiter" in kwargs else self.Unprompted.Config.syntax.delimiter
-		
+		_basename = self.Unprompted.shortcode_var_is_true("_basename",pargs,kwargs)
+		_hide_ext = self.Unprompted.shortcode_var_is_true("_hide_ext",pargs,kwargs)
+
 		# Relative path
 		if (file_string[0] == "."):
 			path = os.path.dirname(context) + "/" + file_string
+		else: file_string = file_string.replace("%BASE_DIR%",self.Unprompted.base_dir)
+			
 		
 		files = glob.glob(file_string)
 		if (len(files) == 0):
-			self.Unprompted.log(f"No files found at this location: {path}",True,"ERROR")
+			self.Unprompted.log(f"No files found at this location: {file_string}",True,"ERROR")
 			return("")
+
+		if _hide_ext:
+			for idx,file in enumerate(files):
+				files[idx] = os.path.splitext(file)[0]
+
+		if _basename:
+			for idx,file in enumerate(files):
+				files[idx] = os.path.basename(file)
 
 		files = _delimiter.join(files)
 

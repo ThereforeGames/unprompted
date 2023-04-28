@@ -58,8 +58,7 @@ class Shortcode():
 
 		debug = self.Unprompted.shortcode_var_is_true("debug", pargs, kwargs, context)
 		show_original = self.Unprompted.shortcode_var_is_true("show_original", pargs, kwargs, context)
-		controlnet_method = self.Unprompted.parse_alt_tags(kwargs["controlnet_method"],context) if "controlnet_method" in kwargs else "none"
-		controlnet_weight = float(self.Unprompted.parse_advanced(kwargs["controlnet_weight"],context)) if "controlnet_weight" in kwargs else 0.5
+		controlnet_preset = self.Unprompted.parse_alt_tags(kwargs["controlnet_preset"],context) if "controlnet_preset" in kwargs else "none"
 		color_correct_method = self.Unprompted.parse_alt_tags(kwargs["color_correct_method"],context) if "color_correct_method" in kwargs else "none"
 		color_correct_timing = self.Unprompted.parse_alt_tags(kwargs["color_correct_timing"],context) if "color_correct_timing" in kwargs else "pre"
 		color_correct_strength = int(float(self.Unprompted.parse_advanced(kwargs["color_correct_strength"],context))) if "color_correct_strength" in kwargs else 1
@@ -325,25 +324,23 @@ class Shortcode():
 					self.Unprompted.p_copy.batch_size = 1
 					self.Unprompted.p_copy.n_iter = 1
 
-					# work in progress, pay no attention to the man behind the curtain
-					if controlnet_method != "none":
-						self.Unprompted.log("Preparing selected ControlNet unit...")
-						import importlib
-						cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
-						np_img = numpy.array(starting_image_face_big)
-						all_units = cnet.get_all_units_in_processing(self.Unprompted.p_copy)
-						setattr(all_units[0],"enabled",True)
-						setattr(all_units[0],"weight",controlnet_weight)
-						setattr(all_units[0],"module",controlnet_method)
-						if controlnet_method == "mediapipe_face": setattr(all_units[0],"model","control_mediapipe_face_sd15_v2")
-						else: setattr(all_units[0],"model","controlnet11Models_openpose")
-						setattr(all_units[1],"enabled",True)
-						setattr(all_units[1],"weight",0.25)
-						setattr(all_units[1],"module","softedge_hed")
-						setattr(all_units[1],"model","controlnet11Models_softedge")
-						setattr(all_units[1],"image",np_img)
-						cnet.update_cn_script_in_processing(self.Unprompted.p_copy, all_units)
-						# color_correct_timing = "post"									
+					if controlnet_preset != "none" and len(controlnet_preset) > 0:
+						set_pargs = [f"common/controlnet_presets/{controlnet_preset}"]
+						set_kwargs = {}
+						file_contents = self.Unprompted.shortcode_objects["file"].run_atomic(set_pargs,set_kwargs,context)						
+						# temporarily disable user vars to avoid applying old controlnet values
+						temp_user_vars = self.Unprompted.shortcode_user_vars
+						self.Unprompted.shortcode_user_vars = {}
+						self.Unprompted.parse_advanced(file_contents,context)
+						for att in self.Unprompted.shortcode_user_vars:
+							if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(att,self.Unprompted.p_copy)
+						
+						# restore user vars
+						self.Unprompted.shortcode_user_vars = temp_user_vars		
+
+					if self.Unprompted.shortcode_var_is_true("use_starting_face",pargs,kwargs):
+						self.Unprompted.p_copy.init_images = [starting_image_face_big]
+						color_correct_timing = "post"					
 
 					# run img2img now to improve face
 					try:
@@ -466,9 +463,16 @@ class Shortcode():
 			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=7.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
 			gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
 			gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.5,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Radio(label="Masking tech method 🡢 mask_method",choices=["clipseg","clip_surgery","grounded_sam"],value="clipseg",interactive=True) # Passed to txt2mask as "method"
+			gr.Number(label="Sharpen amount 🡢 sharpen_amount",value=1.0,interactive=True)
+			gr.Dropdown(label="Color correct method 🡢 color_correct_method",choices=["hm","mvgd","mkl","hm-mvgd-hm","hm-mkl-hms"],value="none",interactive=True)
+			gr.Radio(label="Color correct timing 🡢 color_correct_timing",choices=["pre","post"],value="pre",interactive=True)
+			gr.Slider(label="Color correct strength 🡢 color_correct_strength",value=1.0,maximum=5.0,minimum=1.0,interactive=True,step=1.0)
 			gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
 			gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
 			gr.Number(label="Mask minimum number of pixels 🡢 min_area",value=50,interactive=True)
 			gr.Number(label="Contour padding in pixels 🡢 contour_padding",value=0,interactive=True)
 			gr.Number(label="Upscale width 🡢 upscale_width",value=512,interactive=True)
 			gr.Number(label="Upscale height 🡢 upscale_height",value=512,interactive=True)
+			gr.Number(label="Hires size max 🡢 hires_size_max",value=1024,interactive=True)
+			gr.Checkbox(label="Bypass adaptive hires 🡢 bypass_adaptive_hires")

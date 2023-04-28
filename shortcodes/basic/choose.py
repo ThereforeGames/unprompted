@@ -4,19 +4,27 @@ class Shortcode():
 	def __init__(self,Unprompted):
 		self.Unprompted = Unprompted
 		self.description = "Returns one of multiple options, delimited by newline or vertical pipe"
+		self.temp_syntax_after = self.Unprompted.Config.syntax.sanitize_after
 
-	def preprocess_block(self,pargs,kwargs,context): return True
+	def preprocess_block(self,pargs,kwargs,context):
+		self.temp_syntax_after = self.Unprompted.Config.syntax.sanitize_after
+		if "_sanitize" in kwargs:
+			if len(_sanitize) > 0:
+				import json
+				_sanitize = json.load(self.Unprompted.parse_advanced(kwargs["_sanitize"],context))
+				self.Unprompted.Config.syntax.sanitize_after = _sanitize
+		else:
+			setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",self.Unprompted.Config.syntax.delimiter)
+		return False
 
 	def run_block(self, pargs, kwargs, context, content):
 		# Allow inner [file] to return linebreaks
-		temp_syntax_after = getattr(self.Unprompted.Config.syntax.sanitize_after,"\\n"," ")
-		setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",self.Unprompted.Config.syntax.delimiter)
-		
-		# Do not block inner content
+		# temp_syntax_after = self.Unprompted.Config.syntax.sanitize_after # getattr(self.Unprompted.Config.syntax.sanitize_after,"\\n"," ")
 		final_string = ""
-
 		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.syntax.delimiter).split(self.Unprompted.Config.syntax.delimiter)
 		
+		print(f"what are parts? {parts}")
+
 		# Remove empty lines
 		parts = list(filter(None, parts))
 
@@ -63,9 +71,11 @@ class Shortcode():
 					final_string += _sep
 		except Exception as e:
 			self.Unprompted.log_error(e)
+			pass
 
 		# reset to original value
-		setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",temp_syntax_after)
+		self.Unprompted.Config.syntax.sanitize_after = self.temp_syntax_after
+
 		return final_string
 
 	def ui(self,gr):

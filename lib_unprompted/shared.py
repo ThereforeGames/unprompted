@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.0.1"
+		self.VERSION = "9.1.0"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -112,18 +112,20 @@ class Unprompted:
 		if cleanup_extra_spaces: string = " ".join(string.split()) # Cleanup extra spaces
 		return(string)
 
-	def parse_filepath(self,string,context = ""):
+	def parse_filepath(self,string,context = "",root=None):
 		import random
 		# Relative path
 		if (string[0] == "."):
 			string = os.path.dirname(context) + "/" + string
 		# Absolute path
-		else: string = self.base_dir + "/" + self.Config.template_directory + "/" + string
+		else:
+			if root is None: root = self.base_dir+"/"+self.Config.template_directory
+			string = root + "/" + string
 
 		files = glob.glob(string)
 		filecount = len(files)
 		if (filecount == 0):
-			self.Unprompted.log(f"No files found at this location: {string}",True,"ERROR")
+			self.log(f"No files found at this location: {string}",True,"ERROR")
 			return("")
 		elif filecount > 1:
 			string = random.choice(files)
@@ -263,3 +265,37 @@ class Unprompted:
 		if key in pargs: return True
 		if key in kwargs and self.parse_advanced(kwargs[key],context): return True
 		return False
+	
+	def load_jsons(self,paths,context=None):
+		import json
+		json_obj = {}
+		jsons = paths.split(self.Config.syntax.delimiter)
+		for this_json in jsons:
+			filepath = self.parse_filepath(this_json,context,root=self.base_dir)
+			json_obj = json.load(open(f"{filepath}", "r", encoding="utf8"))
+			# Delimiter support
+			for key,val in json_obj.copy().items():
+				keys = key.split(self.Config.syntax.delimiter)
+				if len(keys) > 1:
+					for key_part in keys: json_obj[key_part] = val
+					del json_obj[key]
+		return(json_obj)
+
+	def update_controlnet_var(self,this_p,att):
+		try:
+			att_split = att.split("_") # e.g. controlnet_0_enabled
+			if len(att_split) >= 3:
+				self.log(f"Setting ControlNet value: {att}")
+				import importlib
+				cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
+				all_units = cnet.get_all_units_in_processing(this_p)
+
+				if att_split[2] == "image":
+					from pil import Image
+					this_val = Image.open(self.shortcode_user_vars[att])
+				else: 
+					this_val = self.shortcode_user_vars[att]
+				setattr(all_units[int(att_split[1])],"_".join(att_split[2:]),this_val)
+				cnet.update_cn_script_in_processing(this_p, all_units)
+		except Exception as e:
+			self.log(f"Could not set ControlNet value: {e}",context="ERROR")

@@ -88,6 +88,10 @@ class Shortcode():
 		# Re-enable alwayson scripts
 		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
 
+		if len(img2img_images) < 1:
+			self.Unprompted.log(f"The returned object does not appear to contain an image: {img2img_images}",context="ERROR")
+			return("")
+
 		# Add the new image(s) to our main output
 		if did_error: return False
 		elif "return_image" in pargs:

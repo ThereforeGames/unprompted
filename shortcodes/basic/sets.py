@@ -8,6 +8,10 @@ class Shortcode():
 		# Populate a dict of system args to pass off to [set]
 		for key,value in kwargs.items():
 			if (self.Unprompted.is_system_arg(key)): system_kwargs[key] = value	
+
+		if "_load" in kwargs:
+			jsons = self.Unprompted.load_jsons(self.Unprompted.parse_advanced(kwargs["_load"],context),context)
+			kwargs.update(jsons)
 		
 		# Traverse our kwargs again, firing the [set] call with all the right data
 		for key,value in kwargs.items():

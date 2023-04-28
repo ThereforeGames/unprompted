@@ -20,10 +20,10 @@ class Shortcode():
 			if pargs[0] in self.Unprompted.shortcode_user_vars:
 				# Check if this var already holds a valid value, if not we will set it
 				if "_choices" in kwargs:
-					if self.Unprompted.shortcode_user_vars[pargs[0]] in kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter): can_set = False
+					if self.Unprompted.shortcode_user_vars[pargs[0]] in self.Unprompted.parse_advanced(kwargs["_choices"],context).split(self.Unprompted.Config.syntax.delimiter): can_set = False
 				else: can_set = False
 		elif "_choices" in kwargs:
-			if str(content) not in kwargs["_choices"].split(self.Unprompted.Config.syntax.delimiter): can_set = False
+			if str(content) not in self.Unprompted.parse_advanced(kwargs["_choices"],context).split(self.Unprompted.Config.syntax.delimiter): can_set = False
 		
 		if can_set:
 			if ("_append" in pargs): self.Unprompted.shortcode_user_vars[pargs[0]] += content
