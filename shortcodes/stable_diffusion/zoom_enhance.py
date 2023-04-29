@@ -49,6 +49,8 @@ class Shortcode():
 				numpy.copyto(sharpened, image, where=low_contrast_mask)
 			return Image.fromarray(sharpened)
 
+
+		test = int(float(self.Unprompted.parse_advanced(kwargs["test"],context))) if "test" in kwargs else 0
 		blur_radius_orig = float(self.Unprompted.parse_advanced(kwargs["blur_size"],context)) if "blur_size" in kwargs else 0.03
 		upscale_width = int(float(self.Unprompted.parse_advanced(kwargs["upscale_width"],context))) if "upscale_width" in kwargs else 512
 		upscale_height = int(float(self.Unprompted.parse_advanced(kwargs["upscale_height"],context))) if "upscale_height" in kwargs else 512
@@ -420,7 +422,11 @@ class Shortcode():
 						fixed_image = fixed_image.resize((w + padding*2,h + padding*2),resample=downscale_method)
 						
 						# Slap our new image back onto the original
-						image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask)
+						if test == 1: image_pil = image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask)
+						elif test == 2: image_pil = image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask).copy()
+						else: image_pil.paste(fixed_image, (x1 - padding, y1 - padding),sub_mask)
+
+						if debug: image_pil.save("zoom_enhance_final_result.png")
 
 						self.Unprompted.log(f"Adding zoom_enhance result for image_idx {image_idx}")
 						if context != "after":
@@ -428,7 +434,10 @@ class Shortcode():
 							self.Unprompted.shortcode_user_vars["init_images"] = image_pil
 						# main return
 						else:
-							self.Unprompted.after_processed.images[image_idx] = image_pil
+							if test == 3: self.Unprompted.after_processed.images[image_idx] = image_pil.copy()
+							elif test == 4: self.Unprompted.after_processed.images.insert(image_idx,image_pil)
+							elif test == 5: append_originals.append(image_pil.copy())
+							else: self.Unprompted.after_processed.images[image_idx] = image_pil
 					except Exception as e:
 							self.Unprompted.log(f"Could not append zoom_enhance result: {e}",context="ERROR")
 							return""
