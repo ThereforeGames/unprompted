@@ -435,7 +435,7 @@ class Shortcode():
 						# main return
 						else:
 							if test == 3: self.Unprompted.after_processed.images[image_idx] = image_pil.copy()
-							elif test == 4: self.Unprompted.after_processed.images.insert(image_idx,image_pil)
+							elif test == 4: self.Unprompted.after_processed.images[0] = image_pil.copy()
 							elif test == 5: append_originals.append(image_pil.copy())
 							else: self.Unprompted.after_processed.images[image_idx] = image_pil
 					except Exception as e:
