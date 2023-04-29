@@ -138,6 +138,8 @@ class Shortcode():
 				self.init_images = []
 				self.image_masks = []
 				self.orginal_n_iter = None
+			
+		return processed
 
 			
 

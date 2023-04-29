@@ -3,7 +3,15 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.1.0 - 28 April 2023</summary>
+<details open><summary>9.1.1 - 29 April 2023</summary>
+
+### Changed
+- Fixed an issue with reading `controlnet_x_image` variable
+- Speculative fix for `postprocess()` routine not receiving updated images
+
+</details>
+
+<details><summary>9.1.0 - 28 April 2023</summary>
 
 ### Added
 - `[choose]`: supports `_sanitize` to override the default content sanitization rules

@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.1.0"
+		self.VERSION = "9.1.1"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -291,8 +291,10 @@ class Unprompted:
 				all_units = cnet.get_all_units_in_processing(this_p)
 
 				if att_split[2] == "image":
-					from pil import Image
-					this_val = Image.open(self.shortcode_user_vars[att])
+					import imageio
+					this_val = imageio.imread(self.shortcode_user_vars[att])
+					#from pil import Image
+					#this_val = Image.open(self.shortcode_user_vars[att])
 				else: 
 					this_val = self.shortcode_user_vars[att]
 				setattr(all_units[int(att_split[1])],"_".join(att_split[2:]),this_val)

@@ -72,7 +72,7 @@ class Shortcode():
 			processed.images.append(self.image_mask)
 			self.image_mask = None
 			self.show = False
-			return processed
+		return processed
 
 	def ui(self,gr):
 		gr.Textbox(label="Path to image file 🡢 str",max_lines=1)

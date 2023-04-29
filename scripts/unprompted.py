@@ -523,9 +523,14 @@ class Scripts(scripts.Script):
 			Unprompted.log("Bypassing After routine to avoid infinite loop.")
 			self.allow_postprocess = True
 			return False # Prevents endless loop with some shortcodes
+
 		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")
-		
+
 		for i in Unprompted.after_routines:
-			Unprompted.shortcode_objects[i].after(p,processed)
+			val = Unprompted.shortcode_objects[i].after(p,processed)
+			if val: processed = val
+
 		self.allow_postprocess = True
+
+		return processed # Checking to see if this resolves issue with receiving final image on some devices

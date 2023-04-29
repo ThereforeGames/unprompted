@@ -37,6 +37,7 @@ class Shortcode():
 
 			self.after_content = []
 			return(self.Unprompted.after_processed)
+		return processed
 
 	def ui(self,gr):
 		gr.Number(label="Order compared to other [after] blocks 🡢 int",value=0,interactive=True)
