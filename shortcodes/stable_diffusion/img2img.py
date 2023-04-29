@@ -88,9 +88,13 @@ class Shortcode():
 		# Re-enable alwayson scripts
 		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
 
-		if len(img2img_images) < 1:
-			self.Unprompted.log(f"The returned object does not appear to contain an image: {img2img_images}",context="ERROR")
-			return("")
+		try:
+			if len(img2img_images) < 1:
+				self.Unprompted.log(f"The returned object does not appear to contain an image: {img2img_images}",context="ERROR")
+				return("")
+		except Exception as e:
+			print("ERROR - Could not check length of img2img_images")
+			pass
 
 		# Add the new image(s) to our main output
 		if did_error: return False
