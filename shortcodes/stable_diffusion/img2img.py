@@ -23,14 +23,16 @@ class Shortcode():
 		for i in range(len(sd_samplers.samplers_for_img2img)):
 			if sd_samplers.samplers_for_img2img[i].name == self.Unprompted.shortcode_user_vars["sampler_name"]:
 				sampler_index = i
-				print(sd_samplers.samplers_for_img2img[i].name) #break
 
 		if "img2img_init_image" in self.Unprompted.shortcode_user_vars:
 			init_img = self.Unprompted.shortcode_user_vars["img2img_init_image"]
 		else:
 			init_img = self.Unprompted.shortcode_user_vars["init_images"][len(self.Unprompted.shortcode_user_vars["init_images"]) - 1]			
 		init_img_with_mask = self.Unprompted.shortcode_user_vars["init_img_with_mask"] if "init_img_with_mask" in self.Unprompted.shortcode_user_vars else None
-		
+
+		for att in self.Unprompted.shortcode_user_vars:
+			if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(att,self.Unprompted.main_p)
+
 		try:
 			img2img_result = modules.img2img.img2img(
 				"unprompted_img2img", #id_task
@@ -63,8 +65,10 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars["seed_resize_from_h"],
 				self.Unprompted.shortcode_user_vars["seed_resize_from_w"],
 				0, # seed_enable_extras
+				0, # selected_scale_tab
 				self.Unprompted.shortcode_user_vars["height"],
 				self.Unprompted.shortcode_user_vars["width"],
+				1.0, #scale_by
 				self.Unprompted.shortcode_user_vars["resize_mode"] if "resize_mode" in self.Unprompted.shortcode_user_vars else 1,
 				self.Unprompted.shortcode_user_vars["inpaint_full_res"] if "inpaint_full_res" in self.Unprompted.shortcode_user_vars else True, # p.inpaint_full_res
 				self.Unprompted.shortcode_user_vars["inpaint_full_res_padding"] if "inpaint_full_res_padding" in self.Unprompted.shortcode_user_vars else 1, # p.inpaint_full_res_padding
@@ -81,8 +85,8 @@ class Shortcode():
 
 			# Get the image stored in the first index
 			img2img_images = img2img_result[0]
-		except:
-			self.Unprompted.log("An error occurred while generating the image! Perhaps it was interrupted by the user?")	
+		except Exception as e:
+			self.Unprompted.log_error(e)
 			did_error = True
 
 		# Re-enable alwayson scripts

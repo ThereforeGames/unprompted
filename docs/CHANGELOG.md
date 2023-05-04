@@ -3,7 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.1.1 - 29 April 2023</summary>
+<details open><summary>9.1.2 - 5 May 2023</summary>
+
+### Fixed
+- `[img2img]`: updated for compatibility with latest WebUI
+</details>
+
+<details><summary>9.1.1 - 29 April 2023</summary>
 
 ### Changed
 - Fixed an issue with reading `controlnet_x_image` variable

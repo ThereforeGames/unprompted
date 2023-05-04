@@ -332,13 +332,14 @@ class Shortcode():
 						file_contents = self.Unprompted.shortcode_objects["file"].run_atomic(set_pargs,set_kwargs,context)						
 						# temporarily disable user vars to avoid applying old controlnet values
 						temp_user_vars = self.Unprompted.shortcode_user_vars
-						self.Unprompted.shortcode_user_vars = {}
-						self.Unprompted.parse_advanced(file_contents,context)
+						self.Unprompted.shortcode_user_vars.clear()
+						self.Unprompted.process_string(file_contents,context)
 						for att in self.Unprompted.shortcode_user_vars:
-							if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(att,self.Unprompted.p_copy)
+							if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(self.Unprompted.p_copy,att)
 						
 						# restore user vars
-						self.Unprompted.shortcode_user_vars = temp_user_vars		
+						self.Unprompted.shortcode_user_vars = temp_user_vars
+						# print(self.Unprompted.shortcode_user_vars)	
 
 					if self.Unprompted.shortcode_var_is_true("use_starting_face",pargs,kwargs):
 						self.Unprompted.p_copy.init_images = [starting_image_face_big]

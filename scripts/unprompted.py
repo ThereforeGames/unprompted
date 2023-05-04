@@ -400,6 +400,7 @@ class Scripts(scripts.Script):
 
 		# test compatibility with controlnet
 		import copy
+		Unprompted.main_p = p
 		Unprompted.p_copy = copy.copy(p)
 		# Update the controlnet script args with a list of 0 units
 		try:
