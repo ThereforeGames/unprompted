@@ -110,6 +110,6 @@ def on_ui_tabs():
             ]
         )
 
-    return (unprompted_editor_ui, "Unprompted Template Editer", "unprompted_editor_ui"),
+    return (unprompted_editor_ui, "Unprompted Template Editor", "unprompted_editor_ui"),
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
