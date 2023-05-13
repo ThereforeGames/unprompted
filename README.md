@@ -16,17 +16,17 @@ Additionally, it gives you access to **exclusive Stable Diffusion features** suc
 
 ## Features
 
-- **Dozens of shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
-- Yes, you can use it for wildcards, e.g. `[choose]red|blue|yellow[/choose]` or `[choose][file somefile][/choose]` to pick a line at random
-- Easily extendable with **custom shortcodes**
-- Simple creation of `.txt` templates that can be organized according to your preferences
-- Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
-- Supports **numerous Stable Diffusion variables** such as `negative_prompt` and `cfg_scale`
-- Supports natural language processing features such as auto-pluralization, finding synonyms, and even verb conjugation
-- Includes a growing list of examples that demonstrate advanced functionality, such as **customizing the weight of a choice list** and **applying emphasis to a random part of your prompt**
-- Comprehensive documentation that is always up-to-date
-- Free
-- Developed by a human
+- [x] **Dozens of shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
+- [x] Yes, you can use it for wildcards, e.g. `[choose]red|blue|yellow[/choose]` or `[choose][file somefile][/choose]` to pick a line at random
+- [x] Easily extendable with **custom shortcodes**
+- [x] Simple creation of `.txt` templates that can be organized according to your preferences
+- [x] Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
+- [x] Supports **numerous Stable Diffusion variables** such as `negative_prompt` and `cfg_scale`
+- [x] Supports natural language processing features such as auto-pluralization, finding synonyms, and even verb conjugation
+- [x] Includes a growing list of examples that demonstrate advanced functionality, such as **customizing the weight of a choice list** and **applying emphasis to a random part of your prompt**
+- [x] Comprehensive documentation that is always up-to-date
+- [x] Free
+- [x] Developed by a human
 
 ## Installation
 
