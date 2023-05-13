@@ -1,2 +1,6 @@
-nltk
-pattern@git+https://github.com/NicolasBizzozzero/pattern
+nltk # natural language processing
+pattern@git+https://github.com/NicolasBizzozzero/pattern # natural language processing
+sentence-transformers # [img2pez]
+salesforce-lavis # [pix2pix_zero]
+segment_anything # [txt2mask]
+color-matcher # [zoom_enhance]

@@ -327,7 +327,7 @@ class Shortcode():
 					self.Unprompted.p_copy.n_iter = 1
 
 					if controlnet_preset != "none" and len(controlnet_preset) > 0:
-						set_pargs = [f"common/controlnet_presets/{controlnet_preset}"]
+						set_pargs = [f"common/presets/controlnet/{controlnet_preset}"]
 						set_kwargs = {}
 						file_contents = self.Unprompted.shortcode_objects["file"].run_atomic(set_pargs,set_kwargs,context)						
 						# temporarily disable user vars to avoid applying old controlnet values

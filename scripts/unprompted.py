@@ -225,7 +225,7 @@ class Scripts(scripts.Script):
 				else: is_open = True
 				
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug",elem_id="promo",value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
+					plug = gr.HTML(label="plug",elem_id="promo",value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_demoncrawl_avatar_generator.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -459,7 +459,7 @@ class Scripts(scripts.Script):
 
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
-		original_model = opts.sd_model_checkpoint
+		Unprompted.original_model = opts.sd_model_checkpoint
 		Unprompted.shortcode_user_vars["sd_model"] = opts.sd_model_checkpoint
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
@@ -470,19 +470,7 @@ class Scripts(scripts.Script):
 		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 		# Apply any updates to system vars
-		for att in dir(p):
-			if not att.startswith("__") and att != "sd_model":
-				setattr(p,att,Unprompted.shortcode_user_vars[att])	
-
-		# Special handling of vars
-		for att in Unprompted.shortcode_user_vars:
-			# change models
-			if att == "sd_model" and Unprompted.shortcode_user_vars[att] != original_model:
-				info = sd_models.get_closet_checkpoint_match(Unprompted.shortcode_user_vars["sd_model"])
-				if (info): sd_models.load_model(info,None,None)
-			# control controlnet
-			elif att.startswith("controlnet_") or att.startswith("cn_"):
-				Unprompted.update_controlnet_var(p,att)
+		Unprompted.update_stable_diffusion_vars(p)
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)

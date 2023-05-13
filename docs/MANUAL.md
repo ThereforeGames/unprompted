@@ -747,6 +747,10 @@ This shortcode is powered by Python's glob module, which means it supports wildc
 
 Supports the optional `_delimiter` argument which lets you specify the separator between each filepath. It defaults to your config's `syntax.delimiter` value (`|`).
 
+Supports the optional `_basename` parg that causes the shortcode to return filenames instead of full paths.
+
+Supports the optional `_hide_ext` parg that causes the shortcode to trim filename extensions out of the returned string.
+
 Supports the macro `%BASE_DIR%` which will be substituted with an absolute path to the Unprompted extension.
 
 ```
@@ -1002,6 +1006,10 @@ Supports the optional `_from` and `_to` arguments, which can process secondary s
 
 Supports the optional `_count` argument which limits the number of occurances to replace. For example, `[replace the="a" _count=1]the frog and the dog and the log[/replace]` will return `a frog and the dog and the log`.
 
+Supports the optional `_insensitive` parg to enable case-insensitive search-and-replace.
+
+Supports the optional `_load` kwarg for importing from:to replacement directions from one or more external JSON files.
+
 ```
 [replace red="purple" flowers="marbles"]
 A photo of red flowers.
@@ -1042,6 +1050,8 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 The atomic version of `[set]` that allows you to set multiple variables at once.
 
 This shortcode processes your arguments with `[set]` directly, meaning you can take advantage of system arguments supported by `[set]`, such as `_new`.
+
+Supports the optional `_load` kwarg for importing key:value pairs from one or more external JSON files.
 
 ```
 [sets var_a=10 var_b=something var_c=500]
@@ -1397,7 +1407,20 @@ Supports the optional `per_instance` positional argument which will render and a
 </details>
 
 <details><summary>[enable_multi_images]</summary>
+
 This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
+
+</details>
+
+<details><summary>[txt2img]</summary>
+
+Runs a txt2img task inside of an `[after]` block.
+
+The txt2img settings are determined by your user variables. In the following example, we explicitly update the CFG scale and prompt for the task:
+
+```
+[after][sets cfg_scale=15 prompt="horse"][txt2img][/after]original prompt goes here
+```
 
 </details>
 
@@ -1422,7 +1445,7 @@ Supports the optional `size_var` argument which will cause the shortcode to calc
 
 Supports the optional `negative_mask` argument which will subtract areas from the content mask.
 
-Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 100, max value is 255. Lowering this value means you may select more than you intend.
+Supports the optional `neg_precision` argument which determines the confidence of the negative mask. Default is 100, the valid range is 1 to 255. Lowering this value means you may select more than you intend.
 
 Supports the optional `neg_padding` which is the same as `padding` but for the negative prompts.
 
@@ -1440,9 +1463,17 @@ Supports the optional `show` positional argument which will append the final mas
 
 Supports the optional `legacy_weights` positional argument which will utilize the original CLIPseg weights. By default, `[txt2mask]` will use the [refined weights](https://github.com/timojl/clipseg#new-fine-grained-weights).
 
-Supports the `unload_model` argument, which will unload the clipseg model after processing. On my GTX 3090, this adds about 3 seconds to inference time. Defaults to `False`, and should only be enabled on devices with low memory.
+Supports the `unload_model` argument, which will unload the masking model after processing. On my GTX 3090, this adds about 3 seconds to inference time (using the clipseg model). Defaults to `False`, and should only be enabled on devices with low memory.
 
 The content and `negative_mask` both support the vertical pipe delimiter (`|`) which allows you to specify multiple subjects for masking.
+
+Supports the optional `stamp` kwarg that pastes a temporary PNG onto the init image before running mask processing, useful for redacting a portion of the image for example. The value of `stamp` is the name of a file in `images/stamps` without extension.
+
+Supports the optional `stamp_method` kwarg to choose the sizing and positioning of stamp logic. Valid options are `stretch` and `center`.
+
+Supports the optional `stamp_x` and `stamp_y` kwargs for precise positioning of the stamp. Both default to 0.
+
+Supports the optional `stamp_blur` parg which is the pixel radius of the stamp's gaussian blur filter. Defaults to 0, which disables the filter altogether.
 
 ```
 [txt2mask]head and shoulders[/txt2mask]Walter White
@@ -1465,6 +1496,8 @@ Supports the `replacement` keyword argument which is the prompt that will be use
 Supports the `negative_replacement` keyword argument, which is the negative prompt that will be used on the mask region via `[img2img]`. Defaults to an empty string.
 
 Both `replacement` and `negative_replacement` support multiple, delimited search terms via `Unprompted.config.syntax.delimiter`.
+
+Supports the `background_mode` parg which will invert the class mask and disable the zoom_enhance step. In other words, you can use this when you want to replace the background instead of the subject. When using this mode, you will likely need to increase `mask_precision` to ~150 or so.
 
 Supports `mask_sort_method` which is used when multiple, non-contiguous masks are detected. Defaults to `left-to-right`. Options include: `left-to-right`, `right-to-left`, `top-to-bottom`, `bottom-to-top`, `big-to-small`, `small-to-big`, `unsorted`.
 
@@ -1497,6 +1530,10 @@ Supports the `color_correction_method` argument which will attempt to match the 
 Supports the `color_correct_strength` argument which is an integer that determines how many times to run the color correction algorithm. Defaults to 1.
 
 Supports the `color_correct_timing` argument which determines when to run the color correction algorithm. Defaults to `pre`, which will run color correction before upscaling. Options include `pre` and `post`.
+
+Supports the `controlnet_preset` kwarg which is the name of a file in `templates/presets/controlnet` containing instructions for loading one more ControlNet units.
+
+Supports the experimental `use_starting_face` parg which will upscale the initial image's face as opposed to the resulting img2img's face. (Irrelevant in txt2img mode.)
 
 Supports the `debug` positional argument, which will output a series of images to your WebUI folder over the course of processing.
 

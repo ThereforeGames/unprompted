@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.1.2"
+		self.VERSION = "9.2.0"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -188,9 +188,9 @@ class Unprompted:
 			this_string += f" {string}"
 			print(this_string)
 
-	def log_error(self,e):
+	def log_error(self,e, msg=""):
 		import traceback
-		self.log(''.join(traceback.TracebackException.from_exception(e).format()),context="ERROR",caller=" ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]")
+		self.log(msg + ''.join(traceback.TracebackException.from_exception(e).format()),context="ERROR",caller=" ["+os.path.relpath(inspect.stack()[1].filename,__file__).replace("..\\","")+"]")
 
 	def strip_str(self,string,chop):
 		while True:
@@ -299,3 +299,24 @@ class Unprompted:
 				cnet.update_cn_script_in_processing(this_p, all_units)
 		except Exception as e:
 			self.log(f"Could not set ControlNet value: {e}",context="ERROR")
+	
+	def update_stable_diffusion_vars(self,this_p):
+		from modules import sd_models
+
+		# Apply any updates to system vars
+		for att in dir(this_p):
+			if not att.startswith("__") and att != "sd_model" and att in self.shortcode_user_vars:
+				try:
+					setattr(this_p,att,self.shortcode_user_vars[att])
+				except Exception as e:
+					self.log_error(e,"Could not update Stable Diffusion attr: ")
+		
+		# Special handling of vars
+		for att in self.shortcode_user_vars:
+			# change models
+			if att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att],str):
+				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
+				if info: sd_models.load_model(info,None,None)
+			# control controlnet
+			elif att.startswith("controlnet_") or att.startswith("cn_"):
+				self.update_controlnet_var(this_p,att)

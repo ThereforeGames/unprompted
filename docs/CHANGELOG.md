@@ -3,7 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.1.2 - 5 May 2023</summary>
+<details open><summary>9.2.0 - 13 May 2023</summary>
+
+### Added
+- New shortcode `[txt2img]` for use within the `[after]` block
+- New directory `templates/common/presets/inference` with a few presets
+- Bodysnatcher v1.3.0: new setting `inference_preset` that will load settings from the aforementioned directory
+- New function `Unprompted.update_stable_diffusion_vars()` to write changes from `shortcode_user_vars` to a specified `p` object
+- Compatibility blurb added to About panel
+
+### Changed
+- The promo boxart is now loaded from the local filesystem instead of an online imagehost
+- The `templates/common/controlnet_presets` directory has been moved to `templates/common/presets/controlnet`
+- Rewrote `install.py` to be more modular
+- Bodysnatcher v1.3.0: minor UI updates
+- Updated the manual
+
+### Removed
+- Bodysnatcher v1.3.0: removed `use_optimized_inference_settings` in favor of the new `inference_preset` setting
+
+</details>
+
+<details><summary>9.1.2 - 5 May 2023</summary>
 
 ### Fixed
 - `[img2img]`: updated for compatibility with latest WebUI

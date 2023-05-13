@@ -23,6 +23,7 @@ class Shortcode():
 		for i in range(len(sd_samplers.samplers_for_img2img)):
 			if sd_samplers.samplers_for_img2img[i].name == self.Unprompted.shortcode_user_vars["sampler_name"]:
 				sampler_index = i
+				break
 
 		if "img2img_init_image" in self.Unprompted.shortcode_user_vars:
 			init_img = self.Unprompted.shortcode_user_vars["img2img_init_image"]
