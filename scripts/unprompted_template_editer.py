@@ -17,8 +17,8 @@ from modules.shared import opts
 from modules import script_callbacks, sd_models, shared
 
 refresh_symbol = '\U0001f504'  # 🔄
-folder_symbol = '\U0001f4c2'  # 📂
-save_style_symbol = '\U0001f4be'  # 💾
+folder_symbol_unprompted = '\U0001f5c1'  # 🗁
+save_style_symbol_unprompted = '\U0001f5ab'  # 🖫
 extra_networks_symbol = '\U0001F3B4'  # 🎴
 
 from lib_unprompted.shared import Unprompted
@@ -33,7 +33,7 @@ def generate_file_list_html(file_list):
     html_content = "<div style='height: 300px; overflow-y: scroll;'><ul>"
     for file in file_list:
         # print(f"file: {file}")
-        html_content += f"<li><a href='#' class='file-link' onclick='loadFile(\"{file}\")'>{file}</a></li>"
+        html_content += f"<li><button style='background-color:FFFFFF00;'  onMouseOver=\"this.style.backgroundColor='#8888AA99'\" onMouseOut=\"this.style.backgroundColor='#FFFFFF00'\"  onclick='loadFile(\"{file}\")'>{file}</button></li>"
     html_content += "</ul></div>"
     return html_content
 
@@ -66,11 +66,11 @@ def on_ui_tabs():
         with gr.Row(elem_id=f"unprompted_toprow"):
             with gr.Column(scale=1, min_width=200):
                 # Add HTML element for file list
-                templates = gr.HTML(value="", elem_id="file_list", css=".file_list_container { height: 300px; overflow-y: scroll; }")
+                templates = gr.HTML(value="", elem_id="file_list", css=".myButtons:hover {background-color: #4CAF50;color: white;}")
                 with gr.Row():  
-                    refresh_button = ToolButton(value=refresh_symbol, elem_id=f"refresh_button_unprompted")
-                    load_button = ToolButton(value=folder_symbol, elem_id=f"load_button_unprompted")
-                    save_button = ToolButton(value=save_style_symbol, elem_id=f"save_button_unprompted")
+                    refresh_button_unprompted = ToolButton(value=refresh_symbol, elem_id=f"refresh_button_unprompted")
+                    load_button_unprompted = ToolButton(value=folder_symbol_unprompted, elem_id=f"load_button_unprompted")
+                    save_button_unprompted = ToolButton(value=save_style_symbol_unprompted, elem_id=f"save_button_unprompted")
                 with gr.Row():
                     # Add save name text box
                     save_name = gr.Textbox(value="", label="Save Name", elem_id="save_name")
@@ -83,7 +83,7 @@ def on_ui_tabs():
                     extra_networks_ui_unprompted_edit_space = ui_extra_networks.create_ui(extra_networks, extra_networks_button, 'unprompted_edit_space')
                     extra_networks_ui_unprompted_gallery = gr.Textbox(visible=False)
         ui_extra_networks.setup_ui(extra_networks_ui_unprompted_edit_space, extra_networks_ui_unprompted_gallery)
-        refresh_button.click(
+        refresh_button_unprompted.click(
             fn=refresh_file_list,
             inputs=[
             ],
@@ -91,7 +91,7 @@ def on_ui_tabs():
             templates,
             ]
         )
-        load_button.click(
+        load_button_unprompted.click(
             fn=load_file,
             inputs=[
                 save_name,
@@ -100,7 +100,7 @@ def on_ui_tabs():
                 main_edit_space,
             ]
         )
-        save_button.click(
+        save_button_unprompted.click(
             fn=save_file,
             inputs=[
                 save_name,
