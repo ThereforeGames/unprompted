@@ -3,7 +3,41 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.2.0 - 13 May 2023</summary>
+<details open><summary>9.3.0 - 24 June 2023</summary>
+
+### Added
+- New shortcode `[bypass]`: allows you to bypass specific shortcodes, useful for debugging
+- New Wizard Capture tab that assembles code for the last image you generated
+- `[txt2mask]`: now supports `fastsam` mask method
+- `[zoom_enhance]`: now supports `inherit_negative` parg to copy your main negative prompt to the replacement img2img task
+- Bodysnatcher v1.3.1: now supports the aforementioned `inherit_negative` feature of `[zoom_enhance]` (true by default)
+- You can minimize startup time by setting `skip_requirements` to true in `config_user.json`
+- Atomic shortcodes may now utilize `run_preprocess()` similar to block shortcodes
+
+### Changed
+- `[txt2mask]`: Improved Wizard GUI
+- Bodysnatcher v1.3.1: Improved Wizard GUI
+- Tested compatibility with WebUI 1.3.2 and updated compatibility blurb as such
+
+### Fixed
+- `[zoom_enhance]`: Potentially fixed a compatibility issue with newer versions of ControlNet
+- Updated checkpoint name detection, hopefully more reliable as a result
+- Temporarily lowered sampling steps of img2img_general_v1 and img2img_full_denoise_v1 from 25 to 24 as a workaround for an odd visual glitch
+
+### Removed
+- `[txt2mask]`: mask method `grounded_sam` has been removed due to inferior results compared to `clip_surgery` and `fastsam`, all of which are based on similar technology
+
+
+</details>
+
+<details><summary>9.2.1 - 21 May 2023</summary>
+
+### Fixed
+- Crash related to install issue with legacy controlnet requirements
+
+</details>
+
+<details><summary>9.2.0 - 13 May 2023</summary>
 
 ### Added
 - New shortcode `[txt2img]` for use within the `[after]` block

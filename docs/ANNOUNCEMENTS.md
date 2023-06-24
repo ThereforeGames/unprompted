@@ -1,6 +1,54 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Hot Summer Update — 24 June 2023</summary>
+
+Hello! It's been a couple months since I've had time to work on Unprompted, but I'm happy to finally announce the arrival of v9.3.0 - just in time for the summer. 😎
+
+This is mainly a quality-of-life update that will make your prompting workflow more convenient. Let's go over what's new:
+
+## The [bypass] shortcode
+
+You can now selectively disable shortcodes for the duration of a run!
+
+Let's say you're working on a lengthy script and you want to disable all instances of `[txt2mask]` for debugging purposes. Rather than having to carefully extract bits of code, you can just slap a `[bypass]` at the start of your script:
+
+```
+[bypass txt2mask]
+```
+
+Additionally, you could use this shortcode inside of a conditional like `[if]` for some fancy logic processing. Why would you want to do that? Well, I have no idea, but you can do it!
+
+## The Wizard Capture tab
+
+I added a snazzy new tab to the Wizard that lets you produce code for the last image you generated.
+
+It contains a `[sets]` block with your inference settings (CFG scale, denoising strength, etc) as well as your prompt and negative prompt.
+
+You can save the code to your `templates` directory and call it later with `[file]`, or send it to somebody as an easy 'preset' for foolproof image reproduction.
+
+## Reworked Wizard UIs
+
+![new_txt2mask_ui]([base_dir]/images/posts/new_txt2mask_ui.png)
+
+The `[txt2mask]` and Bodysnatcher interfaces have received a facelift! They were getting a bit unwieldy with so many options, so I categorized everything into accordion menus and improved the labels in some cases.
+
+## [txt2mask] now supports FastSAM
+
+A new image masking method called FastSAM [made some waves on the Stable Diffusion Reddit](https://www.reddit.com/r/StableDiffusion/comments/14fuqju/fast_segment_anything_40msimage/) earlier this week.
+
+I have implemented it in `[txt2mask]` - simply set `method` to `fastsam` to give it a try!
+
+I can confirm that it is indeed fast. However, `clipseg` is still superior in terms of accuracy. To date, I have incorporated three different types of "Segment Anything" solutions (`clip_surgery`, `grounding_dino`, `fastsam`) and unfortunately none of them are particularly good at creating segmentation masks from text prompts. SAM likely needs additional postprocessing before it can compete with `clipseg` for the purpose of text masking.
+
+## What's next?
+
+I am fairly satisfied withUnprompted's list of features, so I plan to turn my attention to GitHub and catch up on the issue tracker. The next couple patches will likely focus on improving stability.
+
+Enjoy!
+
+</details>
+
 <details><summary>The Big Syntax Update — 25 April 2023</summary>
 
 As part of my ongoing effort to transform Unprompted into a full-featured programming language, I have finally addressed one of its biggest pain points: nested shortcode syntax! Writing logic-heavy templates is a whole lot simpler now.

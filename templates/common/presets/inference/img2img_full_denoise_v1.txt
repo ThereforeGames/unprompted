@@ -1,1 +1,1 @@
-[sets cfg_scale=7.5 sampler_name="Euler a" steps=25 denoising_strength=1.0 mask_blur=0]
+[sets cfg_scale=5 sampler_name="Euler a" steps=24 denoising_strength=1.0 mask_blur=10]

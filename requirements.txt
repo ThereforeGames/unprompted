@@ -3,4 +3,5 @@ pattern@git+https://github.com/NicolasBizzozzero/pattern # natural language proc
 sentence-transformers # [img2pez]
 salesforce-lavis # [pix2pix_zero]
 segment_anything # [txt2mask]
+ultralytics # [txt2mask] FastSAM
 color-matcher # [zoom_enhance]

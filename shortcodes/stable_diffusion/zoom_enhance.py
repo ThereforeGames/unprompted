@@ -2,8 +2,8 @@ try:
 	from modules.processing import process_images_inner, StableDiffusionProcessingImg2Img, StableDiffusionProcessing
 except: pass # for unprompted_dry
 
-def process_images_inner_(p):
-	return(process_images_inner(p))
+def process_images_inner_(this_p):
+	return(process_images_inner(this_p))
 
 class Shortcode():
 	def __init__(self,Unprompted):
@@ -73,6 +73,12 @@ class Shortcode():
 
 		all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"],context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)
 		all_negative_replacements = (self.Unprompted.parse_alt_tags(kwargs["negative_replacement"],context) if "negative_replacement" in kwargs else "").split(self.Unprompted.Config.syntax.delimiter)
+		if self.Unprompted.shortcode_var_is_true("inherit_negative",pargs,kwargs,context):
+			if len(all_negative_replacements) > 0:
+				for idx,val in enumerate(all_negative_replacements):
+					all_negative_replacements[idx] = self.Unprompted.main_p.negative_prompt + " " + val
+			else: all_negative_replacements[0] = self.Unprompted.main_p.negative_prompt
+
 
 		# Ensure standard img2img mode
 		if (hasattr(self.Unprompted.p_copy,"image_mask")):
@@ -339,7 +345,6 @@ class Shortcode():
 						
 						# restore user vars
 						self.Unprompted.shortcode_user_vars = temp_user_vars
-						# print(self.Unprompted.shortcode_user_vars)	
 
 					if self.Unprompted.shortcode_var_is_true("use_starting_face",pargs,kwargs):
 						self.Unprompted.p_copy.init_images = [starting_image_face_big]
@@ -353,18 +358,23 @@ class Shortcode():
 							# self.Unprompted.p_copy.scripts.alwayson_scripts.clear()
 							# Remove Unprompted from the copied object
 
-							for idx,script in enumerate(self.Unprompted.p_copy.scripts.alwayson_scripts):
-								if script.title().lower() == 'unprompted':
-									unp_idx = idx
-									temp_script = self.Unprompted.p_copy.scripts.alwayson_scripts[idx]
-									self.Unprompted.p_copy.scripts.alwayson_scripts.pop(idx)
-									self.Unprompted.log("Successfully disabled Unprompted from p_copy scripts")
-									break
+							temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
+							i = 0
+							while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
+								script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
+								if script.title().lower() == "unprompted": #  or (controlnet_preset == "none" and script.title().lower() == "controlnet")
+									self.Unprompted.p_copy.scripts.alwayson_scripts.pop(i)
+									self.Unprompted.log(f"Successfully disabled {script.title()} from p_copy scripts")
+									i = 0 # reset loop after popping
+								else: i += 1
 
 							fixed_image = process_images_inner_(self.Unprompted.p_copy)
 							fixed_image = fixed_image.images[0]
 
-							self.Unprompted.p_copy.scripts.alwayson_scripts.insert(unp_idx,temp_script)
+							# self.Unprompted.p_copy.scripts.alwayson_scripts.insert(unp_idx,temp_script)
+							self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
+
+							self.Unprompted.log(self.Unprompted.p_copy.scripts.alwayson_scripts)
 						else:
 							# workaround for txt2img, not sure if compatible with controlnet
 							for att in dir(self.Unprompted.p_copy):
@@ -435,10 +445,7 @@ class Shortcode():
 							self.Unprompted.shortcode_user_vars["init_images"] = image_pil
 						# main return
 						else:
-							if test == 3: self.Unprompted.after_processed.images[image_idx] = image_pil.copy()
-							elif test == 4: self.Unprompted.after_processed.images[0] = image_pil.copy()
-							elif test == 5: append_originals.append(image_pil.copy())
-							else: self.Unprompted.after_processed.images[image_idx] = image_pil
+							self.Unprompted.after_processed.images[image_idx] = image_pil
 					except Exception as e:
 							self.Unprompted.log(f"Could not append zoom_enhance result: {e}",context="ERROR")
 							return""
@@ -463,6 +470,7 @@ class Shortcode():
 		gr.Text(label="Replacement 🡢 replacement",value="face")
 		gr.Text(label="Negative mask 🡢 negative_mask",value="")
 		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
+		gr.Checkbox(label="Inherit your negative prompt for replacement 🡢 inherit_negative")
 		gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
 		gr.Checkbox(label="Save debug images to WebUI folder 🡢 debug")
 		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")

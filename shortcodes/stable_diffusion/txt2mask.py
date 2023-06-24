@@ -44,17 +44,6 @@ class Shortcode():
 			mask_width = 512
 			mask_height = 512
 		else:
-			if method == "grounded_sam":
-				import launch
-				if not launch.is_installed("groundingdino"):
-					self.Unprompted.log("Attempting to install GroundingDINO library. Buckle up bro")
-					try:
-						launch.run_pip("install git+https://github.com/IDEA-Research/GroundingDINO","requirements for Unprompted - txt2mask SAM method")
-					except Exception as e:
-						self.Unprompted.log(f"GroundingDINO problem: {e}",context="ERROR")
-						self.Unprompted.log(f"Please open an issue on their repo, not mine.",context="ERROR")
-						return ""
-
 			mask_width = self.init_image.size[0]
 			mask_height = self.init_image.size[1]
 
@@ -152,7 +141,6 @@ class Shortcode():
 				# TODO: Figure out how to convert the plot above to numpy instead of re-loading image
 				else:
 					plt.imsave(filename,mask)
-					import random
 					img = cv2.imread(filename)
 					img = cv2.resize(img,(mask_width,mask_height))
 
@@ -162,9 +150,6 @@ class Shortcode():
 					else: img = cv2.erode(img,padding_dilation_kernel,iterations=1)
 				if smoothing_kernel is not None: img = cv2.filter2D(img,-1,smoothing_kernel)
 
-				#if method == "clip_surgery":
-					#gray_image = cv2.cvtColor(cv2.cvtColor(img, cv2.COLOR_BGR2LUV), cv2.COLOR_BGR2GRAY)
-				#else: gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 				Image.fromarray(gray_image).save("mask_gray_test.png")
 				(thresh, bw_image) = cv2.threshold(gray_image, mask_precision, 255, cv2.THRESH_BINARY)
@@ -183,7 +168,157 @@ class Shortcode():
 			negative_preds = []
 			image_pil = flatten(self.init_image, opts.img2img_background_color)
 
-			if method == "clip_surgery":
+			if method == "fastsam":
+				from ultralytics import YOLO
+				from lib_unprompted.fastsam.utils import tools
+				import clip
+				import numpy as np
+				import cv2
+
+				fastsam_better_quality = bool(self.Unprompted.parse_advanced(kwargs["fastsam_better_quality"],context)) if "fastsam_better_quality" in kwargs else True
+				fastsam_retina = bool(self.Unprompted.parse_advanced(kwargs["fastsam_retina"],context)) if "fastsam_retina" in kwargs else True
+				fastsam_model_type = "YOLOv8s"
+				fastsam_iou = float(self.Unprompted.parse_advanced(kwargs["fastsam_iou"],context)) if "fastsam_iou" in kwargs else 0.9
+				fastsam_conf = float(self.Unprompted.parse_advanced(kwargs["fastsam_conf"],context)) if "fastsam_conf" in kwargs else 0.4
+				fastsam_max_det = int(self.Unprompted.parse_advanced(kwargs["fastsam_max_det"],context)) if "fastsam_max_det" in kwargs else 100
+				fastsam_size = int(self.Unprompted.parse_advanced(kwargs["fastsam_size"],context)) if "fastsam_size" in kwargs else 1024
+
+				def fast_show_mask(
+					annotation,
+					random_color=False,
+					retinamask=True,
+					target_height=960,
+					target_width=960,
+				):
+					msak_sum = annotation.shape[0]
+					height = annotation.shape[1]
+					weight = annotation.shape[2]
+					if device!="cpu":
+						areas = torch.sum(annotation, dim=(1, 2))
+						sorted_indices = torch.argsort(areas, descending=False)
+						annotation = annotation[sorted_indices]
+						# 找每个位置第一个非零值下标
+						index = (annotation != 0).to(torch.long).argmax(dim=0)
+						if random_color == True:
+							color = torch.rand((msak_sum, 1, 1, 3)).to(annotation.device)
+						else:
+							color = torch.ones((msak_sum, 1, 1, 3)).to(annotation.device) * torch.tensor(
+								[30 / 255, 144 / 255, 255 / 255]
+							).to(annotation.device)
+						transparency = torch.ones((msak_sum, 1, 1, 1)).to(annotation.device) * 0.6
+						visual = torch.cat([color, transparency], dim=-1)
+						mask_image = torch.unsqueeze(annotation, -1) * visual
+						# 按index取数，index指每个位置选哪个batch的数，把mask_image转成一个batch的形式
+						show = torch.zeros((height, weight, 4)).to(annotation.device)
+						h_indices, w_indices = torch.meshgrid(
+							torch.arange(height), torch.arange(weight), indexing="ij"
+						)
+					else:
+						# 将annotation 按照面积 排序	
+						areas = np.sum(annotation, axis=(1, 2))	
+						sorted_indices = np.argsort(areas)	
+						annotation = annotation[sorted_indices]	
+						index = (annotation != 0).argmax(axis=0)	
+						if random_color == True:	
+							color = np.random.random((msak_sum, 1, 1, 3))	
+						else:	
+							color = np.ones((msak_sum, 1, 1, 3)) * np.array(	
+								[30 / 255, 144 / 255, 255 / 255]	
+							)	
+						transparency = np.ones((msak_sum, 1, 1, 1)) * 0.6	
+						visual = np.concatenate([color, transparency], axis=-1)	
+						mask_image = np.expand_dims(annotation, -1) * visual	
+						show = np.zeros((height, weight, 4))	
+						h_indices, w_indices = np.meshgrid(	
+							np.arange(height), np.arange(weight), indexing="ij"	
+						)
+					indices = (index[h_indices, w_indices], h_indices, w_indices, slice(None))
+					# 使用向量化索引更新show的值
+					show[h_indices, w_indices, :] = mask_image[indices]
+					show_cpu = show.cpu().numpy()
+					if retinamask == False:
+						show_cpu = cv2.resize(
+							show_cpu, (target_width, target_height), interpolation=cv2.INTER_NEAREST
+						)
+					return show_cpu
+
+				sam_model_dir = f"{self.Unprompted.base_dir}/models/fastsam"
+				os.makedirs(sam_model_dir, exist_ok=True)
+				if fastsam_model_type == "YOLOv8x": sam_filename = "FastSAM-x.pt"
+				else: sam_filename = "FastSAM-s.pt"
+				sam_file = f"{sam_model_dir}/{sam_filename}"
+
+				# Download model weights if we don't have them yet
+				if not os.path.exists(sam_file):
+					self.Unprompted.log("Downloading FastSAM model weights...")
+					# TODO: The YOLOv8x model is too big to download directly from Gdrive, find another host that supports it. Not particularly urgent as the difference in quality between the two models seems negligible...
+					if fastsam_model_type == "YOLOv8x": self.Unprompted.download_file(sam_file,"https://drive.google.com/uc?export=download&id=1m1sjY4ihXBU1fZXdQ-Xdj-mDltW-2Rqv")
+					else: self.Unprompted.download_file(sam_file,f"https://drive.google.com/uc?export=download&id=10XmSj6mmpmRb8NhXbtiuO9cTTBwR_9SV")
+
+				if self.cached_model == -1 or self.cached_model_method != method:
+					model = YOLO(sam_file)
+					clip_model, preprocess = clip.load("ViT-B/32", device=device)
+
+					# Cache for future runs
+					self.cached_model = model
+					self.cached_clip_model = clip_model
+					self.cached_preprocess = preprocess
+					self.cached_model_method = method
+				else:
+					self.Unprompted.log("Using cached FastSAM model.")
+					model = self.cached_model
+					preprocess = self.cached_preprocess
+					clip_model = self.cached_clip_model
+				
+
+				results = model(image_pil,imgsz=fastsam_size,device=device,retina_masks=fastsam_retina,iou=fastsam_iou,conf=fastsam_conf,max_det=fastsam_max_det)
+				results = tools.format_results(results[0],0)
+				cropped_boxes, cropped_images, not_crop, filter_id, annot = tools.crop_image(results, image_pil)
+				
+				image = cv2.cvtColor(np.array(image_pil), cv2.COLOR_BGR2RGB)
+				original_h = image.shape[0]
+				original_w = image.shape[1]
+
+				def run_fastsam(text_prompts):
+					scores = tools.retriev(clip_model, preprocess, cropped_boxes, text_prompts, device=device)
+					max_idx = scores.argsort()
+					max_idx = max_idx[-1]
+					max_idx += sum(np.array(filter_id) <= int(max_idx))
+					annotations = annot[max_idx]["segmentation"]
+					annotations = np.array([annotations])
+
+					if isinstance(annotations[0], dict):
+						annotations = [annotation["segmentation"] for annotation in annotations]
+
+					if fastsam_better_quality == True:
+						if isinstance(annotations[0], torch.Tensor):
+							annotations = np.array(annotations.cpu())
+						for i, mask in enumerate(annotations):
+							mask = cv2.morphologyEx(
+								mask.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)
+							)
+							annotations[i] = cv2.morphologyEx(
+								mask.astype(np.uint8), cv2.MORPH_OPEN, np.ones((8, 8), np.uint8)
+							)
+					# from PIL import Image
+					# preds = Image.fromarray((preds * 255).astype(np.uint8))
+					if device == "cpu": annotations = np.array(annotations)
+					else:
+						if isinstance(annotations[0], np.ndarray):
+							annotations = torch.from_numpy(annotations)
+
+					return fast_show_mask(
+						annotations,
+						random_color=False,
+						retinamask=fastsam_retina,
+						target_height=original_h,
+						target_width=original_w,
+					)
+				
+				preds.append(run_fastsam(prompts))
+				if negative_prompts: negative_preds.append(run_fastsam(negative_prompts))
+
+			elif method == "clip_surgery":
 				from lib_unprompted import clip_surgery as clip
 				import cv2
 				import numpy as np
@@ -258,7 +393,7 @@ class Shortcode():
 							sam_file = f"{sam_model_dir}/{sam_filename}"
 							# Download model weights if we don't have them yet
 							if not os.path.exists(sam_file):
-								print("Downloading SAM model weights...")
+								self.Unprompted.log("Downloading SAM model weights...")
 								self.Unprompted.download_file(sam_file,f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
 							
 							model_type = "vit_h"
@@ -309,152 +444,6 @@ class Shortcode():
 					
 						preds = sam_inference(text_features)
 						if negative_prompts: negative_preds = sam_inference(negative_text_features)
-
-			elif method == "grounded_sam":
-				box_thresh = float(self.Unprompted.parse_advanced(kwargs["box_threshold"],context)) if "box_threshold" in kwargs else 0.3
-				text_thresh = float(self.Unprompted.parse_advanced(kwargs["text_threshold"],context)) if "text_threshold" in kwargs else 0.25
-				# Grounding DINO
-				import groundingdino.datasets.transforms as T
-				from groundingdino.models import build_model
-				from groundingdino.util import box_ops
-				from groundingdino.util.slconfig import SLConfig
-				from groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
-
-				# segment anything
-				from segment_anything import build_sam, SamPredictor 
-				import cv2
-				import numpy as np
-				import matplotlib.pyplot as plt
-
-				def get_grounding_output(model, image, caption, box_threshold, text_threshold, with_logits=True, device="cpu"):
-					caption = caption.lower()
-					caption = caption.strip()
-					if not caption.endswith("."):
-						caption = caption + "."
-					model = model.to(device)
-					image = image.to(device)
-					with torch.no_grad():
-						outputs = model(image[None], captions=[caption])
-					logits = outputs["pred_logits"].cpu().sigmoid()[0]  # (nq, 256)
-					boxes = outputs["pred_boxes"].cpu()[0]  # (nq, 4)
-					logits.shape[0]
-
-					# filter output
-					logits_filt = logits.clone()
-					boxes_filt = boxes.clone()
-					filt_mask = logits_filt.max(dim=1)[0] > box_threshold
-					logits_filt = logits_filt[filt_mask]  # num_filt, 256
-					boxes_filt = boxes_filt[filt_mask]  # num_filt, 4
-					logits_filt.shape[0]
-
-					# get phrase
-					tokenlizer = model.tokenizer
-					tokenized = tokenlizer(caption)
-					# build pred
-					pred_phrases = []
-					for logit, box in zip(logits_filt, boxes_filt):
-						pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
-						if with_logits:
-							pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
-						else:
-							pred_phrases.append(pred_phrase)
-
-					return boxes_filt, pred_phrases
-
-				sam_model_dir = f"{self.Unprompted.base_dir}/models/segment_anything"
-				os.makedirs(sam_model_dir, exist_ok=True)
-				sam_filename = "sam_vit_h_4b8939.pth"
-				sam_file = f"{sam_model_dir}/{sam_filename}"
-
-				# Download model weights if we don't have them yet
-				if not os.path.exists(sam_file):
-					print("Downloading SAM model weights...")
-					self.Unprompted.download_file(sam_file,f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
-				
-				dino_model_dir = f"{self.Unprompted.base_dir}/models/groundingdino"
-				os.makedirs(dino_model_dir, exist_ok=True)
-				dino_filename = "groundingdino_swint_ogc.pth"
-				dino_file = f"{dino_model_dir}/{dino_filename}"
-
-				if not os.path.exists(dino_file):
-					print("Downloading GroundingDINO model weights...")
-					self.Unprompted.download_file(dino_file,f"https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/{dino_filename}")
-
-				model_config_path = f"{self.Unprompted.base_dir}/lib_unprompted/groundingdino/config/GroundingDINO_SwinT_OGC.py"
-
-				# load model
-				if self.cached_model == -1 or self.cached_model_method != method:
-					args = SLConfig.fromfile(model_config_path)
-					args.device = device
-					model = build_model(args)
-					checkpoint = torch.load(dino_file, map_location="cpu")
-					load_res = model.load_state_dict(clean_state_dict(checkpoint["model"]), strict=False)
-					print(load_res)
-					_ = model.eval()
-
-					transform = T.Compose(
-						[
-							T.RandomResize([800], max_size=1333),
-							T.ToTensor(),
-							T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-						]
-					)
-					self.cached_model = model
-					self.cached_transform = transform
-					self.cached_model_method = method
-
-				else:
-					self.Unprompted.log("Using cached GroundingDINO model.")
-					model = self.cached_model
-					transform = self.cached_transform
-
-
-				def sam_infer(boxes_filt):
-					for i in range(boxes_filt.size(0)):
-						boxes_filt[i] = boxes_filt[i] * torch.Tensor([W, H, W, H])
-						boxes_filt[i][:2] -= boxes_filt[i][2:] / 2
-						boxes_filt[i][2:] += boxes_filt[i][:2]
-
-					boxes_filt = boxes_filt.cpu()
-					transformed_boxes = predictor.transform.apply_boxes_torch(boxes_filt, img.shape[:2]).to(device)
-
-					masks, _, _ = predictor.predict_torch(
-						point_coords = None,
-						point_labels = None,
-						boxes = transformed_boxes.to(device),
-						multimask_output = False,
-					)
-					
-					preds = []
-					value = 0
-					mask_img = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
-					for idx, mask in enumerate(masks):
-						# mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
-						mask_img[mask.cpu().numpy()[0] >= 1] = np.array([255, 255, 255], dtype=np.uint8)
-						mask_img[mask.cpu().numpy()[0] < 1] = np.array([0, 0, 0], dtype=np.uint8)
-					# TODO: Figure out if we can take advantage of individual mask layers rather than stacking as composite
-					preds.append(mask_img) 
-
-					return(preds)
-
-				# run grounding dino model
-				img, _ = transform(image_pil,None)
-				boxes_filt, pred_phrases = get_grounding_output(model, img, prompts[0], box_thresh, text_thresh, device=device)
-				if (negative_prompts):
-					neg_boxes_filt, pred_phrases = get_grounding_output(model, img, negative_prompts[0], box_thresh, text_thresh, device=device)
-
-				# initialize SAM
-				predictor = SamPredictor(build_sam(checkpoint=sam_file).to(device))
-				img = numpy.array(image_pil) # cv2.imread(image_path)
-				img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-				predictor.set_image(img)
-
-				size = image_pil.size
-				H, W = size[0], size[1]
-
-				preds = sam_infer(boxes_filt)
-				if (negative_prompts): negative_preds = sam_infer(neg_boxes_filt)		
-
 			# clipseg method
 			else:
 				from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
@@ -469,7 +458,7 @@ class Shortcode():
 
 				# Download model weights if we don't have them yet
 				if not os.path.exists(d64_file):
-					print("Downloading clipseg model weights...")
+					self.Unprompted.log("Downloading clipseg model weights...")
 					self.Unprompted.download_file(d64_file,f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
 					self.Unprompted.download_file(d16_file,"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
 
@@ -512,7 +501,8 @@ class Shortcode():
 					
 					if (negative_prompts): negative_preds = model(img.repeat(negative_prompt_parts,1,1,1).to(device=device), negative_prompts)[0].cpu()
 
-			# All of the below logic applies to both clipseg and sam
+			# The below logic applies to all masking methods
+
 			if "image_mask" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["image_mask"] = None
 				
 			if (brush_mask_mode == "add" and self.Unprompted.shortcode_user_vars["image_mask"] is not None):
@@ -602,6 +592,8 @@ class Shortcode():
 				self.cached_model = -1
 				self.cached_model_method = ""
 				self.cached_predictor = -1
+				self.cached_preprocess = -1
+				self.cached_clip_model = -1
 
 			return final_img
 
@@ -640,22 +632,29 @@ class Shortcode():
 			return processed
 	
 	def ui(self,gr):
-		gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
-		gr.Radio(label="Masking tech method 🡢 method",choices=["clipseg","clip_surgery","grounded_sam"],value="clipseg",interactive=True)
-		gr.Checkbox(label="Show mask in output 🡢 show")
-		gr.Checkbox(label="Use clipseg legacy weights 🡢 legacy_weights")
-		gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
-		gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
-		gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
-		gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
-		gr.Number(label="Negative mask precision of selected area 🡢 neg_precision",value=100,interactive=True)
-		gr.Number(label="Negative mask padding radius in pixels 🡢 neg_padding",value=0,interactive=True)
-		gr.Number(label="Negative mask smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
-		gr.Textbox(label="Mask color, enables Inpaint Sketch mode 🡢 sketch_color",max_lines=1,placeholder="e.g. tan or 127,127,127")
-		gr.Number(label="Mask alpha, must be used in conjunction with mask color 🡢 sketch_alpha",value=0,interactive=True)
-		gr.Textbox(label="Stamp file 🡢 stamp",max_lines=1)
-		gr.Dropdown(label="Stamp method 🡢 stamp_method",choices=["stretch","center"],value="stretch",interactive=True)
-		gr.Number(label="Stamp X 🡢 stamp_x",value=0,interactive=True)
-		gr.Number(label="Stamp Y 🡢 stamp_y",value=0,interactive=True)
-		gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)
-		gr.Checkbox(label="Unload model after inference (for low memory devices) 🡢 unload_model")
+		with gr.Accordion("⚙️ General Settings", open=False):
+			gr.Radio(label="Masking tech method (clipseg is most accurate) 🡢 method",choices=["clipseg","clip_surgery","fastsam"],value="clipseg",interactive=True)
+			gr.Radio(label="Mask blend mode 🡢 mode",choices=["add","subtract","discard"],value="add",interactive=True)
+			gr.Textbox(label="Mask color, enables Inpaint Sketch mode 🡢 sketch_color",max_lines=1,placeholder="e.g. tan or 127,127,127")
+			gr.Number(label="Mask alpha, must be used in conjunction with mask color 🡢 sketch_alpha",value=0,interactive=True)
+			gr.Textbox(label="Save the mask size to the following variable 🡢 size_var",max_lines=1)
+			gr.Checkbox(label="Show mask in output 🡢 show")
+			gr.Checkbox(label="Debug mode (saves mask images to root WebUI folder) 🡢 debug")
+			gr.Checkbox(label="Unload model after inference (for low memory devices) 🡢 unload_model")
+			gr.Checkbox(label="Use clipseg legacy weights 🡢 legacy_weights")
+		with gr.Accordion("➕ Positive Mask", open=False):
+			gr.Number(label="Precision of selected area 🡢 precision",value=100,interactive=True)
+			gr.Number(label="Padding radius in pixels 🡢 padding",value=0,interactive=True)
+			gr.Number(label="Smoothing radius in pixels 🡢 smoothing",value=20,interactive=True)
+		with gr.Accordion("➖ Negative Mask",open=False):
+			gr.Textbox(label="Negative mask prompt 🡢 negative_mask",max_lines=1)
+			gr.Number(label="Negative mask precision of selected area 🡢 neg_precision",value=100,interactive=True)
+			gr.Number(label="Negative mask padding radius in pixels 🡢 neg_padding",value=0,interactive=True)
+			gr.Number(label="Negative mask smoothing radius in pixels 🡢 neg_smoothing",value=20,interactive=True)
+		with gr.Accordion("🖼️ Stamp", open=False):
+			gr.Textbox(label="Stamp file(s) 🡢 stamp",max_lines=1,placeholder="Looks for PNG file in unprompted/images/stamps OR absolute path")
+			gr.Dropdown(label="Stamp method 🡢 stamp_method",choices=["stretch","center"],value="stretch",interactive=True)
+			gr.Number(label="Stamp X 🡢 stamp_x",value=0,interactive=True)
+			gr.Number(label="Stamp Y 🡢 stamp_y",value=0,interactive=True)
+		
+		

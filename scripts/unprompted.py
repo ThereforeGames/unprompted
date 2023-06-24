@@ -32,6 +32,7 @@ WizardModes = IntEnum("WizardModes", ["TEMPLATES","SHORTCODES"], start=0)
 
 Unprompted.wizard_groups = [[{},{}] for _ in range(len(WizardModes))] # Two subdictionaries for txt2img and img2img
 Unprompted.wizard_dropdown = None
+Unprompted.main_p = None
 
 Unprompted.wizard_template_files = []
 Unprompted.wizard_template_names = []
@@ -176,6 +177,52 @@ def wizard_generate_shortcode(option,is_img2img,prepend="",append=""):
 		result += block_content + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + option + Unprompted.Config.syntax.tag_end
 
 	return (prepend+result+append)
+
+def wizard_generate_capture(include_inference,include_prompt,include_neg_prompt,include_model,include_template_block):
+	try:
+		if Unprompted.main_p:
+			result = f"<strong>RESULT:</strong> "
+			prompt = ""
+			neg_prompt = ""
+
+			if include_template_block:
+				result += f"{Unprompted.Config.syntax.tag_start}template name='Untitled'{Unprompted.Config.syntax.tag_end}Your template description goes here.{Unprompted.Config.syntax.tag_start}{Unprompted.Config.syntax.tag_close}template{Unprompted.Config.syntax.tag_end}"
+
+			if include_inference != "none" or include_model:
+				result += f"{Unprompted.Config.syntax.tag_start}sets"
+				if include_model: result += f" sd_model='{opts.data['sd_model_checkpoint']}'"
+
+			for att in dir(Unprompted.main_p):
+				if not att.startswith("__"):
+					att_val = getattr(Unprompted.main_p,att)
+					if att == "prompt":
+						if include_prompt=="postprocessed": prompt = att_val
+						else: prompt = Unprompted.original_prompt
+					elif att == "negative_prompt":
+						if include_neg_prompt=="postprocessed": neg_prompt = att_val
+						else: neg_prompt = Unprompted.original_negative_prompt
+					elif include_inference != "none":
+						if (isinstance(att_val,int) or isinstance(att_val,float) or isinstance(att_val,str)):
+							prefix = f" {att}="
+
+							if isinstance(att_val,str):
+								if (len(att_val) > 0 or include_inference=="verbose"):
+									result += f"{prefix}'{att_val}'"
+							else:
+								if isinstance(att_val,bool): att_val = int(att_val == True) # convert bool to 0 or 1
+								if att_val == 0 and include_inference != "verbose": continue
+								result += f"{prefix}{att_val}"
+
+			if include_inference != "none" or include_model: result += f"{Unprompted.Config.syntax.tag_end}"
+			if include_prompt != "none": result += prompt
+			if include_neg_prompt != "none" and len(neg_prompt) > 0: result += f"{Unprompted.Config.syntax.tag_start}set negative_prompt{Unprompted.Config.syntax.tag_end}{neg_prompt}{Unprompted.Config.syntax.tag_start}{Unprompted.Config.syntax.tag_close}set{Unprompted.Config.syntax.tag_end}"
+
+		else: result = "<strong>ERROR:</strong> Could not detect your inference settings. Try generating an image first."
+	except Exception as e:
+		Unprompted.log_error(e)
+		result = f"<strong>ERROR:</strong> {e}"
+	
+	return result
 
 def get_local_file_dir(filename=None):
 	unp_dir = os.path.basename(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -351,10 +398,21 @@ class Scripts(scripts.Script):
 								Unprompted.wizard_dropdown.change(fn=wizard_select_item,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img)],outputs=list(filtered_shortcodes.values()))
 								
 								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
+
+							with gr.Tab("Capture"):
+								gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and call it later using `[file]`, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
+								# wizard_capture_include_inference = gr.Checkbox(label="Include inference settings",value=True)
+								wizard_capture_include_inference = gr.Radio(label="Include inference settings:",choices=["none","simple","verbose"],value="simple",interactive=True)
+								wizard_capture_include_prompt = gr.Radio(label="Include prompt:",choices=["none","original","postprocessed"],value="original",interactive=True)
+								wizard_capture_include_neg_prompt = gr.Radio(label="Include negative prompt:",choices=["none","original","postprocessed"],value="original",interactive=True)
+								wizard_capture_include_model = gr.Checkbox(label="Include model",value=False)
+								wizard_capture_add_template_block = gr.Checkbox(label="Add [template] block",value=False)
+								wizard_capture_btn = gr.Button(value="Generate code for my last image")
 							
 							wizard_result = gr.HTML(label="wizard_result",value="",elem_id="unprompted_result")
 							wizard_shortcode_btn.click(fn=wizard_generate_shortcode,inputs=[Unprompted.wizard_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
 							wizard_template_btn.click(fn=wizard_generate_template,inputs=[templates_dropdown,gr.Variable(value=is_img2img),gr.Variable(value="<strong>RESULT:</strong> ")],outputs=wizard_result)
+							wizard_capture_btn.click(fn=wizard_generate_capture,inputs=[wizard_capture_include_inference,wizard_capture_include_prompt,wizard_capture_include_neg_prompt,wizard_capture_include_model, wizard_capture_add_template_block],outputs=wizard_result)
 
 					else: gr.HTML(label="wizard_debug",value="You have disabled the Wizard in your config.")
 
@@ -406,8 +464,10 @@ class Scripts(scripts.Script):
 		try:
 			import importlib
 			external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
-			external_code.update_cn_script_in_processing(Unprompted.p_copy, []) 
-		except: pass
+			external_code.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
+		except Exception as e:
+			Unprompted.log_error(e)
+			pass
 
 
 		if match_main_seed: 
@@ -425,9 +485,9 @@ class Scripts(scripts.Script):
 			return template.replace("*",string)
 
 		# Reset vars
-		original_prompt = p.all_prompts[0]
+		Unprompted.original_prompt = p.all_prompts[0]
 
-		# self.infotext_fields.append((None,original_prompt))
+		# self.infotext_fields.append((None,Unprompted.original_prompt))
 
 		# Process Wizard auto-includes
 		if Unprompted.Config.ui.wizard_enabled and self.allow_postprocess:
@@ -443,31 +503,31 @@ class Scripts(scripts.Script):
 					while hasattr(autoinclude_obj,"children"): autoinclude_obj = autoinclude_obj.children[-1]
 
 					if (autoinclude_obj.value):
-						if mode == WizardModes.SHORTCODES: original_prompt = wizard_generate_shortcode(key,is_img2img,"",original_prompt)
-						elif mode == WizardModes.TEMPLATES: original_prompt = wizard_generate_template(idx,is_img2img,"",original_prompt)
+						if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key,is_img2img,"",Unprompted.original_prompt)
+						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx,is_img2img,"",Unprompted.original_prompt)
 
-		original_negative_prompt = p.all_negative_prompts[0]
+		Unprompted.original_negative_prompt = p.all_negative_prompts[0]
 		Unprompted.shortcode_user_vars = {}
 
 		if Unprompted.Config.stable_diffusion.show_extra_generation_params:
 			p.extra_generation_params.update({
 				"Unprompted Enabled": True,
-				"Unprompted Prompt": original_prompt.replace("\"","'"), # Must use single quotes or output will include backslashes
-				"Unprompted Negative Prompt": original_negative_prompt.replace("\"","'"),
+				"Unprompted Prompt": Unprompted.original_prompt.replace("\"","'"), # Must use single quotes or output will include backslashes
+				"Unprompted Negative Prompt": Unprompted.original_negative_prompt.replace("\"","'"),
 				"Unprompted Seed": unprompted_seed
 			})
 
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
-		Unprompted.original_model = opts.sd_model_checkpoint
-		Unprompted.shortcode_user_vars["sd_model"] = opts.sd_model_checkpoint
+		Unprompted.original_model = opts.data['sd_model_checkpoint'] # opts.sd_model_checkpoint
+		Unprompted.shortcode_user_vars["sd_model"] = opts.data['sd_model_checkpoint'] # opts.sd_model_checkpoint 
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
 			if not att.startswith("__") and att != "sd_model":
 				Unprompted.shortcode_user_vars[att] = getattr(p,att)
-		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
-		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
+		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt,Unprompted.Config.templates.default))
+		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 		# Apply any updates to system vars
 		Unprompted.update_stable_diffusion_vars(p)
@@ -489,8 +549,8 @@ class Scripts(scripts.Script):
 				else:
 					Unprompted.shortcode_user_vars = {}
 					Unprompted.shortcode_user_vars["batch_index"] = i
-					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(original_prompt,Unprompted.Config.templates.default))
-					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else original_negative_prompt,Unprompted.Config.templates.default_negative))
+					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt,Unprompted.Config.templates.default))
+					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False)
 		# Keep the same prompt between runs

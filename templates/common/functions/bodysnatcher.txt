@@ -1,16 +1,20 @@
-[template name="Bodysnatcher v1.3.0"]
+[template name="Bodysnatcher v1.3.1"]
 ![Preview]([base_dir]/bodysnatcher.png)
-## ⚠️ Important info, please read carefully:
+<details open><summary>⚠️ Important info, please read carefully</summary>
 
 This template works best with multiple ControlNet units and/or an inpainting model.
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically. Restart the WebUI after making this change.
+
+</details>
 
 <details><summary>Recommended inference settings</summary>
 
 Use the img2img inpainting tab.
 
 Choose a model with strong knowledge of human anatomy, such as Deliberate or RealisticVision.
+
+Lowering your **Noise multiplier for img2img** in the WebUI settings (Stable Diffusion tab) may improve your results.
 
 - **Mask blur and mask padding:** 10
 - **Only masked padding:** 0
@@ -35,40 +39,47 @@ You can load units in any order. That said, I am listing them in order of import
 - **openpose / controlnet11Models_openpose**: Can help keep the swap coherent with certain postures or angles.
 
 </details>
- 
-
-Always bodysnatch responsibly.
+<br><br>
+Always bodysnatch responsibly.<br>
 [/template]
 
-[set prefix _new _label="Prefix" _info="For example, the visual medium"]photo of[/set]
-[set subject _new _label="New subject"]mona lisa[/set]
-[set simple_description _new _label="Simple Description" _info="These terms will apply to both the full image and the cropped face, 1-3 words are usually plenty"][/set]
-[set class _new _label="Class" _info="The search term that determines the inpainting mask"]woman[/set]
+[wizard_ui_accordion _label="⚙️ Basic Settings" _open]
+	[set prefix _new _label="Prefix" _info="For example, the visual medium"]photo of[/set]
+	[set subject _new _label="New subject"]mona lisa[/set]
+	[set simple_description _new _label="Simple Description" _info="These terms will apply to both the full image and the cropped face, 1-3 words are usually plenty"][/set]
+	[set class _new _label="Class" _info="The search term that determines the inpainting mask"]woman[/set]
+[/wizard_ui_accordion]
 
-[set background_mode _new _label="Background Mode" _ui="checkbox" _info="Inverts the class mask and disables the zoom_enhance step (note: you'll probably want to increase the mask_precision - try 150 precision to start)"]0[/set]
-
-[set keep_hands _new _label="Keep original hands" _ui="checkbox" _info="You don't really want Stable Diffusion to remake those hands, do you?"]1[/set]
-[set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
-
-[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/inference/*.*' _basename _hide_ext}"]img2img_general_v1[/set]
-[set body_controlnet_preset _new _info="Loads multiple ControlNet units, please make sure you have 'Allow other scripts to control this extension' enabled (note: the 'dev' preset is for internal testing)" _label="Body ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
-[set face_controlnet_preset _new _info="Loads a ControlNet unit for the face upscale step" _label="Face ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
-
-[wizard_ui_accordion _label="⚙️ Advanced Options"]
-	[set fix_bodypart _new _label="Fix a body part" _info="Note: currently not compatible with Background Mode"]face[/set]
-	[set color_correct_method _new _label="Color correct method" _ui="dropdown" _choices="none|hm|mvgd|mkl|hm-mvgd-hm|hm-mkl-hm"]hm-mkl-hm[/set]
-	[set color_correct_timing _new _label="Color correct timing" _info="Post may produce more accurate colors, but it tends to look a bit posterized" _ui="dropdown" _choices="pre|post"]pre[/set]
-	[set color_correct_strength _new _label="Color correct strength" _ui="slider" _minimum=1 _maximum=5]1[/set]
-	[set mask_method _new _label="Masking method" _ui="radio" _choices="clipseg|clip_surgery|grounded_sam"]clipseg[/set]
+[wizard_ui_accordion _label="🎭 Mask Settings"]
+	[set mask_method _new _label="Masking method" _ui="radio" _choices="clipseg|clip_surgery|fastsam"]clipseg[/set]
 	[set manual_mask_mode _new _label="Manual masking mode" _ui="radio" _choices="add|subtract|discard"]subtract[/set]
 	[set mask_precision _new _label="Mask precision"]75[/set]
 	[set stamp _new _label="Stamp" _info="Paste a temporary image on the init image for the purpose of masking (check unprompted/images/stamps for default stamps)"][/set]
-	[set zoom_enhance_controlnet_weight _new]0.5[/set]
-	[set zoom_enhance_denoising_max _new]0.45[/set]
-	[set zoom_enhance_base_cfg _new _ui="slider" _minimum="1" _maximum="30"]10[/set]
-	[set show_original _new _label="Show unenhanced image in output window" _ui="checkbox"]0[/set]
-	[set debug _new _label="Save debug images" _ui="checkbox"]0[/set]
+	[set background_mode _new _label="Background Mode" _ui="checkbox" _info="Inverts the class mask and disables the zoom_enhance step (note: you'll probably want to increase the mask_precision - try 150 precision to start)"]0[/set]
+	[set keep_hands _new _label="Keep original hands" _ui="checkbox" _info="You don't really want Stable Diffusion to remake those hands, do you?"]1[/set]
+	[set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
 [/wizard_ui_accordion]
+
+[wizard_ui_accordion _label="🔍 Zoom Enhance Settings"]
+	[set fix_bodypart _new _label="Fix a body part" _info="Note: currently not compatible with Background Mode"]face[/set]
+	[set zoom_enhance_denoising_max _new _label="Max denoising strength"]0.45[/set]
+	[set zoom_enhance_base_cfg _new _ui="slider" _minimum="1" _maximum="30" _label="Minimum CFG for upscaling step"]10[/set]
+	[set zoom_enhance_inherit_negative _new _ui="checkbox" _label="Inherit the negative prompt during upscaling step"]1[/set]
+	[set show_original _new _label="Show unenhanced image in output window" _ui="checkbox"]0[/set]
+	[set bypass_zoom_enhance _new _label="Bypass zoom_enhance" _ui="checkbox"]0[/set]
+[/wizard_ui_accordion]
+
+[wizard_ui_accordion _label="🎨 Color Correction Settings"]
+	[set color_correct_method _new _label="Color correct method" _ui="dropdown" _choices="none|hm|mvgd|mkl|hm-mvgd-hm|hm-mkl-hm"]hm-mkl-hm[/set]
+	[set color_correct_timing _new _label="Color correct timing" _info="Post may produce more accurate colors, but it tends to look a bit posterized" _ui="dropdown" _choices="pre|post"]pre[/set]
+	[set color_correct_strength _new _label="Color correct strength" _ui="slider" _minimum=1 _maximum=5 _info="Experimental, recommend leaving it at 1"]1[/set]
+[/wizard_ui_accordion]
+
+[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/inference/*.*' _basename _hide_ext}"]img2img_general_v1[/set]
+[set body_controlnet_preset _new _info="Loads multiple ControlNet units, please make sure you have 'Allow other scripts to control this extension' enabled (note: the 'dev' preset is for internal testing)" _label="Body ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
+[set face_controlnet_preset _new _info="Loads a ControlNet unit for the face upscale step (not recommended)" _label="Face ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
+
+[set debug _new _label="Debug Mode" _ui="checkbox"]0[/set]
 
 [sets neg_mask=""]
 [if "(keep_hands==1 and background_mode==0) or (keep_hands==0 and background_mode==1)"]
@@ -93,9 +104,9 @@ Always bodysnatch responsibly.
 		[invert_mask]
 	[/if]
 [/if]
-[if "background_mode==0 and batch_index==0"]
+[if "background_mode==0 and batch_index==0 and bypass_zoom_enhance==0"]
 	[after]
-		[zoom_enhance mask_method="{get mask_method}" color_correct_method="{get color_correct_method}" color_correct_timing="{get color_correct_timing}" color_correct_strength="{get color_correct_strength}" sharpen_amount=0.0 mode="subtract" mask="{get class} {get fix_bodypart}" replacement="{get prefix} {get subject} {get fix_bodypart} {get simple_description _before=' '}" cfg_scale_min="{get zoom_enhance_base_cfg}" denoising_max="{get zoom_enhance_denoising_max}" controlnet_preset="{get face_controlnet_preset}" debug="{get debug}" show_original="{get show_original}"]
+		[zoom_enhance mask_method="{get mask_method}" color_correct_method="{get color_correct_method}" color_correct_timing="{get color_correct_timing}" color_correct_strength="{get color_correct_strength}" sharpen_amount=0.0 mode="subtract" mask="{get class} {get fix_bodypart}" replacement="{get prefix} {get subject} {get fix_bodypart} {get simple_description _before=' '}" cfg_scale_min="{get zoom_enhance_base_cfg}" denoising_max="{get zoom_enhance_denoising_max}" controlnet_preset="{get face_controlnet_preset}" debug="{get debug}" inherit_negative="{get zoom_enhance_inherit_negative}" show_original="{get show_original}"]
 	[/after]
 [/if]
 [get prefix] [get subject][get simple_description _before=" "]

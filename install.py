@@ -1,5 +1,14 @@
-import launch, shutil, os, pkg_resources
+import os
 this_path = os.path.dirname(os.path.realpath(__file__))
+
+if os.path.isfile(f"{this_path}/config_user.json"):
+	import json
+	cfg_dict = json.load(open(f"{this_path}/config_user.json", "r", encoding="utf8"))
+	if "skip_requirements" in cfg_dict and cfg_dict["skip_requirements"]:
+		print("Unprompted - Skipping install.py check per skip_requirements flag")
+		quit()
+		
+import launch, shutil, pkg_resources
 
 def migrate_folder(old_dir,new_dir):
 	try:
@@ -36,6 +45,7 @@ with open(requirements) as file:
 		except Exception as e:
 			print(e)
 			print(f"(ERROR) Failed to install {package} dependency for Unprompted - {reason} functions may not work")
+			pass
 
 # (Legacy) Copy the ControlNet's cldm folder into venv to prevent the WebUI from crashing on startup if a ControlNet model was last active
 if not launch.is_installed("cldm"):
@@ -45,4 +55,5 @@ if not launch.is_installed("cldm"):
 		destination = shutil.copytree(f"{this_path}/lib_unprompted/stable_diffusion/controlnet/cldm", f"{this_path}/../../venv/Lib/site-packages/cldm")
 	except OSError as err:
 		print("Copy error: % s" % err)
+		pass
 

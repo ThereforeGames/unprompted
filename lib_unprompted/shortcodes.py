@@ -122,7 +122,14 @@ class AtomicShortcode(Shortcode):
 			msg = f"An exception was raised while rendering the "
 			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
 			raise ShortcodeRenderingError(msg) from ex
-
+	
+	def render_preprocess(self,context):
+		try:
+			return self.preprocess(self.token.keyword, self.pargs, self.kwargs, context)
+		except Exception as ex:
+			msg = f"An exception was raised while pre-processing the "
+			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
+			raise ShortcodeRenderingError(msg) from ex
 
 # A block-scoped shortcode is a shortcode with a closing tag.
 class BlockShortcode(Shortcode):
@@ -205,9 +212,9 @@ class Parser:
 					expecting.append(endword)
 					stack[-1].children.append(node)
 					if blocking_depth < 2: stack.append(node)
-					# stack[-1].children.append(Text(token.raw_text))
 				else:
-					node = AtomicShortcode(token, handler)
+					node = AtomicShortcode(token, handler, preprocessor)
+					if preprocessor: node.render_preprocess(context)
 					stack[-1].children.append(node)
 			elif token.keyword in self.endwords:
 				if len(expecting) == 0:

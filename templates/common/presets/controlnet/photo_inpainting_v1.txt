@@ -1,5 +1,6 @@
 [sets 
  cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_module=depth_midas cn_0_model=controlnet11Models_depth cn_0_weight=1.0 cn_0_control_mode=1
- cn_1_enabled=1 cn_1_pixel_perfect=1 cn_1_module=normal_midas cn_1_model=controlnet11Models_normal cn_1_weight=1.0 cn_1_control_mode=1
- cn_2_enabled=1 cn_2_pixel_perfect=1 cn_2_module=softedge_pidisafe cn_2_model=controlnet11Models_softedge cn_2_weight=1.0 cn_2_control_mode=1
+ cn_1_enabled=0 cn_1_pixel_perfect=1 cn_1_module=normal_midas cn_1_model=controlnet11Models_normal cn_1_weight=1.0 cn_1_control_mode=1
+ cn_2_enabled=1 cn_2_pixel_perfect=1 cn_2_module=reference_adain cn_2_weight=1.0 cn_2_control_mode=1
+ cn_3_enabled=1 cn_3_pixel_perfect=1 cn_3_module=lineart_anime_denoise cn_3_model=controlnet11Models_animeline cn_3_weight=1.0 cn_3_control_mode=1
  ]

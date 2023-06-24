@@ -6,9 +6,17 @@ If you encounter any confusing, incomplete, or out-of-date information here, ple
 
 ## ❔ Known Issues
 
-<details><summary>Compatibility with ControlNet and other extensions</summary>
+<details><summary>Compatibility with ControlNet</summary>
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically.
+
+</details>
+
+<details><summary>Compatibility with other extensions</summary>
+
+The following extension(s) are known to cause issues with Unprompted:
+
+- **stable-diffusion-webui-pixelization**: seems to break Unprompted when "Pixelization" is added as a postprocessing operation in the WebUI settings.
 
 </details>
 
@@ -242,6 +250,10 @@ If you wish to override the default settings, you should make another file at th
 
 Here are some of the settings you can modify:
 
+### skip_requirements (bool)
+
+Bypasses the startup requirements check (`install.py`) to minimize startup time.
+
 ### debug (bool)
 
 When `True`, you will see a lot more diagnostic information printed to the console during a run. You should use this when creating your own shortcode, template, or when filing a bug report.
@@ -315,7 +327,7 @@ Pressing **"Generate Shortcode"** will assemble a ready-to-use block of code tha
 
 Alternatively, you can enable `Auto-include this in prompt` which will add the shortcode to your prompts behind the scenes. This essentially lets you use Unprompted shortcodes as if they were standalone scripts. You can enable/disable this setting on a per-shortcode basis.
 
-The Wizard includes two distinct modes: Shortcodes and Templates.
+The Wizard includes three distinct modes: Shortcodes, Templates, and Capture.
 
 </details>
 
@@ -372,6 +384,20 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
 
 Supports the `[wizard_ui_accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
+
+</details>
+
+<details><summary>Capture Mode</summary>
+
+This mode offers a convenient way to produce the code for the last image you generated.
+
+It has a few settings that change how the code is formatted:
+
+- **Include inference settings:** Determines which inference options to show as a `[sets]` block. These are settings such as CFG Scale, batch count, etc. On `simple`, it will exclude variables with a value of 0 as well as empty strings. `Verbose` gives you everything.
+- **Include (negative) prompt:** Determines whether to show the prompt. On `original`, it will show the prompt with shortcodes intact, whereas `postprocessed` gives you the prompt after shortcodes have been executed.
+- **Include model:** adds the checkpoint name to the `[sets]` block.
+- **Add [template] block**: Prepends the result with a placeholder `[template]` block that makes your code compatible with the Wizard Templates tab.
+
 
 </details>
 
@@ -536,6 +562,23 @@ Supports the optional `confidence` argument, which is a float between 0 and 1 th
 ```
 ```
 RESULT: spelling is very difficult sometimes, okay!!!
+```
+
+</details>
+
+<details><summary>[bypass]</summary>
+
+Allows you to disable the execution of specific shortcodes for the remainder of the run. It is similar to `[override]`, but for shortcodes instead of variables. Particularly useful for debugging purposes.
+
+Provide the names of the shortcodes you wish to disable as pargs, separated by spaces.
+
+If you supply `_toggle`, the shortcode can re-enable shortcodes that were previously bypassed.
+
+```
+[bypass repeat chance][repeat 3]do not print me[/repeat][chance 100]skip this too[/chance]print me
+```
+```
+RESULT: print me
 ```
 
 </details>
@@ -1428,7 +1471,7 @@ The txt2img settings are determined by your user variables. In the following exa
 
 A port of [the script](https://github.com/ThereforeGames/txt2mask) by the same name, `[txt2mask]` allows you to create a region for inpainting based only on the text content (as opposed to the brush tool.) This shortcode only works in the img2img tab of the A1111 WebUI.
 
-Supports the `method` argument which determines the technology to use for masking. Defaults to `clipseg`. Can be changed to `sam` which will utilize [Segment Anything](https://segment-anything.com/) instead.
+Supports the `method` argument which determines the technology to use for masking. Defaults to `clipseg`. Can be changed to `fastsam` or `clip_surgery`, both of which utilize [Segment Anything](https://segment-anything.com/) instead. Although SAM technology is newer, my testing has shown that `clipseg` is still the most accurate method by far.
 
 Supports the `mode` argument which determines how the text mask will behave alongside a brush mask:
 - `add` will overlay the two masks. This is the default value.
@@ -1496,6 +1539,8 @@ Supports the `replacement` keyword argument which is the prompt that will be use
 Supports the `negative_replacement` keyword argument, which is the negative prompt that will be used on the mask region via `[img2img]`. Defaults to an empty string.
 
 Both `replacement` and `negative_replacement` support multiple, delimited search terms via `Unprompted.config.syntax.delimiter`.
+
+Supports the `inherit_negative` parg, which copies your main negative prompt to the `[img2img]` replacement task. If used in conjunction with `negative_replacement`, the replacement negative becomes: `main_negative_prompt negative_replacement_value`. If you have multiple, delimited `negative_replacement` values, your main negative prompt will be preprended to all of them.
 
 Supports the `background_mode` parg which will invert the class mask and disable the zoom_enhance step. In other words, you can use this when you want to replace the background instead of the subject. When using this mode, you will likely need to increase `mask_precision` to ~150 or so.
 

@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.2.0"
+		self.VERSION = "9.3.0"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -60,9 +60,17 @@ class Unprompted:
 			self.shortcode_objects[shortcode_name] = self.shortcode_modules[shortcode_name].Shortcode(self)
 
 			if (hasattr(self.shortcode_objects[shortcode_name],"run_atomic")):
-				@shortcodes.register(shortcode_name)
-				def handler(keyword, pargs, kwargs, context):
-					return(self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
+				if hasattr(self.shortcode_objects[shortcode_name],"run_preprocess"):
+					def preprocess(keyword, pargs, kwargs, context):
+						return(self.shortcode_objects[f"{keyword}"].run_preprocess(pargs, kwargs, context))
+					@shortcodes.register(shortcode_name, None, preprocess)
+					def handler(keyword, pargs, kwargs, context):
+						return(self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))					
+				# Normal atomic
+				else:
+					@shortcodes.register(shortcode_name)
+					def handler(keyword, pargs, kwargs, context):
+						return(self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 			else:
 				# Allow shortcode to run before inner content
 				if hasattr(self.shortcode_objects[shortcode_name],"preprocess_block"):
