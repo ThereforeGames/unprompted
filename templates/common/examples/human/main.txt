@@ -8,4 +8,4 @@
 
 [# Check out all these other cool variables we can set!]
 [set negative_prompt][file ./negative][/set]
-[if medium="photo"]<set restore_faces>1</set>[/if]
+[if medium="photo"][set restore_faces]1[/set][/if]
