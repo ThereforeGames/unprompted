@@ -20,9 +20,9 @@ The following extension(s) are known to cause issues with Unprompted:
 
 </details>
 
-<details><summary>Xformers v0.0.18 instability</summary>
+<details><summary>WebUI randomly locking up</summary>
 
-I have observed multiple glitches while generating images with Xformers v0.0.18. I am not certain whether this has to do with Unprompted specifically, but would advise downgrading to v0.0.17 until further notice.
+Gradio v3.2.x reportedly causes some performance issues due to websocket functionality. Try adding `--no-gradio-queue` to your launch options as a possible workaround.
 
 </details>
 

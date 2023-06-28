@@ -211,6 +211,7 @@ def wizard_generate_capture(include_inference,include_prompt,include_neg_prompt,
 							else:
 								if isinstance(att_val,bool): att_val = int(att_val == True) # convert bool to 0 or 1
 								if att_val == 0 and include_inference != "verbose": continue
+								elif (att_val == float("inf") or att_val == float("-inf")) and include_inference != "verbose": continue
 								result += f"{prefix}{att_val}"
 
 			if include_inference != "none" or include_model: result += f"{Unprompted.Config.syntax.tag_end}"
@@ -446,7 +447,7 @@ class Scripts(scripts.Script):
 				with gr.Tab("📘 Manual"):
 					manual = gr.Markdown(value=get_markdown("docs/MANUAL.md"))
 
-				with gr.Tab("🎓 Starter Guide"):
+				with gr.Tab("🎓 Guides"):
 					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
 				

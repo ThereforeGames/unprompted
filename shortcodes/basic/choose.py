@@ -9,8 +9,6 @@ class Shortcode():
 	def preprocess_block(self,pargs,kwargs,context): return True
 
 	def run_block(self, pargs, kwargs, context, content):
-		# Allow inner [file] to return linebreaks
-
 		# import copy
 		temp_syntax_after = copy.copy(self.Unprompted.Config.syntax.sanitize_after)
 		if "_sanitize" in kwargs:
@@ -21,7 +19,11 @@ class Shortcode():
 		else:
 			setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",self.Unprompted.Config.syntax.delimiter)
 
-		content = self.Unprompted.parse_advanced(content,context)
+		# Allow inner [file] to return linebreaks
+		content = self.Unprompted.shortcode_parser.parse(content,context)
+
+		# content = self.Unprompted.parse_advanced(content,context)
+
 
 		final_string = ""
 		parts = content.replace(getattr(self.Unprompted.Config.syntax.sanitize_before,"\n","\\n"),self.Unprompted.Config.syntax.delimiter).split(self.Unprompted.Config.syntax.delimiter)

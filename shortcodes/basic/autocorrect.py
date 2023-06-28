@@ -4,9 +4,12 @@ class Shortcode():
 		self.description = "Attempts to correct the spelling of content."
 	def run_block(self, pargs, kwargs, context, content):
 		from pattern.en import suggest
-		from nltk import word_tokenize
+		from nltk import download, word_tokenize
 		from nltk.tokenize.treebank import TreebankWordDetokenizer
 
+		# requirement for word_tokenize
+		download("punkt")
+		
 		confidence = float(kwargs["confidence"]) if "confidence" in kwargs else 0.85
 		final_words = word_tokenize(content) # content.split()
 		

@@ -465,32 +465,37 @@ class Shortcode():
 		return ""
 
 	def ui(self,gr):
-		gr.Checkbox(label="Include original, unenhanced image in output window? 🡢 show_original")
-		gr.Text(label="Mask to find 🡢 mask",value="face")
-		gr.Text(label="Replacement 🡢 replacement",value="face")
-		gr.Text(label="Negative mask 🡢 negative_mask",value="")
-		gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
-		gr.Checkbox(label="Inherit your negative prompt for replacement 🡢 inherit_negative")
-		gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
-		gr.Checkbox(label="Save debug images to WebUI folder 🡢 debug")
-		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")
-		with gr.Accordion("⚙️ Advanced Options", open=False):
+		
+		with gr.Accordion("💬 Prompt Settings", open=True):
+			gr.Text(label="Mask to find 🡢 mask",value="face")
+			gr.Text(label="Replacement 🡢 replacement",value="face")
+			gr.Text(label="Negative mask 🡢 negative_mask",value="")
+			gr.Text(label="Negative replacement 🡢 negative_replacement",value="")
+			gr.Checkbox(label="Inherit your negative prompt for replacement 🡢 inherit_negative")
+		with gr.Accordion("🎭 Mask Settings",open=False):
+			gr.Radio(label="Masking tech method 🡢 mask_method",choices=["clipseg","clip_surgery","fastsam"],value="clipseg",interactive=True) # Passed to txt2mask as "method"
+			gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method",value="left-to-right",choices=["left-to-right","right-to-left","top-to-bottom","bottom-to-top","big-to-small","small-to-big","unsorted"])
+			gr.Number(label="Minimum mask size in pixels 🡢 min_area",value=50,interactive=True)
+			gr.Slider(label="Maximum mask size area 🡢 mask_size_max",value=0.5,maximum=1.0,minimum=0.0,interactive=True,step=0.01,info="Example: 0.6 = 60% of the canvas")
+			gr.Slider(label="Blur edges size 🡢 blur_size",value=0.03,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Number(label="Contour padding in pixels 🡢 contour_padding",value=0,interactive=True)
+		with gr.Accordion("🖥️ Resolution Settings", open=False):
 			gr.Dropdown(label="Upscale method 🡢 upscale_method",value="Nearest Neighbor",choices=list(self.resample_methods.keys()),interactive=True)
 			gr.Dropdown(label="Downscale method 🡢 downscale_method",value="Lanczos",choices=list(self.resample_methods.keys()),interactive=True)
-			gr.Slider(label="Blur edges size 🡢 blur_size",value=0.03,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=7.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
-			gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-			gr.Slider(label="Maximum mask size (if a bigger mask is found, it will bypass the shortcode) 🡢 mask_size_max",value=0.5,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
-			gr.Radio(label="Masking tech method 🡢 mask_method",choices=["clipseg","clip_surgery","grounded_sam"],value="clipseg",interactive=True) # Passed to txt2mask as "method"
 			gr.Number(label="Sharpen amount 🡢 sharpen_amount",value=1.0,interactive=True)
-			gr.Dropdown(label="Color correct method 🡢 color_correct_method",choices=["hm","mvgd","mkl","hm-mvgd-hm","hm-mkl-hms"],value="none",interactive=True)
-			gr.Radio(label="Color correct timing 🡢 color_correct_timing",choices=["pre","post"],value="pre",interactive=True)
-			gr.Slider(label="Color correct strength 🡢 color_correct_strength",value=1.0,maximum=5.0,minimum=1.0,interactive=True,step=1.0)
-			gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
-			gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
-			gr.Number(label="Mask minimum number of pixels 🡢 min_area",value=50,interactive=True)
-			gr.Number(label="Contour padding in pixels 🡢 contour_padding",value=0,interactive=True)
 			gr.Number(label="Upscale width 🡢 upscale_width",value=512,interactive=True)
 			gr.Number(label="Upscale height 🡢 upscale_height",value=512,interactive=True)
 			gr.Number(label="Hires size max 🡢 hires_size_max",value=1024,interactive=True)
 			gr.Checkbox(label="Bypass adaptive hires 🡢 bypass_adaptive_hires")
+		with gr.Accordion("🎨 Inference Settings",open=False):
+			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min",value=7.0,maximum=15.0,minimum=0.0,interactive=True,step=0.5)
+			gr.Slider(label="Maximum denoising strength 🡢 denoising_max",value=0.65,maximum=1.0,minimum=0.0,interactive=True,step=0.01)
+			gr.Text(label="Force CFG scale to this value 🡢 cfg_scale")
+			gr.Text(label="Force denoising strength to this value 🡢 denoising_strength")
+			gr.Dropdown(label="Color correct method 🡢 color_correct_method",choices=["hm","mvgd","mkl","hm-mvgd-hm","hm-mkl-hms"],value="none",interactive=True)
+			gr.Radio(label="Color correct timing 🡢 color_correct_timing",choices=["pre","post"],value="pre",interactive=True)
+			gr.Slider(label="Color correct strength 🡢 color_correct_strength",value=1.0,maximum=5.0,minimum=1.0,interactive=True,step=1.0,info="Experimental, probably best to leave it at 1")
+			
+		gr.Checkbox(label="Include original, unenhanced image in output window? 🡢 show_original")
+		gr.Checkbox(label="Save debug images to WebUI folder 🡢 debug")
+		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")

@@ -1,4 +1,4 @@
-# Starter Guide
+<details><summary>Getting Started</summary>
 
 Your first Unprompted template. It's a big step, I know. You feeling nervous? A sense of tremendous pressure maybe? Don't worry, it's not that hard to set this thing up.
 
@@ -166,5 +166,89 @@ We have only scratched the surface here - when you're ready to do a deeper dive,
 [Unprompted Manual](MANUAL.md)
 
 Good luck!
+
+</details>
+
+</details>
+
+<details><summary>Setting up Replacement Terms</summary>
+
+Do you regularly use LORA files or other embeddings in your Stable Diffusion prompts? If so, you probably know that it can be a challenge to keep track of all the different filenames, trigger words, and optimal weights to use in your prompts.
+
+You can solve this by setting up replacement terms with Unprompted.
+
+Let's say you have the following prompt with a couple LORA tags:
+
+```
+an amazing illustration of pepe_frog<lora:pepeFrog_v20:0.8> bloodstainai<lora:bloodstainedVector_v10:0.75>
+```
+
+You can use the `[replace]` shortcode to perform find-and-replace operations on the inner content. So if we specify `[replace red=blue]`, then all instances of "red" will be swapped to "blue."
+
+Here's where it gets interesting: **we can load our replacement strings from external files.**
+
+## Dictionary setup
+
+In your `unprompted` folder, create a subdirectory called `user` and make a file called `replacements.json` inside of that (i.e. `unprompted/user/replacements.json`).
+
+Open `replacements.json` in your text editor of choice.
+
+Let's write our new dictionary with "from":"to" replacement pairings:
+
+```
+{
+	"from something":"to something else"
+}
+```
+
+In place of `from something`, we want to insert an easy-to-remember shorthand for the complicated LORA tag.
+
+Looking at the example prompt, we'll use `pepe the frog` for the first tag. Here is our updated dictionary:
+
+```
+{
+	"pepe the frog":"pepe_frog<lora:pepeFrog_v20:0.8>"
+}
+```
+
+Now, let's add a comma and a linebreak for the next entry.
+
+We don't want to use `bloodstained` as our shorthand because it's too generic - sometimes you may want to include "bloodstained" in your prompts without invoking the LORA embedding. So we'll use `in the style of bloodstained` instead. We can also add an **alternative replacement** such as `bloodstained style` with a vertical pipe delimiter.
+
+Here is our dictionary with both entries:
+
+```
+{
+	"pepe the frog":"pepe_frog<lora:pepeFrog_v20:0.8>",
+	"in the style of bloodstained|bloodstained style":"bloodstainai<lora:bloodstainedVector_v10:0.75>"
+}
+```
+
+Save the file. To use it in your prompts, you must set it to the `_load` value of your `[replace]` block as shown below:
+
+```
+[replace _load="user/replacements.json"]an amazing illustration of pepe the frog in the style of bloodstained[/replace]
+```
+
+And you're done!
+
+## How to automatically include [replace] in your prompts
+
+If you're happy with your dictionary, you probably don't want to manually write `[replace]` all the time. Luckily, you don't have to.
+
+Create or open a file called `config_user.json` in the root of `unprompted`.
+
+Add an entry called `templates` as shown below:
+
+```
+{
+	"templates":
+	{
+		"default":"[replace _load='user/replace.json']*[/replace]"
+	}
+}
+```
+
+The asterisk wildcard represents any prompt. Restart the WebUI and you're all set!
 
 </details>

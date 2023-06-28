@@ -3,7 +3,27 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.3.0 - 24 June 2023</summary>
+<details open><summary>9.3.1 - 29 June 2023</summary>
+
+### Added
+- New guide: "Setting up Replacement Terms"
+
+### Changed
+- `[zoom_enhance]`: Improved Wizard GUI
+- Moved older changelog entries into their own accordion menu
+- Wizard Capture `simple` inference settings no longer capture inf values
+- Tested compatibility with WebUI 1.4.0 and updated compatibility blurb as such
+
+### Fixed
+- The `autocast()` function no longer crashes when given infinity
+- `[choose]`: Fixed a crash related to using secondary shortcode arguments in the content
+- `[if]`: Fixed `context` value
+- `[autocorrect]`: Fixed missing `punkt` dependency download
+- Merged [#159 by bsweezy](https://github.com/ThereforeGames/unprompted/pull/159): Fix restore_faces brackets in example template
+
+</details>
+
+<details><summary>9.3.0 - 24 June 2023</summary>
 
 ### Added
 - New shortcode `[bypass]`: allows you to bypass specific shortcodes, useful for debugging
@@ -26,7 +46,6 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 ### Removed
 - `[txt2mask]`: mask method `grounded_sam` has been removed due to inferior results compared to `clip_surgery` and `fastsam`, all of which are based on similar technology
-
 
 </details>
 
@@ -145,6 +164,8 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 </details>
 
+<br>
+<details><summary>👴🏼 Older Versions</summary>
 <details><summary>8.3.1 - 22 April 2023</summary>
 
 ### About
@@ -902,4 +923,5 @@ The new features in this release are still under development and may or may not 
 
 ### Added
 - Initial release
+</details>
 </details>

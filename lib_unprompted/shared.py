@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.3.0"
+		self.VERSION = "9.3.1"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -242,7 +242,8 @@ class Unprompted:
 	def autocast(self,var):
 		"""Converts a variable between string, int, and float depending on how it's formatted"""
 		original_var = var
-		if (self.is_float(var)):
+		if original_var == "inf" or original_var == "-inf": return(original_var)
+		elif (self.is_float(var)):
 			var = float(var)
 			if int(var) == var and "." not in str(original_var): var = int(var)
 		elif (self.is_int(var)): var = int(var)

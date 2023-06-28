@@ -47,7 +47,7 @@ class Shortcode():
 		if ((is_true and not _not) or (_not and not is_true)):
 			self.Unprompted.shortcode_objects["else"].do_else = False
 			# return(self.Unprompted.parse_alt_tags(content,context))
-			return(self.Unprompted.process_string(content,"after")) # self.Unprompted.parse_alt_tags(content,context)
+			return(self.Unprompted.process_string(content,context)) # self.Unprompted.parse_alt_tags(content,context)
 		else:
 			self.Unprompted.shortcode_objects["else"].do_else = True
 			return ""
