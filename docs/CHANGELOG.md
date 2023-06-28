@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.3.1 - 29 June 2023</summary>
+<details open><summary>9.3.1 - 28 June 2023</summary>
 
 ### Added
 - New guide: "Setting up Replacement Terms"
