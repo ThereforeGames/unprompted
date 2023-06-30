@@ -24,19 +24,20 @@ class Shortcode():
 		from matplotlib import pyplot as plt
 		import cv2
 		import numpy
-		import gc
+		# import gc
 		from modules.images import flatten
 		from modules.shared import opts
 		from torchvision.transforms.functional import pil_to_tensor, to_pil_image
 
-		gc.collect()
+		# gc.collect()
 
 		if "txt2mask_init_image" in kwargs:
 			self.init_image = kwargs["txt2mask_init_image"].copy()
 		elif "init_images" not in self.Unprompted.shortcode_user_vars:
-			self.Unprompted.log("No init_images found...")
+			self.Unprompted.log("No init_images found...",context="ERROR")
 			return
-		else: self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0].copy()
+		else:
+			self.init_image = self.Unprompted.shortcode_user_vars["init_images"][0].copy()
 
 		method = self.Unprompted.parse_advanced(kwargs["method"],context) if "method" in kwargs else "clipseg"
 
@@ -579,14 +580,15 @@ class Shortcode():
 				# return image_pil
 
 			else: 
-				self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
+				if ("mode" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mode"] != 5): # 5 =  batch processing
+					self.Unprompted.shortcode_user_vars["mode"] = 4 # "mask upload" mode to avoid unnecessary processing
 				if ("mask_blur" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
 					from PIL import ImageFilter
 					blur = ImageFilter.GaussianBlur(self.Unprompted.shortcode_user_vars["mask_blur"])
 					final_img = final_img.filter(blur)
 					self.Unprompted.shortcode_user_vars["mask_blur"] = 0
 
-
+			# Free up memory
 			if "unload_model" in pargs:
 				self.model = -1
 				self.cached_model = -1
@@ -602,16 +604,29 @@ class Shortcode():
 		
 		if "return_image" in pargs: return(self.image_mask)
 		
-		self.Unprompted.shortcode_user_vars["mode"] = max(4,self.Unprompted.shortcode_user_vars["mode"])
+		if "mode" in self.Unprompted.shortcode_user_vars:
+			self.Unprompted.shortcode_user_vars["mode"] = max(5,self.Unprompted.shortcode_user_vars["mode"])
 		self.Unprompted.shortcode_user_vars["image_mask"] =self.image_mask
-		self.Unprompted.shortcode_user_vars["mask"]=self.image_mask
+
+		# Copy code from modules/processing.py, necessary for batch processing
+		if "mask" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mask"] is not None:
+			self.Unprompted.log("Detected batch tab tensor mask, attempting to update it...",context="WARNING")
+			latmask = self.image_mask.convert('RGB').resize((self.Unprompted.shortcode_user_vars["init_latent"].shape[3], self.Unprompted.shortcode_user_vars["init_latent"].shape[2]))
+			latmask = numpy.moveaxis(numpy.array(latmask, dtype=numpy.float32), 2, 0) / 255
+			latmask = latmask[0]
+			latmask = numpy.around(latmask)
+			latmask = numpy.tile(latmask[None], (4, 1, 1))
+			self.Unprompted.shortcode_user_vars["mask"]=torch.asarray(1.0 - latmask).to(device).type(self.Unprompted.main_p.sd_model.dtype)
+			self.Unprompted.shortcode_user_vars["nmask"] = torch.asarray(latmask).to(device).type(self.Unprompted.main_p.sd_model.dtype)
+
+		# self.Unprompted.shortcode_user_vars["mmask"]=self.Unprompted.shortcode_user_vars["mask"]
 		self.Unprompted.shortcode_user_vars["mask_for_overlay"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["latent_mask"] = None # fixes inpainting full resolution
 		arr = {}
 		arr["image"] = self.init_image
 		arr["mask"] = self.image_mask
 		self.Unprompted.shortcode_user_vars["init_img_with_mask"] = arr
-		self.Unprompted.shortcode_user_vars["init_mask"] = self.image_mask
+		self.Unprompted.shortcode_user_vars["init_mask"] = self.image_mask # TODO: Not sure if used anymore
 
 		if "save" in kwargs: self.image_mask.save(f"{self.Unprompted.parse_advanced(kwargs['save'],context)}.png")
 
@@ -622,7 +637,7 @@ class Shortcode():
 		from torchvision.utils import draw_segmentation_masks
 		
 		if self.image_mask and self.show:
-			if self.Unprompted.shortcode_user_vars["mode"] == 4: processed.images.append(self.image_mask)
+			if "mode" not in self.Unprompted.shortcode_user_vars or self.Unprompted.shortcode_user_vars["mode"] >= 4: processed.images.append(self.image_mask)
 			else: processed.images.append(self.Unprompted.shortcode_user_vars["colorized_mask"])
 			
 			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(self.Unprompted.shortcode_user_vars["init_images"][0]), pil_to_tensor(self.image_mask.convert("L")) > 0)

@@ -12,7 +12,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.3.1"
+		self.VERSION = "9.4.0"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games",False,"SETUP")
 		self.log("Initializing Unprompted object...",False,"SETUP")
@@ -293,7 +293,7 @@ class Unprompted:
 	def update_controlnet_var(self,this_p,att):
 		try:
 			att_split = att.split("_") # e.g. controlnet_0_enabled
-			if len(att_split) >= 3:
+			if len(att_split) >= 3 and any(chr.isdigit() for chr in att): # Make sure we have at least 2 underscores and at least one number
 				self.log(f"Setting ControlNet value: {att}")
 				import importlib
 				cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
@@ -307,7 +307,7 @@ class Unprompted:
 				setattr(all_units[int(att_split[1])],"_".join(att_split[2:]),this_val)
 				cnet.update_cn_script_in_processing(this_p, all_units)
 		except Exception as e:
-			self.log(f"Could not set ControlNet value: {e}",context="ERROR")
+			self.log(f"Could not set ControlNet value ({att}): {e}",context="ERROR")
 	
 	def update_stable_diffusion_vars(self,this_p):
 		from modules import sd_models

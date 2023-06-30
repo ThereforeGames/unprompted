@@ -653,6 +653,8 @@ If you skip a weight value--e.g. `3|Apple|Strawberry`--then the following option
 
 The weight value dictates the number of times that an option is added to the master list of choices, which is then shuffled and picked from at random. So, if your content is `2|Blue|3|Red|Green` the master list becomes `Blue,Blue,Red,Red,Red,Green`.
 
+Supports the `_raw` parg, which prevents the execution of inner shortcodes except the one that is selected by `[choose]`.
+
 ```
 [choose]red|yellow|blue|green[/choose]
 ```
@@ -1267,7 +1269,9 @@ Photo of a cat
 
 Automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image.
 
-Stable Diffuion generates images in sizes divisible by 64 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
+Stable Diffuion generates images in sizes divisible by 8 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
+
+Supports the `unit` shortcode which lets you specify the resolution multiplier. Must be divisible by 8. Defaults to 64.
 
 Supports `target_size` which is the minimum possible size of either dimension. Defaults to 512.
 
@@ -1531,6 +1535,8 @@ Upscales a selected portion of an image via `[img2img]` and `[txt2mask]`, then p
 Greatly improves low-resolution details like faces and hands. It is significantly faster than Hires Fix and more flexible than the "Restore Faces" option.
 
 It must be used within an `[after]` block.
+
+Supports the `_alt` parg which engages alternate processing. May help those who are having trouble with the shortcode, but is perhaps not fully compatible with ControlNet.
 
 Supports the `mask` keyword argument which is a region to search for within your image. Defaults to `face`. Note that if multiple non-contiguous regions are found, they will be processed independently.
 

@@ -20,9 +20,8 @@ class Shortcode():
 			setattr(self.Unprompted.Config.syntax.sanitize_after,"\\n",self.Unprompted.Config.syntax.delimiter)
 
 		# Allow inner [file] to return linebreaks
-		content = self.Unprompted.shortcode_parser.parse(content,context)
-
-		# content = self.Unprompted.parse_advanced(content,context)
+		if "_raw" not in pargs:
+			content = self.Unprompted.shortcode_parser.parse(content,context)
 
 
 		final_string = ""
@@ -79,10 +78,11 @@ class Shortcode():
 		# Reset to original value
 		self.Unprompted.Config.syntax.sanitize_after = copy.copy(temp_syntax_after)
 
-		return final_string
+		return self.Unprompted.parse_alt_tags(final_string,context)
 
 	def ui(self,gr):
 		gr.Number(label="Number of times to choose 🡢 int",value=1,interactive=True)
 		gr.Textbox(label="String delimiter when returning more than one choice 🡢 _sep",max_lines=1,placeholder=", ")
 		gr.Checkbox(label="Custom weight per option 🡢 _weighted")
+		gr.Checkbox(label="Do not process inner shortcodes except the selected one 🡢 _raw")
 		gr.Number(label="Override random nature of shortcode with predetermined outcome 🡢 _case",value=-1,interactive=True)

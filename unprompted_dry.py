@@ -22,4 +22,5 @@ while True:
 	try:
 		command = input("(INPUT) Unprompted string:")
 		do_unprompted(command)
-	except ValueError: print("ValueError occurred.")
+	except Exception as e:
+		Unprompted.log_error(e,"Exception occurred.")

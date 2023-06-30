@@ -1,8 +1,7 @@
 @echo off
 echo (NOTICE) Make a copy of this file and edit the call statements to match your environment!
 
-call T:/programs/anaconda3/Scripts/activate.bat
-call conda activate a1111_310
+call T:/code/python/automatic-stable-diffusion-webui/venv/Scripts/activate
 
 python unprompted_dry.py
 

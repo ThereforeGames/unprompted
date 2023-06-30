@@ -352,12 +352,7 @@ class Shortcode():
 
 					# run img2img now to improve face
 					try:
-						if is_img2img:
-							#print(self.Unprompted.p_copy.all_prompts)
-							# temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
-							# self.Unprompted.p_copy.scripts.alwayson_scripts.clear()
-							# Remove Unprompted from the copied object
-
+						if is_img2img and "_alt" not in pargs:
 							temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
 							i = 0
 							while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
@@ -373,10 +368,9 @@ class Shortcode():
 
 							# self.Unprompted.p_copy.scripts.alwayson_scripts.insert(unp_idx,temp_script)
 							self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
-
-							self.Unprompted.log(self.Unprompted.p_copy.scripts.alwayson_scripts)
 						else:
 							# workaround for txt2img, not sure if compatible with controlnet
+							self.Unprompted.log("Using alternate zoom_enhance processing - may not be compatible with ControlNet",context="WARNING")
 							for att in dir(self.Unprompted.p_copy):
 								if not att.startswith("__") and att != "sd_model":
 									self.Unprompted.shortcode_user_vars[att] = getattr(self.Unprompted.p_copy,att)							
@@ -499,3 +493,4 @@ class Shortcode():
 		gr.Checkbox(label="Include original, unenhanced image in output window? 🡢 show_original")
 		gr.Checkbox(label="Save debug images to WebUI folder 🡢 debug")
 		gr.Checkbox(label="Unload txt2mask model after inference (for low memory devices) 🡢 unload_model")
+		gr.Checkbox(label="Shortcode not working? Try alternate processing 🡢 _alt")

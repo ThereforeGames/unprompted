@@ -32,7 +32,7 @@ class Shortcode():
 		init_img_with_mask = self.Unprompted.shortcode_user_vars["init_img_with_mask"] if "init_img_with_mask" in self.Unprompted.shortcode_user_vars else None
 
 		for att in self.Unprompted.shortcode_user_vars:
-			if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(att,self.Unprompted.main_p)
+			if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(self.Unprompted.main_p,att)
 
 		try:
 			img2img_result = modules.img2img.img2img(

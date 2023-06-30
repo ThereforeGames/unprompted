@@ -33,6 +33,8 @@ WizardModes = IntEnum("WizardModes", ["TEMPLATES","SHORTCODES"], start=0)
 Unprompted.wizard_groups = [[{},{}] for _ in range(len(WizardModes))] # Two subdictionaries for txt2img and img2img
 Unprompted.wizard_dropdown = None
 Unprompted.main_p = None
+Unprompted.original_prompt = None
+Unprompted.original_negative_prompt = ""
 
 Unprompted.wizard_template_files = []
 Unprompted.wizard_template_names = []
@@ -456,20 +458,21 @@ class Scripts(scripts.Script):
 	def process(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args):
 		if not is_enabled:
 			return p
-
+		
 		# test compatibility with controlnet
 		import copy
 		Unprompted.main_p = p
 		Unprompted.p_copy = copy.copy(p)
 		# Update the controlnet script args with a list of 0 units
+		# TODO: Check if CN is installed and enabled
 		try:
 			import importlib
 			external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
 			external_code.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
 		except Exception as e:
-			Unprompted.log_error(e)
+			# Unprompted.log_error(e)
+			Unprompted.log("Could not communicate with ControlNet; proceeding without it.",context="WARNING")
 			pass
-
 
 		if match_main_seed: 
 			if p.seed == -1:
@@ -486,7 +489,14 @@ class Scripts(scripts.Script):
 			return template.replace("*",string)
 
 		# Reset vars
-		Unprompted.original_prompt = p.all_prompts[0]
+		if hasattr(p,"unprompted_original_prompt"):
+			Unprompted.log(f"Experimental: reset to initial prompt for batch processing ({Unprompted.original_prompt})",context="WARNING")
+			p.all_prompts[0] = Unprompted.original_prompt
+			p.all_negative_prompts[0] = Unprompted.original_negative_prompt
+		else:
+			Unprompted.original_prompt = p.all_prompts[0]
+			# This var is necessary for batch processing
+			p.unprompted_original_prompt = Unprompted.original_prompt
 
 		# self.infotext_fields.append((None,Unprompted.original_prompt))
 
@@ -583,4 +593,4 @@ class Scripts(scripts.Script):
 
 		self.allow_postprocess = True
 
-		return processed # Checking to see if this resolves issue with receiving final image on some devices
+		return processed

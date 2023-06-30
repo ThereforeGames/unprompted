@@ -3,7 +3,25 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.3.1 - 28 June 2023</summary>
+<details open><summary>9.4.0 - 29 June 2023</summary>
+
+### Added
+- Attempting to introduce img2img batch tab support, this is experimental and may not work with every shortcode
+- `[txt2mask]`: Compatibility with img2img batch tab tensor masks
+- `[zoom_enhance]`: Now supports `_alt` which uses the `[img2img]` shortcode for processing instead of the native `process_images_inner()` function - may improve compatibility for some users
+- `[choose]`: Now supports `_raw` which prevents inner shortcodes from running except the one that is chosen
+- `[img2img_autosize]`: Now supports `unit` which lets you adjust the rounding multiplier of the output resolution, defaults to 64
+- Added "WARNING" as a default console message log type
+
+### Fixed
+- `[choose]`: Parses secondary tags after selecting an option
+- `[img2img]`: Fixed bug in `update_controlnet_var()` call
+- Improved error catching in `unprompted_dry.py`
+- The `update_controlnet_var()` script will check to see if the given att has a number to avoid false positives (such as `controlnet_initial_noise_modifier`)
+
+</details>
+
+<details><summary>9.3.1 - 28 June 2023</summary>
 
 ### Added
 - New guide: "Setting up Replacement Terms"

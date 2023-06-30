@@ -4,7 +4,7 @@ class Shortcode():
 		self.description = "Automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image."
 	def run_atomic(self, pargs, kwargs, context):
 		if "init_images" in self.Unprompted.shortcode_user_vars:
-			sd_unit = 64
+			sd_unit = self.Unprompted.parse_advanced(kwargs["unit"],context) if "unit" in kwargs else 64
 			target_size = self.Unprompted.parse_advanced(kwargs["target"],context) if "target" in kwargs else 512
 			only_full_res = self.Unprompted.parse_advanced(kwargs["only_full_res"],context) if "only_full_res" in kwargs else False
 
@@ -29,9 +29,11 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars["height"] = round(self.Unprompted.shortcode_user_vars["height"] / sd_unit) * sd_unit
 
 				self.Unprompted.log(f"Output image size: {self.Unprompted.shortcode_user_vars['width']}x{self.Unprompted.shortcode_user_vars['height']}")
-	
+		else:
+			self.Unprompted.log(f"Could not find initial image! Printing the user vars for reference: {dir(self.Unprompted.shortcode_user_vars)}",context="ERROR")
 		return("")
 
 	def ui(self,gr):
 		gr.Number(label="Minimum pixels of at least one dimension 🡢 target",value=512,interactive=True)
+		gr.Number(label="Rounding multiplier of output resolution (must be divisible by 8) 🡢 unit",value=64,interactive=True)
 		gr.Checkbox(label="Only run this shortcode if using full resolution inpainting mode 🡢 only_full_res")
