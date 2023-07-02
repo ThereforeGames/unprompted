@@ -197,7 +197,8 @@ def wizard_generate_capture(include_inference,include_prompt,include_neg_prompt,
 			for att in dir(Unprompted.main_p):
 				if not att.startswith("__"):
 					att_val = getattr(Unprompted.main_p,att)
-					if att == "prompt":
+					if (att.startswith("unprompted_")): continue # Skip special extension attributes
+					elif att == "prompt":
 						if include_prompt=="postprocessed": prompt = att_val
 						else: prompt = Unprompted.original_prompt
 					elif att == "negative_prompt":
@@ -458,11 +459,12 @@ class Scripts(scripts.Script):
 	def process(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args):
 		if not is_enabled:
 			return p
-		
+
 		# test compatibility with controlnet
 		import copy
 		Unprompted.main_p = p
 		Unprompted.p_copy = copy.copy(p)
+
 		# Update the controlnet script args with a list of 0 units
 		# TODO: Check if CN is installed and enabled
 		try:
@@ -485,20 +487,27 @@ class Scripts(scripts.Script):
 			import random
 			random.seed(unprompted_seed)
 		
+		fix_hires_prompts = False
+		if hasattr(p,"hr_prompt"):
+			try:
+				if p.hr_prompt == p.prompt and p.hr_negative_prompt == p.negative_prompt:
+					fix_hires_prompts = True
+			except Exception as e:
+				Unprompted.log_error(e,"Could not read hires variables from p object")
+				pass
+
 		def apply_prompt_template(string,template):
 			return template.replace("*",string)
 
 		# Reset vars
 		if hasattr(p,"unprompted_original_prompt"):
-			Unprompted.log(f"Experimental: reset to initial prompt for batch processing ({Unprompted.original_prompt})",context="WARNING")
+			Unprompted.log(f"Resetting to initial prompt for batch processing: {Unprompted.original_prompt}")
 			p.all_prompts[0] = Unprompted.original_prompt
 			p.all_negative_prompts[0] = Unprompted.original_negative_prompt
 		else:
 			Unprompted.original_prompt = p.all_prompts[0]
 			# This var is necessary for batch processing
 			p.unprompted_original_prompt = Unprompted.original_prompt
-
-		# self.infotext_fields.append((None,Unprompted.original_prompt))
 
 		# Process Wizard auto-includes
 		if Unprompted.Config.ui.wizard_enabled and self.allow_postprocess:
@@ -518,6 +527,7 @@ class Scripts(scripts.Script):
 						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx,is_img2img,"",Unprompted.original_prompt)
 
 		Unprompted.original_negative_prompt = p.all_negative_prompts[0]
+		if not hasattr(p,"unprompted_original_negative_prompt"): p.unprompted_original_negative_prompt = Unprompted.original_negative_prompt
 		Unprompted.shortcode_user_vars = {}
 
 		if Unprompted.Config.stable_diffusion.show_extra_generation_params:
@@ -530,8 +540,8 @@ class Scripts(scripts.Script):
 
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
-		Unprompted.original_model = opts.data['sd_model_checkpoint'] # opts.sd_model_checkpoint
-		Unprompted.shortcode_user_vars["sd_model"] = opts.data['sd_model_checkpoint'] # opts.sd_model_checkpoint 
+		Unprompted.original_model = opts.data["sd_model_checkpoint"] # opts.sd_model_checkpoint
+		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"] # opts.sd_model_checkpoint 
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(p):
@@ -553,6 +563,7 @@ class Scripts(scripts.Script):
 		# Batch support
 		if (Unprompted.Config.stable_diffusion.batch_support):
 			for i, val in enumerate(p.all_prompts):
+				if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[i] = Unprompted.shortcode_user_vars["single_seed"]
 				if (i == 0):
 					Unprompted.shortcode_user_vars["batch_index"] = i
 					p.all_prompts[0] = Unprompted.shortcode_user_vars["prompt"]
@@ -560,8 +571,8 @@ class Scripts(scripts.Script):
 				else:
 					Unprompted.shortcode_user_vars = {}
 					Unprompted.shortcode_user_vars["batch_index"] = i
-					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt,Unprompted.Config.templates.default))
-					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt,Unprompted.Config.templates.default_negative))
+					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt,Unprompted.Config.templates.default))
+					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_negative_prompt,Unprompted.Config.templates.default_negative))
 
 				Unprompted.log(f"Result {i}: {p.all_prompts[i]}",False)
 		# Keep the same prompt between runs
@@ -569,6 +580,13 @@ class Scripts(scripts.Script):
 			for i, val in enumerate(p.all_prompts):
 				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 				p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
+
+		if fix_hires_prompts:
+			Unprompted.log("Synchronizing prompt vars with hr_prompt vars")
+			p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
+			p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
+			p.all_hr_prompts = p.all_prompts
+			p.all_hr_negative_prompts = p.all_negative_prompts
 
 		# Cleanup routines
 		Unprompted.log("Entering Cleanup routine...",False)

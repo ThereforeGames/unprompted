@@ -49,6 +49,11 @@ class Shortcode():
 				result_list.append(self.Unprompted.shortcode_user_vars[pargs[0]].index(self.Unprompted.parse_advanced(item,context)))
 		if "_shuffle" in pargs:
 			random.shuffle(self.Unprompted.shortcode_user_vars[pargs[0]])
+		if "_fill" in kwargs:
+			fill_val = self.Unprompted.parse_advanced(kwargs["_fill"],context)
+			for i in range(len(self.Unprompted.shortcode_user_vars[pargs[0]])):
+				self.Unprompted.shortcode_user_vars[pargs[0]][i] = fill_val
+
 		
 		return(delimiter.join(str(x) for x in result_list))
 

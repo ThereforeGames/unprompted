@@ -3,7 +3,23 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.4.0 - 29 June 2023</summary>
+<details open><summary>9.5.0 - 2 July 2023</summary>
+
+### Added
+- New special variable `single_seed`: forces the same seed value for all images in a batch
+- `[array]`: New kwarg `_fill` lets you replace all values in the array with a specified value
+
+### Changed
+- Wizard Capture tab no longer prints special extension attributes such as `unprompted_original_prompt` since they are not needed for image reproduction
+- `[enable_multi_images]`: Now considered a legacy shortcode as it is reportedly incompatible with recent version of the WebUI (this shortcode was originally merged from a PR)
+
+### Fixed
+- Img2img batch tab should now correctly re-evaluate shortcodes when batch_count > 1
+- Resolved compatibility issue with hires. fix in newer versions of the WebUI
+
+</details>
+
+<details><summary>9.4.0 - 29 June 2023</summary>
 
 ### Added
 - Attempting to introduce img2img batch tab support, this is experimental and may not work with every shortcode

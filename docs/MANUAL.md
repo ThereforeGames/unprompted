@@ -188,6 +188,20 @@ An integer that correponds to your progress in a batch run. For example, if your
 
 You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
 
+### single_seed
+
+You can set this integer variable to lock the seed for all images in a batch run.
+
+You might be wondering why `[set seed]x[/set]` won't accomplish the same thing. Well, this is because the WebUI populates another variable called `all_seeds` for batch runs. It takes your initial seed (let's say 1000) and increments it by 1 for each successive image. So if you're making 4 images (i.e. `batch_count` = 4) and you set `seed` to 1000, your seeds will actually look like this: 1000, 1001, 1002, 1003.
+
+The `single_seed` variable will instead force all the seeds to your chosen value.
+
+It is functionally equivalent to the following:
+
+```
+[array all_seeds _fill=1000]
+```
+
 ### controlnet_*
 
 You can use `[set]` to manage ControlNet settings in this format:
@@ -523,6 +537,8 @@ AFTER: my_array = 5,7,6
 Supports `_find` which will return the index of the first matching value in the array.
 
 Supports `_shuffle` which will randomize the order of the array.
+
+Supports `_fill` kwarg which will populate the entire array with a given value.
 
 </details>
 
@@ -1453,12 +1469,6 @@ Supports the optional `per_instance` positional argument which will render and a
 
 </details>
 
-<details><summary>[enable_multi_images]</summary>
-
-This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
-
-</details>
-
 <details><summary>[txt2img]</summary>
 
 Runs a txt2img task inside of an `[after]` block.
@@ -1632,6 +1642,14 @@ Supports the `detect_resolution` argument which is the size of the detected map.
 Supports the `eta` argument.
 
 Supports the following model-specific arguments: `value_threshold`, `distance_threshold`, `bg_threshold`, `low_threshold`, `high_threshold`
+
+</details>
+
+<details><summary>[enable_multi_images]</summary>
+
+**Reason for legacy status:** This shortcode was introduced by a PR and is reportedly not compatible with recent versions of the WebUI.
+
+This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
 
 </details>
 
