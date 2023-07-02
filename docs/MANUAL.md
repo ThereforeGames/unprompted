@@ -1285,7 +1285,7 @@ Photo of a cat
 
 Automatically adjusts the width and height parameters in img2img mode based on the proportions of the input image.
 
-Stable Diffuion generates images in sizes divisible by 8 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
+Stable Diffusion generates images in sizes divisible by 8 pixels. If your initial image is something like 504x780, this shortcode will set the width and height to 512x768.
 
 Supports the `unit` shortcode which lets you specify the resolution multiplier. Must be divisible by 8. Defaults to 64.
 
