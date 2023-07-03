@@ -3,7 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.5.0 - 2 July 2023</summary>
+<details open><summary>9.5.1 - 3 July 2023</summary>
+
+### Fixed
+- `[txt2img]`: Fixed an issue with this shortcode not receiving updates to the `p` object while in txt2img mode
+</details>
+
+<details><summary>9.5.0 - 2 July 2023</summary>
 
 ### Added
 - New special variable `single_seed`: forces the same seed value for all images in a batch

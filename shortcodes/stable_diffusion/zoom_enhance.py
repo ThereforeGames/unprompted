@@ -129,6 +129,9 @@ class Shortcode():
 		min_area = int(float(self.Unprompted.parse_advanced(kwargs["min_area"],context))) if "min_area" in kwargs else 50
 		target_mask = self.Unprompted.parse_alt_tags(kwargs["mask"],context) if "mask" in kwargs else "face"
 
+		if "skip_idx" in kwargs: skip_idx = (self.Unprompted.parse_advanced(kwargs["skip_idx"],context)).split(self.Unprompted.Config.syntax.delimiter)
+		else: skip_idx = []
+
 		set_pargs = pargs
 		set_kwargs = kwargs
 		set_pargs.insert(0,"return_image") # for [txt2mask]
@@ -142,6 +145,10 @@ class Shortcode():
 		
 		# Batch support yo
 		for image_idx, image_pil in enumerate(all_images):
+			if str(image_idx) in skip_idx:
+				self.Unprompted.log(f"Bypassing image {image_idx} per skip_idx kwarg")
+				continue
+
 			if show_original: append_originals.append(all_images[image_idx].copy())
 			# Workaround for compatibility between [after] block and batch processing
 			if "width" not in self.Unprompted.shortcode_user_vars:

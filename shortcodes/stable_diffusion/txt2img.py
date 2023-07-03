@@ -55,8 +55,9 @@ class Shortcode():
 				)
 		else:
 			# We're already in txt2img mode, so we should be able to use the same p object
-			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.p_copy)
-			this_p = self.Unprompted.p_copy
+			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
+			this_p = self.Unprompted.main_p
+			print(this_p.prompt)
 		
 		processed = process_images_inner_(this_p)
 
