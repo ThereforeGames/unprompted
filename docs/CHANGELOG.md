@@ -3,7 +3,30 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.5.1 - 3 July 2023</summary>
+<details open><summary>9.6.0 - 20 July 2023</summary>
+
+### About
+This update resolves a number of issues related to `batch_index` evaluation, which was causing degraded image quality with `[zoom_enhance]`.
+
+### Beta
+- `[img2img]`: updated for compatibility with the A1111 dev branch
+
+### Added
+- New shortcode `[remember]`: Allows you to declare the names of variables you would like to keep over the course of a batch run
+- `[set]` and `[sets]`: Now support `_remember` parg, which invokes the `[remember]` shortcode with your variable(s)
+- New special variable `batch_test`: Shortcodes that implement batch processing--such as `[zoom_enhance]`--will evaluate your `batch_test` expression against the batch item index to determine if it should be bypassed, e.g. if `batch_test` is  `<= 5` and we're on the seventh image, it won't be processed by `[zoom_enhance]`.
+
+### Changed
+- Enabled Python formatter yapf with args `{use_tabs: 1,column_limit: 999}`, please make sure any code submitted in a PR adheres to the same formatting rules
+
+### Fixed
+- `[zoom_enhance]`: Improved batch support for `replacement` and `negative_replacement`
+- `[zoom_enhance]`: Can access `batch_index` variable correctly
+- `[zoom_enhance]`: Fixed `seed` value not synchronizing correctly with batch process
+- Fixed an issue where explicitly setting the `negative_prompt` in a batch run where `batch_index` > 0 would not take effect
+</details>
+
+<details><summary>9.5.1 - 3 July 2023</summary>
 
 ### Fixed
 - `[txt2img]`: Fixed an issue with this shortcode not receiving updates to the `p` object while in txt2img mode

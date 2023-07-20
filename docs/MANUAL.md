@@ -184,6 +184,12 @@ In addition to all of the Stable Diffusion variables exposed by Automatic1111's 
 
 An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
 
+### batch_test
+
+Shortcodes that implement batch processing--such as `[zoom_enhance]`--will test the expression stored in `batch_test` against the batch item index to determine if an image should be bypassed by the shortcode.
+
+Example: you set `batch_test` to `<= 3` and you run a batch process with 5 images. The fifth image will be skipped by shortcodes such as `[zoom_enhance]`. (`batch_index` is zero-indexed, so 3 corresponds to the fourth image.)
+
 ### sd_model
 
 You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
@@ -1100,6 +1106,8 @@ Supports the optional `_choices` argument, which is a delimited string of accept
 
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.
 
+Supports the `_remember` parg that will invoke the `[remember]` shortcode with your variable. See `[remember]` for more information.
+
 ```
 [set my_var]This is the value of my_var[/set]
 ```
@@ -1465,6 +1473,30 @@ Supports the optional `per_instance` positional argument which will render and a
 
 ```
 [instance2mask]clock[/txt2mask]
+```
+
+</details>
+
+<details><summary>[remember]</summary>
+
+Allows you to keep one or more variables in memory for the duration of a batch run (i.e. runs where `batch_count` > 1). This overrides Unprompted's default behavior of completely resetting the `shortcode_user_vars` object after each image.
+
+Here is a practical example:
+
+Let's say you have a template where you want to pass different values to `[zoom_enhance]` that correspond to the `batch_index` of the run.
+
+To do this, we can create an `[array]` and append a new value to it each step of the run. We will mark the array with `[remember]` and tell `[zoom_enhance]` to look up the `batch_index` position of the array.
+
+
+```
+[array zoom_replacements _append="{get subject}"]
+[if batch_index=0]
+	[remember zoom_replacements]
+	[after][zoom_enhance replacement="{array zoom_replacements batch_index}" negative_replacement="worst quality"][/after]
+[/if]
+```
+```
+[remember var_a var_b]
 ```
 
 </details>
