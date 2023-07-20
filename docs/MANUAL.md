@@ -270,70 +270,107 @@ If you wish to override the default settings, you should make another file at th
 
 Here are some of the settings you can modify:
 
-### skip_requirements (bool)
+<details><summary>beta_features (bool)</summary>
 
-Bypasses the startup requirements check (`install.py`) to minimize startup time.
+Opt into unfinished features by setting `beta_features` to true.
 
-### debug (bool)
+</details>
 
-When `True`, you will see a lot more diagnostic information printed to the console during a run. You should use this when creating your own shortcode, template, or when filing a bug report.
+<details><summary>log_contexts (str)</summary>
 
-### advanced_expressions (bool)
+This is a comma-delimited list that determines what types of messages will appear in the output console. Defaults to `RESULT,WARNING,ERROR`.
+
+Note: `log_contexts` replaces the old `debug` config setting. If you want to see debug messages, simply add `DEBUG` to the list.
+
+</details>
+
+<details><summary>advanced_expressions (bool)</summary>
 
 This determines whether expressions will be processed by simpleeval. Disable for slightly better performance at the cost of breaking some templates.
 
-### template_directory (str)
+</details>
+
+<details><summary>skip_requirements (bool)</summary>
+
+Bypasses the startup requirements check (`install.py`) to minimize startup time.
+
+</details>
+
+<details><summary>template_directory (str)</summary>
 
 This is the base directory for your text files.
 
-### txt_format (str)
+</details>
+
+<details><summary>txt_format (str)</summary>
 
 This is the file extension that Unprompted will assume you're looking for with `[file]`.
 
-### syntax/sanitize_before (dict)
+</details>
+
+<details><summary>syntax.sanitize_before (dict)</summary>
 
 This is a dictionary of strings that will be replaced at the start of processing. By default, Unprompted will swap newline and tab characters to the `\\n` placeholder.
 
-### syntax/sanitize_after (dict)
+</details>
+
+<details><summary>syntax.sanitize_after (dict)</summary>
 
 This is a dictionary of strings that will be replaced after processing. By default, Unprompted will convert the `\\n` placeholder to a space.
 
-### syntax/tag_start (str)
+</details>
+
+<details><summary>syntax.tag_start (str)</summary>
 
 This is the string that indicates the start of a shortcode.
 
-### syntax/tag_end (str)
+</details>
+
+<details><summary>syntax.tag_end (str)</summary>
 
 This is the string that indicates the end of a shortcode.
 
+</details>
 
-### syntax/tag_start_alt (str)
+<details><summary>syntax.tag_start_alt (str)</summary>
 
 This is the string that indicates the start of a secondary shortcode.
 
-### syntax/tag_end_alt (str)
+</details>
+
+<details><summary>syntax.tag_end_alt (str)</summary>
 
 This is the string that indicates the end of a secondary shortcode.
 
-### syntax/tag_close (str)
+</details>
+
+<details><summary>syntax.tag_close (str)</summary>
 
 This is the string that indicates the closing tag of a block-scoped shortcode.
 
-### syntax/tag_escape (str)
+</details>
+
+<details><summary>syntax.tag_escape (str)</summary>
 
 This is the string that allows you to print a shortcode as a literal string, bypassing the shortcode processor.
 
 Note that you only have to include this string once, before the shortcode, as opposed to in front of every bracket.
 
-### templates/default (str)
+</details>
+
+<details><summary>templates/default (str)</summary>
 
 This is the final string that will be processed by Unprompted, where `*` is the user input.
 
 The main purpose of this setting is for hardcoding shortcodes you want to run every time. For example: `[img2img_autosize]*`
 
-### templates/default_negative (str)
+</details>
+
+<details><summary>templates/default_negative (str)</summary>
 
 Same as above, but for the negative prompt.
+
+</details>
 
 </details>
 

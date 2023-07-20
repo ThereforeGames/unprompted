@@ -6,7 +6,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 <details open><summary>9.6.0 - 20 July 2023</summary>
 
 ### About
-This update resolves a number of issues related to `batch_index` evaluation, which was causing degraded image quality with `[zoom_enhance]`.
+This update resolves a number of issues related to `batch_index` evaluation, which were causing degraded image quality with `[zoom_enhance]`.
 
 ### Beta
 - `[img2img]`: updated for compatibility with the A1111 dev branch
