@@ -33,7 +33,8 @@
 	"stable_diffusion":
 	{
 		"batch_support":true,
-		"show_extra_generation_params":true
+		"show_extra_generation_params":true,
+		"template_editor":true
 	},
 	"ui":
 	{
