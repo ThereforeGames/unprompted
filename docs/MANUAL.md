@@ -1125,7 +1125,7 @@ Result: A photo of purple marbles.
 
 </details>
 
-<details><summary>[round {_precision}]</summary>
+<details><summary>[round {_place}]</summary>
 
 Allows you to round the first parg to a certain level of precision.
 
