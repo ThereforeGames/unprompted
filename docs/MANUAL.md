@@ -308,6 +308,18 @@ This is the file extension that Unprompted will assume you're looking for with `
 
 </details>
 
+<details><summary>stable_diffusion.batch_method (str)</summary>
+
+Determines how Unprompted will process images when `batch_count` or `batch_size` > 1.
+
+The default method is `standard` which utilizes the WebUI's `process_batch()` routine to evaluate your prompt before each image generation.
+
+Supports `legacy` method which pre-processes all images at the beginning of the batch run. This method prevents system variables such as CFG scale or model checkpoint from being altered mid-run but may have better compatibility with some shortcodes.
+
+Supports `none` method which causes all images in a batch run to have the same settings as the first image.
+
+</details>
+
 <details><summary>syntax.sanitize_before (dict)</summary>
 
 This is a dictionary of strings that will be replaced at the start of processing. By default, Unprompted will swap newline and tab characters to the `\\n` placeholder.
@@ -358,7 +370,7 @@ Note that you only have to include this string once, before the shortcode, as op
 
 </details>
 
-<details><summary>templates/default (str)</summary>
+<details><summary>templates.default (str)</summary>
 
 This is the final string that will be processed by Unprompted, where `*` is the user input.
 
@@ -366,7 +378,7 @@ The main purpose of this setting is for hardcoding shortcodes you want to run ev
 
 </details>
 
-<details><summary>templates/default_negative (str)</summary>
+<details><summary>templates.default_negative (str)</summary>
 
 Same as above, but for the negative prompt.
 

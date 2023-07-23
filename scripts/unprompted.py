@@ -656,8 +656,9 @@ class Scripts(scripts.Script):
 
 			Unprompted.shortcode_user_vars["prompt"] = prompt_result
 			Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
-			Unprompted.shortcode_user_vars["prompts"] = [prompt_result] # TODO: Determine if this list should ever contain more than 1 prompt
-			Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result]
+			# TODO: Determine if Unprompted should handle batch_size in a more sophisticated fashion than simply filling the prompts list with one result
+			Unprompted.shortcode_user_vars["prompts"] = [prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
+			Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
 
 			Unprompted.update_stable_diffusion_vars(p)
 

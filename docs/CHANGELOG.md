@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>9.8.1 - 23 July 2023</summary>
+
+### Fixed
+- Hotfix for `sd_model` handling
+- Hotfix for `batch_size` > 1 crash
+- Updated documentation
+
+</details>
+
 <details open><summary>9.8.0 - 22 July 2023</summary>
 
 ### About
