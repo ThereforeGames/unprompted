@@ -18,13 +18,15 @@ class Shortcode():
 
 		self.Unprompted.log(f"Rounding the following number: {num}")
 
+		def round_helper(num, place):
+			multiplier = pow(10, place)
+			return int(round_func(num / multiplier)) * multiplier
+
 		if "." in str(num):
 			if (round_func == round): return round_func(num, place)
-			else: return round_func(num)
+			else: return round_helper(num, place)
 		elif self.Unprompted.is_int(num):
-			multiplier = pow(10, place)
-			num = int(round_func(num / multiplier)) * multiplier
-			return num
+			return round_helper(num, place)
 		else:
 			self.Unprompted.log_error("The number is not a valid type: ", num)
 			return ""

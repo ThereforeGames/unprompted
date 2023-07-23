@@ -263,6 +263,10 @@ def gradio_enabled_checkbox_workaround():
 	return (Unprompted.Config.ui.enabled)
 
 
+def apply_prompt_template(string, template):
+	return template.replace("*", string)
+
+
 class Scripts(scripts.Script):
 	allow_postprocess = True
 
@@ -511,17 +515,14 @@ class Scripts(scripts.Script):
 			import random
 			random.seed(unprompted_seed)
 
-		fix_hires_prompts = False
+		Unprompted.fix_hires_prompts = False
 		if hasattr(p, "hr_prompt"):
 			try:
 				if p.hr_prompt == p.prompt and p.hr_negative_prompt == p.negative_prompt:
-					fix_hires_prompts = True
+					Unprompted.fix_hires_prompts = True
 			except Exception as e:
 				Unprompted.log_error(e, "Could not read hires variables from p object")
 				pass
-
-		def apply_prompt_template(string, template):
-			return template.replace("*", string)
 
 		# Reset vars
 		if hasattr(p, "unprompted_original_prompt"):
@@ -558,7 +559,7 @@ class Scripts(scripts.Script):
 		if Unprompted.Config.stable_diffusion.show_extra_generation_params:
 			p.extra_generation_params.update({
 			    "Unprompted Enabled": True,
-			    "Unprompted Prompt": Unprompted.original_prompt.replace("\"", "'"),  # Must use single quotes or output will include backslashes
+			    "Unprompted Prompt": Unprompted.original_prompt.replace("\"", "'"),  # Must use single quotes or output will have backslashes
 			    "Unprompted Negative Prompt": Unprompted.original_negative_prompt.replace("\"", "'"),
 			    "Unprompted Seed": unprompted_seed
 			})
@@ -570,14 +571,14 @@ class Scripts(scripts.Script):
 		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]  # opts.sd_model_checkpoint
 
 		# Set up system var support - copy relevant p attributes into shortcode var object
-		for att in dir(p):
-			if not att.startswith("__") and att != "sd_model":
-				Unprompted.shortcode_user_vars[att] = getattr(p, att)
-		Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-		Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+		# for att in dir(p):
+		# 	if not att.startswith("__") and att != "sd_model":
+		# 		Unprompted.shortcode_user_vars[att] = getattr(p, att)
 
-		# Apply any updates to system vars
-		Unprompted.update_stable_diffusion_vars(p)
+		#Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+		#Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+
+		#Unprompted.update_stable_diffusion_vars(p)
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
@@ -586,43 +587,99 @@ class Scripts(scripts.Script):
 			p.seed = -1
 			p.seed = fix_seed(p)
 
-		# Batch support
-		if (Unprompted.Config.stable_diffusion.batch_support):
-			for i, val in enumerate(p.all_prompts):
-				if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[i] = Unprompted.shortcode_user_vars["single_seed"]
-				if (i == 0):
-					Unprompted.shortcode_user_vars["batch_index"] = i
-					p.all_prompts[0] = Unprompted.shortcode_user_vars["prompt"]
-					p.all_negative_prompts[0] = Unprompted.shortcode_user_vars["negative_prompt"]
-				else:
-					for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
-						if key not in Unprompted.shortcode_objects["remember"].globals:
-							del Unprompted.shortcode_user_vars[key]
-					# Unprompted.shortcode_user_vars = {}
-					Unprompted.shortcode_user_vars["batch_index"] = i
-					p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-					p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+		# Legacy processing support
+		if (Unprompted.Config.stable_diffusion.batch_method != "standard"):
+			# Set up system var support - copy relevant p attributes into shortcode var object
+			for att in dir(p):
+				if not att.startswith("__") and att != "sd_model":
+					Unprompted.shortcode_user_vars[att] = getattr(p, att)
 
-				Unprompted.log(f"Result {i}: {p.all_prompts[i]}", False)
-		# Keep the same prompt between runs
-		else:
-			for i, val in enumerate(p.all_prompts):
-				p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
-				p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
+			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
-		if fix_hires_prompts:
-			Unprompted.log("Synchronizing prompt vars with hr_prompt vars")
-			p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
-			p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
-			p.all_hr_prompts = p.all_prompts
-			p.all_hr_negative_prompts = p.all_negative_prompts
+			# Apply any updates to system vars
+			Unprompted.update_stable_diffusion_vars(p)
 
-		# Cleanup routines
-		Unprompted.log("Entering Cleanup routine...", False)
-		for i in Unprompted.cleanup_routines:
-			Unprompted.shortcode_objects[i].cleanup()
+			if (Unprompted.Config.stable_diffusion.batch_method == "legacy"):
+				for i, val in enumerate(p.all_prompts):
+					if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[i] = Unprompted.shortcode_user_vars["single_seed"]
+					if (i == 0):
+						Unprompted.shortcode_user_vars["batch_index"] = i
+						p.all_prompts[0] = Unprompted.shortcode_user_vars["prompt"]
+						p.all_negative_prompts[0] = Unprompted.shortcode_user_vars["negative_prompt"]
+					else:
+						for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
+							if key not in Unprompted.shortcode_objects["remember"].globals:
+								del Unprompted.shortcode_user_vars[key]
 
-		if unprompted_seed != -1: random.seed()
+						Unprompted.shortcode_user_vars["batch_index"] = i
+						p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+						p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+
+					Unprompted.log(f"Result {i}: {p.all_prompts[i]}", False)
+			# Keep the same prompt between runs
+			elif (Unprompted.Config.stable_diffusion.batch_method == "none"):
+				for i, val in enumerate(p.all_prompts):
+					p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
+					p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
+
+			# Cleanup routines
+			Unprompted.log("Entering Cleanup routine...", False)
+			for i in Unprompted.cleanup_routines:
+				Unprompted.shortcode_objects[i].cleanup()
+
+			if unprompted_seed != -1: random.seed()
+
+	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
+		if (is_enabled and Unprompted.Config.stable_diffusion.batch_method == "standard"):
+			Unprompted.log("Engaging new process_batch() implementation - if it gives you any trouble, please set batch_method to 'legacy' in your config. This message will be removed in a future update.", context="WARNING")
+
+			batch_index = Unprompted.shortcode_user_vars["batch_index"]
+
+			Unprompted.log(f"Starting process_batch() for batch_index #{batch_index}...")
+
+			if batch_index > 0:
+				if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[batch_index] = Unprompted.shortcode_user_vars["single_seed"]
+
+				for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
+					if key not in Unprompted.shortcode_objects["remember"].globals and key != "batch_index":
+						del Unprompted.shortcode_user_vars[key]
+
+			# Set up system var support - copy relevant p attributes into shortcode var object
+			for att in dir(p):
+				if not att.startswith("__") and att != "sd_model":
+					# Unprompted.log(f"Setting {att} to {getattr(p, att)}")
+					Unprompted.shortcode_user_vars[att] = getattr(p, att)
+
+			prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+			negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+
+			Unprompted.shortcode_user_vars["prompt"] = prompt_result
+			Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
+			Unprompted.shortcode_user_vars["prompts"] = [prompt_result] # TODO: Determine if this list should ever contain more than 1 prompt
+			Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result]
+
+			Unprompted.update_stable_diffusion_vars(p)
+
+			p.all_prompts[batch_index] = prompt_result
+			p.all_negative_prompts[batch_index] = negative_prompt_result
+
+			# Increment batch index
+			batch_index += 1
+
+			# Check for final iteration
+			if (batch_index == len(p.all_prompts)):
+
+				# Cleanup routines
+				Unprompted.log("Entering Cleanup routine...", False)
+				for i in Unprompted.cleanup_routines:
+					Unprompted.shortcode_objects[i].cleanup()
+
+				if unprompted_seed != -1:
+					import random
+					random.seed()
+			else:
+				Unprompted.shortcode_user_vars["batch_index"] = batch_index
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
@@ -630,6 +687,13 @@ class Scripts(scripts.Script):
 			Unprompted.log("Bypassing After routine to avoid infinite loop.")
 			self.allow_postprocess = True
 			return False  # Prevents endless loop with some shortcodes
+
+		if Unprompted.fix_hires_prompts:
+			Unprompted.log("Synchronizing prompt vars with hr_prompt vars")
+			p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
+			p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
+			p.all_hr_prompts = p.all_prompts
+			p.all_hr_negative_prompts = p.all_negative_prompts
 
 		self.allow_postprocess = False
 		Unprompted.log("Entering After routine...")

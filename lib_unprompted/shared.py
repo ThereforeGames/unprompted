@@ -13,7 +13,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.7.0"
+		self.VERSION = "9.8.0"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games", False, "SETUP")
 		self.log("Initializing Unprompted object...", False, "SETUP")
@@ -329,6 +329,7 @@ class Unprompted:
 		for att in dir(this_p):
 			if not att.startswith("__") and att != "sd_model" and att in self.shortcode_user_vars:
 				try:
+					# print(f"setting var: {att} to {self.shortcode_user_vars[att]}")
 					setattr(this_p, att, self.shortcode_user_vars[att])
 				except Exception as e:
 					self.log_error(e, "Could not update Stable Diffusion attr: ")

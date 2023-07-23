@@ -8,6 +8,7 @@ class Shortcode():
 		for parg in pargs:
 			if parg not in self.globals:
 				self.globals.append(parg)
+		return ""
 
 	def cleanup(self):
 		self.globals = []

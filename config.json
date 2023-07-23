@@ -32,7 +32,7 @@
 	},
 	"stable_diffusion":
 	{
-		"batch_support":true,
+		"batch_method":"standard",
 		"show_extra_generation_params":true,
 		"template_editor":true
 	},

@@ -3,7 +3,24 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.7.0 - 20 July 2023</summary>
+<details open><summary>9.8.0 - 22 July 2023</summary>
+
+### About
+This update integrates batch processing with the WebUI's `process_batch()` routine - this allows Unprompted to change system variables such as CFG scale or model checkpoint between each image generation. I hope the added flexibility proves useful for your prompting workflows. If you find that the new system is incompatible with a particular shortcode, please open an issue for me and use the `legacy` setting as a short-term workaround. Thanks!
+
+### Changed
+- Batch processing will now update Stable Diffusion vars after each image
+- Due to the above change, the `Unprompted.Config.stable_diffusion.batch_support` setting has been renamed to `Unprompted.Config.stable_diffusion.batch_method` with a default setting of `standard`
+- You can set the `batch_method` to `legacy` if you prefer the old implementation, or `none` to disable batch support altogether
+
+### Fixed
+- `[round]`: Fixed `_up` and `_down` with floats
+- `[choose]`: The `_raw` parg no longer replaces linebreaks with the delimiter character in a selected `[file]`
+- `[remember]`: Fixed this shortcode unintentionally adding "None" to prompt
+
+</details>
+
+<details><summary>9.7.0 - 20 July 2023</summary>
 
 ### Added
 - New shortcode `[round]`: Rounds the first parg to a certain level of precision, e.g. 1.345 at `_place=1` yields 1.3, and 1644 at `_place=2` yields 1600
