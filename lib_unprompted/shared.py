@@ -339,7 +339,7 @@ class Unprompted:
 			# change models
 			if att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
 				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
-				if info: sd_models.load_model(info, None, None)
+				if info: sd_models.load_model(info, None)  #, None
 			# control controlnet
 			elif att.startswith("controlnet_") or att.startswith("cn_"):
 				self.update_controlnet_var(this_p, att)
