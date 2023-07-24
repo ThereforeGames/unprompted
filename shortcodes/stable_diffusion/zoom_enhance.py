@@ -49,6 +49,7 @@ class Shortcode():
 				numpy.copyto(sharpened, image, where=low_contrast_mask)
 			return Image.fromarray(sharpened)
 
+		orig_batch_size = self.Unprompted.shortcode_user_vars["batch_size"]
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0
 		self.Unprompted.p_copy.batch_index = 0
 
@@ -78,6 +79,7 @@ class Shortcode():
 			image_mask_orig = self.Unprompted.p_copy.image_mask
 		else:
 			image_mask_orig = None
+
 		self.Unprompted.p_copy.mode = 0
 		self.Unprompted.p_copy.image_mask = None
 		self.Unprompted.p_copy.mask = None
@@ -143,8 +145,10 @@ class Shortcode():
 			if self.Unprompted.batch_test_bypass(image_idx): continue
 			if image_idx > 0:
 				self.Unprompted.p_copy.seed += 1
-				self.Unprompted.p_copy.batch_index += 1
-				self.Unprompted.shortcode_user_vars["batch_index"] += 1
+				# Only increment batch_index after we finish a set per batch_size value
+				if image_idx % orig_batch_size == 0:
+					self.Unprompted.p_copy.batch_index += 1
+					self.Unprompted.shortcode_user_vars["batch_index"] += 1
 
 			all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"], context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)
 

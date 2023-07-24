@@ -590,9 +590,7 @@ class Scripts(scripts.Script):
 		# Legacy processing support
 		if (Unprompted.Config.stable_diffusion.batch_method != "standard"):
 			# Set up system var support - copy relevant p attributes into shortcode var object
-			for att in dir(p):
-				if not att.startswith("__") and att != "sd_model":
-					Unprompted.shortcode_user_vars[att] = getattr(p, att)
+			Unprompted.populate_stable_diffusion_vars(p)
 
 			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
 			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
@@ -629,6 +627,19 @@ class Scripts(scripts.Script):
 				Unprompted.shortcode_objects[i].cleanup()
 
 			if unprompted_seed != -1: random.seed()
+		# In standard mode,
+		# it is essential to evalute the prompt here at least once to set up our Extra Networks correctly.
+		else:
+			Unprompted.populate_stable_diffusion_vars(p)
+
+			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+
+			# TODO: Determine if there are any side effects with filling up the all_prompts array with prompt 0 at this step
+			Unprompted.shortcode_user_vars["all_prompts"] = [Unprompted.shortcode_user_vars["prompt"]] * len(p.all_prompts)
+			Unprompted.shortcode_user_vars["all_negative_prompts"] = [Unprompted.shortcode_user_vars["negative_prompt"]] * len(p.all_prompts)
+
+			Unprompted.update_stable_diffusion_vars(p)
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
 		if (is_enabled and Unprompted.Config.stable_diffusion.batch_method == "standard"):
@@ -645,14 +656,17 @@ class Scripts(scripts.Script):
 					if key not in Unprompted.shortcode_objects["remember"].globals and key != "batch_index":
 						del Unprompted.shortcode_user_vars[key]
 
-			# Set up system var support - copy relevant p attributes into shortcode var object
-			for att in dir(p):
-				if not att.startswith("__") and att != "sd_model":
-					# Unprompted.log(f"Setting {att} to {getattr(p, att)}")
-					Unprompted.shortcode_user_vars[att] = getattr(p, att)
+				Unprompted.populate_stable_diffusion_vars(p)
 
-			prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-			negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+				prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+				negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+			# On the first image, we have already evaluted the prompt in the process() function
+			else:
+				prompt_result = Unprompted.shortcode_user_vars["prompt"]
+				negative_prompt_result = Unprompted.shortcode_user_vars["negative_prompt"]
+
+				p.prompt = prompt_result
+				p.negative_prompt = negative_prompt_result
 
 			Unprompted.shortcode_user_vars["prompt"] = prompt_result
 			Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
@@ -660,7 +674,10 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_user_vars["prompts"] = [prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
 			Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
 
-			Unprompted.update_stable_diffusion_vars(p)
+			p.prompts = Unprompted.shortcode_user_vars["prompts"]
+			p.negative_prompts = Unprompted.shortcode_user_vars["negative_prompts"]
+
+			if (batch_index > 0): Unprompted.update_stable_diffusion_vars(p)
 
 			p.all_prompts[batch_index] = prompt_result
 			p.all_negative_prompts[batch_index] = negative_prompt_result

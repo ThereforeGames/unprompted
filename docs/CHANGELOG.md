@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>9.8.2 - 24 July 2023</summary>
+
+### Fixed
+- Updated the batch processing code to fix compatibility with Extra Networks as well as the `templates.default` setting
+- `[zoom_enhance]`: Fixed handling of `batch_index` when `batch_size` > 1
+
+</details>
+
 <details open><summary>9.8.1 - 23 July 2023</summary>
 
 ### Fixed
