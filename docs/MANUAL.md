@@ -276,6 +276,14 @@ Opt into unfinished features by setting `beta_features` to true.
 
 </details>
 
+<details><summary>skip_requirements (bool)</summary>
+
+Setting this to true will bypass the Python dependencies check at startup, allowing the WebUI to load more quickly. If you use this, please remember to disable it between major updates of Unprompted.
+
+Also note that this setting **must** be specified in `config_user.json` - it has no effect in `config.json`.
+
+</details>
+
 <details><summary>log_contexts (str)</summary>
 
 This is a comma-delimited list that determines what types of messages will appear in the output console. Defaults to `RESULT,WARNING,ERROR`.
