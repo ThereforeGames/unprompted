@@ -13,7 +13,7 @@ import time
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.8.2"
+		self.VERSION = "9.8.3"
 
 		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games", False, "SETUP")
 		self.log("Initializing Unprompted object...", False, "SETUP")
@@ -332,18 +332,16 @@ class Unprompted:
 	def update_stable_diffusion_vars(self, this_p):
 		from modules import sd_models
 
-		# Apply any updates to system vars
-		for att in dir(this_p):
-			if not att.startswith("__") and att != "sd_model" and att in self.shortcode_user_vars:
+		self.log("Synchronizing Stable Diffusion variables with Unprompted...")
+
+		p_dir = dir(this_p)
+		for att in self.shortcode_user_vars:
+			if att in p_dir and att != "sd_model":
 				try:
 					setattr(this_p, att, self.shortcode_user_vars[att])
 				except Exception as e:
 					self.log_error(e, "Could not update Stable Diffusion attr: ")
-
-		# Special handling of vars
-		for att in self.shortcode_user_vars:
-			# change models
-			if att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
+			elif att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
 				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
 				if info: sd_models.load_model(info, None)  #, None
 			# control controlnet

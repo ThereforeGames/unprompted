@@ -10,6 +10,9 @@ class Shortcode():
 
 		did_error = False
 
+		# Synchronize any changes from user vars
+		self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
+
 		# Temporarily bypass alwayson scripts because I am not sure how to call modules.img2img.img2img with arbitrary extension args
 		temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
 		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()

@@ -49,6 +49,9 @@ class Shortcode():
 				numpy.copyto(sharpened, image, where=low_contrast_mask)
 			return Image.fromarray(sharpened)
 
+		# Apply any changes from user variables such as SD checkpoint
+		self.Unprompted.update_stable_diffusion_vars(self.Unprompted.p_copy)
+
 		orig_batch_size = self.Unprompted.shortcode_user_vars["batch_size"]
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0
 		self.Unprompted.p_copy.batch_index = 0
@@ -202,8 +205,6 @@ class Shortcode():
 
 			if debug: image_pil.save("zoom_enhance_0.png")
 
-			#if "include_original" in pargs:
-			#	append_originals.append(image_pil.copy())
 			if "mask_method" in kwargs: set_kwargs["method"] = self.Unprompted.parse_alt_tags(kwargs["mask_method"], context)
 
 			set_kwargs["txt2mask_init_image"] = image_pil
@@ -386,10 +387,8 @@ class Shortcode():
 							# workaround for txt2img, not sure if compatible with controlnet
 							self.Unprompted.log("Using alternate zoom_enhance processing - may not be compatible with ControlNet", context="WARNING")
 
-							for att in dir(self.Unprompted.p_copy):
-								if not att.startswith("__") and att != "sd_model":
-									self.Unprompted.shortcode_user_vars[att] = getattr(self.Unprompted.p_copy, att)
-							self.Unprompted.log(f"negative prompt check {self.Unprompted.p_copy.negative_prompt} plus {self.Unprompted.shortcode_user_vars['negative_prompt']}")
+							self.Unprompted.populate_stable_diffusion_vars(self.Unprompted.p_copy)
+
 							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, None, None)
 						if debug: fixed_image.save("zoom_enhance_4after.png")
 					except Exception as e:

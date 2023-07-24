@@ -3,7 +3,15 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.8.2 - 24 July 2023</summary>
+<details open><summary>9.8.3 - 24 July 2023</summary>
+
+### Changed
+- Stable Diffusion variables will be synchronized with your Unprompted variables whenever an img2img task is called, including `[zoom_enhance]` and `[img2img]`
+- Optimized `Unprompted.update_stable_diffusion_vars()` performance
+
+</details>
+
+<details><summary>9.8.2 - 24 July 2023</summary>
 
 ### Fixed
 - Updated the batch processing code to fix compatibility with Extra Networks as well as the `templates.default` setting
@@ -11,7 +19,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 </details>
 
-<details open><summary>9.8.1 - 23 July 2023</summary>
+<details><summary>9.8.1 - 23 July 2023</summary>
 
 ### Fixed
 - Hotfix for `sd_model` handling
@@ -20,7 +28,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 </details>
 
-<details open><summary>9.8.0 - 22 July 2023</summary>
+<details><summary>9.8.0 - 22 July 2023</summary>
 
 ### About
 This update integrates batch processing with the WebUI's `process_batch()` routine - this allows Unprompted to change system variables such as CFG scale or model checkpoint between each image generation. I hope the added flexibility proves useful for your prompting workflows. If you find that the new system is incompatible with a particular shortcode, please open an issue for me and use the `legacy` setting as a short-term workaround. Thanks!
