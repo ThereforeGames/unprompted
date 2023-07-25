@@ -3,7 +3,18 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.8.3 - 24 July 2023</summary>
+<details open><summary>9.9.0 - 25 July 2023</summary>
+
+### Added
+- `[array]`: Now accepts variable names as kwargs for updating array indexes dynamically, as in the case of a `[for]` loop
+- New example template `batch_seeds_custom_step_size` that allows you to override the WebUI's behavior of incrementing the seed by 1 in a batch process
+
+### Fixed
+- Ensured compatibility with WebUI v1.5.0
+
+</details>
+
+<details><summary>9.8.3 - 24 July 2023</summary>
 
 ### Changed
 - Stable Diffusion variables will be synchronized with your Unprompted variables whenever an img2img task is called, including `[zoom_enhance]` and `[img2img]`

@@ -21,11 +21,18 @@ class Shortcode():
 		# Set new array values
 		for kwarg, val in kwargs.items():
 			if (self.Unprompted.is_system_arg(kwarg)): continue
-			this_kwarg = int(kwarg)
+			if (self.Unprompted.is_int(kwarg)):
+				this_kwarg = int(kwarg)
+			else:
+				try:
+					this_kwarg = int(self.Unprompted.shortcode_user_vars[kwarg])
+				except Exception as e:
+					self.Unprompted.log_error(e, f"Could not parse the following kwarg as an array index: {kwarg}")
+					continue
 			# Initialize null values if we're outside the array's length
 			while (len(self.Unprompted.shortcode_user_vars[parg]) <= this_kwarg):
 				self.Unprompted.shortcode_user_vars[parg].append("")
-			self.Unprompted.shortcode_user_vars[parg][int(kwarg)] = self.Unprompted.parse_advanced(val, context)
+			self.Unprompted.shortcode_user_vars[parg][this_kwarg] = self.Unprompted.parse_advanced(val, context)
 
 		if "_append" in kwargs:
 			split_append = self.Unprompted.parse_advanced(kwargs["_append"], context).split(delimiter)

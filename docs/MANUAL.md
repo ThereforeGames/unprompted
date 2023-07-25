@@ -567,6 +567,8 @@ If you want to **set** values at specific indexes, supply the indexes as keyword
 [array my_array 2="something" 4=500 3="something else"]
 ```
 
+You can also use variable names as keyword arguments and `[array]` will attempt to parse them for an integer value.
+
 Supports the optional `_delimiter` argument that defines the separator string when retrieving multiple values from the array. Defaults to your `Config.syntax.delimiter` setting.
 
 Supports `_append` which allows you to add values to the end of the array. You can pass multiple values into `_append` with your `_delimiter` string, e.g. `[array my_array _append="something|another thing|third thing"]`.
@@ -905,7 +907,7 @@ Current value of i: [get i]
 
 Returns the value of `variable`.
 
-Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="<file example>"]`.
+Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="{file example}"]`.
 
 You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`.
 

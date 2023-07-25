@@ -1,0 +1,8 @@
+[sets step=100 _new] [# Change step size as desired, or use a random block]
+[if batch_index=0] [# We only need to process the seeds array once]
+	[for i=1 "i < {length all_seeds}" "i+1"]
+		[set new_seed][eval][get seed]+[get step]*[get i][/eval][/set]
+		[array all_seeds i="{get new_seed}"]
+		[log]Setting seed of image [get i] to [get new_seed][/log]
+	[/for]
+[/if]
