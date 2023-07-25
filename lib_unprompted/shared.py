@@ -325,7 +325,7 @@ class Unprompted:
 	def populate_stable_diffusion_vars(self, this_p):
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(this_p):
-			if not att.startswith("__") and att != "sd_model":
+			if not att.startswith("__") and att != "sd_model" and att != "batch_index":
 				# self.log(f"Setting {att} to {getattr(this_p, att)}")
 				self.shortcode_user_vars[att] = getattr(this_p, att)
 

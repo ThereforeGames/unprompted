@@ -11,6 +11,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 ### Fixed
 - Ensured compatibility with WebUI v1.5.0
+- Hotfix for `batch_index` user variable handling
 
 </details>
 
