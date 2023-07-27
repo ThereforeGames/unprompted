@@ -8,15 +8,29 @@ import importlib
 import inspect
 import sys
 import time
+import logging
+
+
+def parse_config(base_dir="."):
+	cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
+	user_config = f"{base_dir}/config_user.json"
+	if (os.path.isfile(user_config)):
+		import lib_unprompted.flatdict as flatdict
+		flat_user_cfg = flatdict.FlatDict(json.load(open(user_config, "r", encoding="utf8")))
+		flat_cfg = flatdict.FlatDict(cfg_dict)
+
+		# Write differences to flattened dictionary
+		flat_cfg.update(flat_user_cfg)
+
+		# Unflatten
+		cfg_dict = flat_cfg.as_dict()
+	return (cfg_dict, json.loads(json.dumps(cfg_dict), object_hook=lambda d: SimpleNamespace(**d)))
 
 
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.9.0"
-
-		self.log(f"Loading Unprompted v{self.VERSION} by Therefore Games", False, "SETUP")
-		self.log("Initializing Unprompted object...", False, "SETUP")
+		self.VERSION = "9.10.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -25,24 +39,36 @@ class Unprompted:
 		self.after_routines = []
 		self.base_dir = base_dir
 
-		self.log("Loading configuration files...", False, "SETUP")
+		self.cfg_dict, self.Config = parse_config(base_dir)
 
-		self.cfg_dict = json.load(open(f"{base_dir}/config.json", "r", encoding="utf8"))
-		user_config = f"{base_dir}/config_user.json"
-		if (os.path.isfile(user_config)):
-			import lib_unprompted.flatdict as flatdict
-			flat_user_cfg = flatdict.FlatDict(json.load(open(user_config, "r", encoding="utf8")))
-			flat_cfg = flatdict.FlatDict(self.cfg_dict)
+		class LogFormatter(logging.Formatter):
+			def __init__(self, format_str, config):
+				super().__init__(format_str)
+				self.Config = config
 
-			# Write differences to flattened dictionary
-			flat_cfg.update(flat_user_cfg)
+			if self.Config.logging.use_colors:
 
-			# Unflatten
-			self.cfg_dict = flat_cfg.as_dict()
-		self.Config = json.loads(json.dumps(self.cfg_dict), object_hook=lambda d: SimpleNamespace(**d))
+				def format(self, record):
+					import copy
+					colored_record = copy.copy(record)
+					levelname = colored_record.levelname
+					color_sequence = getattr(self.Config.logging.colors, levelname, self.Config.logging.colors.RESET).encode().decode("unicode-escape")
+					colored_record.levelname = f"{color_sequence}{levelname}{(self.Config.logging.colors.RESET).encode().decode('unicode-escape')}"
+					return super().format(colored_record)
 
-		self.log(f"Logging enabled for the following message types: {self.Config.log_contexts}", False, "SETUP")
-		self.Config.log_contexts = self.Config.log_contexts.split(",")
+		self.log = logging.getLogger("Unprompted")
+		self.log.propagate = False
+		self.log.setLevel(getattr(logging, self.Config.logging.level))
+		if not self.log.handlers:
+			if self.Config.logging.file:
+				handler = logging.FileHandler(self.Config.logging.file, self.Config.logging.filemode)
+			else:
+				handler = logging.StreamHandler(sys.stdout)
+			handler.setFormatter(LogFormatter(self.Config.logging.format, self.Config))
+			self.log.addHandler(handler)
+
+		self.log.info(f"Loading Unprompted v{self.VERSION} by Therefore Games")
+		self.log.info("Initializing Unprompted object...")
 
 		# Load shortcodes
 		import importlib.util
@@ -99,10 +125,13 @@ class Unprompted:
 			if (hasattr(self.shortcode_objects[shortcode_name], "after")):
 				self.after_routines.append(shortcode_name)
 
-			self.log(f"Loaded shortcode: {shortcode_name}", False)
+			# Create descendent logger
+			self.shortcode_objects[shortcode_name].log = self.log.getChild(shortcode_name)
+
+			self.log.debug(f"Loaded shortcode: {shortcode_name}")
 
 		self.shortcode_parser = shortcodes.Parser(start=self.Config.syntax.tag_start, end=self.Config.syntax.tag_end, esc=self.Config.syntax.tag_escape, ignore_unknown=True)
-		self.log(f"Unprompted finished loading in {time.time()-start_time} seconds.", False)
+		self.log.debug(f"Unprompted finished loading in {time.time()-start_time} seconds.")
 
 	def shortcode_string_log(self):
 		return ("[" + os.path.basename(inspect.stack()[1].filename) + "]")
@@ -141,7 +170,7 @@ class Unprompted:
 		files = glob.glob(string)
 		filecount = len(files)
 		if (filecount == 0):
-			self.log(f"No files found at this location: {string}", True, "ERROR")
+			self.log.error(f"No files found at this location: {string}")
 			return ("")
 		elif filecount > 1:
 			string = random.choice(files)
@@ -197,18 +226,10 @@ class Unprompted:
 
 		return (parser.parse(string, context))
 
-	def log(self, string, show_caller=True, context="DEBUG", caller=None):
-		if (context == "SETUP" or context in self.Config.log_contexts or "ALL" in self.Config.log_contexts):
-			this_string = f"({context})"
-			if show_caller:
-				if caller is None: caller = " [" + os.path.relpath(inspect.stack()[1].filename, __file__).replace("..\\", "") + "]"
-				this_string += caller
-			this_string += f" {string}"
-			print(this_string)
-
 	def log_error(self, e, msg=""):
+		"""Helper function that formats the exception e for easy reading"""
 		import traceback
-		self.log(msg + ''.join(traceback.TracebackException.from_exception(e).format()), context="ERROR", caller=" [" + os.path.relpath(inspect.stack()[1].filename, __file__).replace("..\\", "") + "]")
+		self.log.error(msg + ''.join(traceback.TracebackException.from_exception(e).format()))
 
 	def strip_str(self, string, chop):
 		while True:
@@ -307,9 +328,10 @@ class Unprompted:
 		try:
 			att_split = att.split("_")  # e.g. controlnet_0_enabled
 			if len(att_split) >= 3 and any(chr.isdigit() for chr in att):  # Make sure we have at least 2 underscores and at least one number
-				self.log(f"Setting ControlNet value: {att}")
-				import importlib
-				cnet = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
+				self.log.debug(f"Setting ControlNet value: {att}")
+				cn_path = self.extension_path(self.Config.stable_diffusion.controlnet_name)
+				cnet = self.import_file(f"{self.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
+
 				all_units = cnet.get_all_units_in_processing(this_p)
 
 				if att_split[2] == "image":
@@ -320,19 +342,19 @@ class Unprompted:
 				setattr(all_units[int(att_split[1])], "_".join(att_split[2:]), this_val)
 				cnet.update_cn_script_in_processing(this_p, all_units)
 		except Exception as e:
-			self.log(f"Could not set ControlNet value ({att}): {e}", context="ERROR")
+			self.log.error(f"Could not set ControlNet value ({att}): {e}")
 
 	def populate_stable_diffusion_vars(self, this_p):
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(this_p):
 			if not att.startswith("__") and att != "sd_model" and att != "batch_index":
-				# self.log(f"Setting {att} to {getattr(this_p, att)}")
+				# self.log.debug(f"Setting {att} to {getattr(this_p, att)}")
 				self.shortcode_user_vars[att] = getattr(this_p, att)
 
 	def update_stable_diffusion_vars(self, this_p):
 		from modules import sd_models
 
-		self.log("Synchronizing Stable Diffusion variables with Unprompted...")
+		self.log.debug("Synchronizing Stable Diffusion variables with Unprompted...")
 
 		p_dir = dir(this_p)
 		for att in self.shortcode_user_vars:
@@ -343,7 +365,14 @@ class Unprompted:
 					self.log_error(e, "Could not update Stable Diffusion attr: ")
 			elif att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
 				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
-				if info: sd_models.load_model(info, None)  #, None
+				if info:
+					new_model = sd_models.load_model(info, None)  #, None
+					self.shortcode_user_vars["sd_base"] = "none"
+					if new_model:
+						# Update `sd_base` special variable
+						if new_model.is_sdxl: self.shortcode_user_vars["sd_base"] = "sdxl"
+						elif new_model.is_sd2: self.shortcode_user_vars["sd_base"] = "sd2"
+						elif new_model.is_sd1: self.shortcode_user_vars["sd_base"] = "sd1"
 			# control controlnet
 			elif att.startswith("controlnet_") or att.startswith("cn_"):
 				self.update_controlnet_var(this_p, att)
@@ -351,6 +380,28 @@ class Unprompted:
 	def batch_test_bypass(self, batch_idx):
 		"""This is used by shortcodes that implement batch processing to determine if we should skip a certain image per the expression stored in the batch_test user var."""
 		if "batch_test" in self.shortcode_user_vars and self.shortcode_user_vars["batch_test"] and not simple_eval(f"{batch_idx} {self.shortcode_user_vars['batch_test']}", names=self.shortcode_user_vars):
-			self.log(f"Bypassing this batch item per batch_test expression: {batch_idx} is not {self.shortcode_user_vars['batch_test']}")
+			self.log.debug(f"Bypassing this batch item per batch_test expression: {batch_idx} is not {self.shortcode_user_vars['batch_test']}")
 			return True
 		return False
+
+	def extension_path(self, name, allow_disabled=False):
+		"""Traverses the modules.extensions list to check for presence of an extension with a given name. If found, returns the full path of the extension."""
+		from modules import extensions
+		for e in extensions.extensions:
+			if e.name == name:
+				if e.enabled or allow_disabled:
+					return (e.path)
+				else:
+					self.log.warning(f"Extension {name} found but is not enabled.")
+					return None
+		return None
+
+	def import_file(self, full_name, path):
+		"""Allows importing of modules from full filepath, not sure why Python requires a helper function for this in 2023"""
+		from importlib import util
+
+		spec = util.spec_from_file_location(full_name, path)
+		mod = util.module_from_spec(spec)
+
+		spec.loader.exec_module(mod)
+		return mod

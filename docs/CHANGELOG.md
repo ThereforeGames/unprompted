@@ -3,7 +3,39 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.9.0 - 25 July 2023</summary>
+<details open><summary>9.10.0 - 27 July 2023</summary>
+
+### About
+Unprompted v9.10.0 overhauls the logger and brings quality-of-life improvements for the newly-released SDXL. Congratulations to Stability AI for their incredible work!
+
+### Added
+- New example template `sdxl_refiner` that automatically refines the image via img2img (this is not the most efficient means of using the refiner, but I believe it's the best that A1111 supports at the time of writing)
+- `[zoom_enhance]`: The default values of `upscale_width` and `upscale_height` will automatically become 1024 if you have an SDXL model loaded (otherwise 512)
+- New special variable `sd_base`: returns the base type of the selected checkpoint, i.e. `sd1`, `sd2`, `sdxl` or `none`
+- The logger has been implemented anew using Python's `logging` module
+- The format and colors of the new logger are adopted from ControlNet to help ensure a consistent-looking console
+- New setting `Config.stable_diffusion.controlnet_name` if for some reason your environment expects it to be something other than `sd-webui-controlnet`
+- New setting `Config.logging.colors`: A dictionary of escape sequences that correspond to colors for the various logging levels
+- New setting `Config.logging.format`: String that defines the structure of a log message
+- New setting `Config.logging.file`: An optional filepath for writing log messages to disk
+- New setting `Config.logging.filemode`: If writing log messages to disk, you can specify filemode `a` to append messages to the file or `w` to overwrite the existing file
+- New setting `Config.logging.level`: This defines the lowest-priority messages you wish to see in your console, set it to `DEBUG` for verbose output
+- New setting `Config.logging.use_colors`: Set to false if you hate colors
+
+### Changed
+- Hardcoded references to ControlNet location have been replaced with path returned by `modules.extensions`, which may allow CN variables to work with third-party forks of the WebUI (which are nevertheless considered unsupported by this extension - try them at your own risk)
+
+### Fixed
+- Template Editor: No longer creates an entire Unprompted object, as it only needed the object for its config-parsing capabilities
+
+### Removed
+- `[pix2pix_zero]`: This shortcode presented a dependency conflict with the `ultralytics` package required by [txt2mask]. I have decided to simply remove this shortcode given its legacy status.
+- Config setting `log_contexts` superceded by the new setting `logging.level`
+- The log contexts `SETUP` and `RESULT` do not have direct equivalents in the new logger and have been replaced with `INFO` level messages
+
+</details>
+
+<details><summary>9.9.0 - 25 July 2023</summary>
 
 ### Added
 - `[array]`: Now accepts variable names as kwargs for updating array indexes dynamically, as in the case of a `[for]` loop

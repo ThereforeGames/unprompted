@@ -1,11 +1,11 @@
-from lib_unprompted.shared import Unprompted
+from lib_unprompted.shared import parse_config
 
 import modules.scripts as scripts
 
 base_dir = scripts.basedir()
-Unprompted = Unprompted(base_dir)
+cfg_dict, Config = parse_config(base_dir)
 
-if Unprompted.Config.stable_diffusion.template_editor:
+if Config.stable_diffusion.template_editor:
 	import os.path
 	from pathlib import Path
 
@@ -28,7 +28,7 @@ if Unprompted.Config.stable_diffusion.template_editor:
 	save_style_symbol_unprompted = '\U0001f5ab'  # 🖫
 	extra_networks_symbol = '\U0001F3B4'  # 🎴
 
-	folder = f"{base_dir}/{Unprompted.Config.template_directory}"
+	folder = f"{base_dir}/{Config.template_directory}"
 
 	def get_file_list(folder):
 		return [os.path.relpath(os.path.join(dirpath, file), folder).replace("\\", "/") for (dirpath, dirnames, filenames) in os.walk(folder) for file in filenames if file.endswith(".txt")]
@@ -99,5 +99,3 @@ if Unprompted.Config.stable_diffusion.template_editor:
 		return (unprompted_editor_ui, "Unprompted Template Editor", "unprompted_editor_ui"),
 
 	script_callbacks.on_ui_tabs(on_ui_tabs)
-else:
-	Unprompted.log("Template Editor disabled per Unprompted.Config.stable_diffusion.template_editor")

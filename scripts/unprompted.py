@@ -13,13 +13,7 @@ from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
 from enum import IntEnum, auto
-
-# from ui import settings
-
-import sys
-import os
-
-# settings.initialize()
+import sys, os
 
 base_dir = scripts.basedir()
 sys.path.append(base_dir)
@@ -42,12 +36,12 @@ Unprompted.wizard_template_kwargs = []
 
 
 def do_dry_run(string):
-	Unprompted.log(string)
+	Unprompted.log.debug(string)
 	# Reset vars
 	Unprompted.shortcode_user_vars = {}
 	unp_result = Unprompted.process_string(string)
 	# Cleanup routines
-	Unprompted.log("Entering cleanup routine...", False)
+	Unprompted.log.debug("Entering cleanup routine...")
 	for i in Unprompted.cleanup_routines:
 		Unprompted.shortcode_objects[i].cleanup()
 	return f"<strong>RESULT:</strong> {unp_result}"
@@ -494,21 +488,18 @@ class Scripts(scripts.Script):
 		Unprompted.p_copy = copy.copy(p)
 
 		# Update the controlnet script args with a list of 0 units
-		# TODO: Check if CN is installed and enabled
-		try:
-			import importlib
-			external_code = importlib.import_module("extensions.sd-webui-controlnet.scripts.external_code", "external_code")
-			external_code.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
-		except Exception as e:
-			# Unprompted.log_error(e)
-			Unprompted.log("Could not communicate with ControlNet; proceeding without it.", context="WARNING")
-			pass
+		cn_path = Unprompted.extension_path(Unprompted.Config.stable_diffusion.controlnet_name)
+		if cn_path:
+			cn_module = Unprompted.import_file(f"{Unprompted.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
+			cn_module.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
+		else:
+			Unprompted.log.warning("Could not communicate with ControlNet; proceeding without it.")
 
 		if match_main_seed:
 			if p.seed == -1:
 				from modules.processing import get_fixed_seed
 				p.seed = get_fixed_seed(-1)
-			Unprompted.log(f"Synchronizing seed with WebUI: {p.seed}")
+			Unprompted.log.debug(f"Synchronizing seed with WebUI: {p.seed}")
 			unprompted_seed = p.seed
 
 		if unprompted_seed != -1:
@@ -526,7 +517,7 @@ class Scripts(scripts.Script):
 
 		# Reset vars
 		if hasattr(p, "unprompted_original_prompt"):
-			Unprompted.log(f"Resetting to initial prompt for batch processing: {Unprompted.original_prompt}")
+			Unprompted.log.debug(f"Resetting to initial prompt for batch processing: {Unprompted.original_prompt}")
 			p.all_prompts[0] = Unprompted.original_prompt
 			p.all_negative_prompts[0] = Unprompted.original_negative_prompt
 		else:
@@ -567,18 +558,13 @@ class Scripts(scripts.Script):
 		# Extra vars
 		Unprompted.shortcode_user_vars["batch_index"] = 0
 		Unprompted.shortcode_user_vars["batch_test"] = None
-		Unprompted.original_model = opts.data["sd_model_checkpoint"]  # opts.sd_model_checkpoint
-		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]  # opts.sd_model_checkpoint
-
-		# Set up system var support - copy relevant p attributes into shortcode var object
-		# for att in dir(p):
-		# 	if not att.startswith("__") and att != "sd_model":
-		# 		Unprompted.shortcode_user_vars[att] = getattr(p, att)
-
-		#Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-		#Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
-
-		#Unprompted.update_stable_diffusion_vars(p)
+		Unprompted.original_model = opts.data["sd_model_checkpoint"]
+		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]
+		Unprompted.shortcode_user_vars["sd_base"] = "none"
+		if sd_models.model_data.sd_model:
+			if sd_models.model_data.sd_model.is_sdxl: Unprompted.shortcode_user_vars["sd_base"] = "sdxl"
+			elif sd_models.model_data.sd_model.is_sd2: Unprompted.shortcode_user_vars["sd_base"] = "sd2"
+			elif sd_models.model_data.sd_model.is_sd1: Unprompted.shortcode_user_vars["sd_base"] = "sd1"
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
@@ -614,7 +600,7 @@ class Scripts(scripts.Script):
 						p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
 						p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
 
-					Unprompted.log(f"Result {i}: {p.all_prompts[i]}", False)
+					Unprompted.log.debug(f"Result {i}: {p.all_prompts[i]}")
 			# Keep the same prompt between runs
 			elif (Unprompted.Config.stable_diffusion.batch_method == "none"):
 				for i, val in enumerate(p.all_prompts):
@@ -622,7 +608,7 @@ class Scripts(scripts.Script):
 					p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
 
 			# Cleanup routines
-			Unprompted.log("Entering Cleanup routine...", False)
+			Unprompted.log.debug("Entering Cleanup routine...")
 			for i in Unprompted.cleanup_routines:
 				Unprompted.shortcode_objects[i].cleanup()
 
@@ -643,11 +629,9 @@ class Scripts(scripts.Script):
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
 		if (is_enabled and Unprompted.Config.stable_diffusion.batch_method == "standard"):
-			Unprompted.log("Engaging new process_batch() implementation - if it gives you any trouble, please set batch_method to 'legacy' in your config. This message will be removed in a future update.", context="WARNING")
-
 			batch_index = Unprompted.shortcode_user_vars["batch_index"]
 
-			Unprompted.log(f"Starting process_batch() for batch_index #{batch_index}...")
+			Unprompted.log.debug(f"Starting process_batch() for batch_index #{batch_index}...")
 
 			if batch_index > 0:
 				if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[batch_index] = Unprompted.shortcode_user_vars["single_seed"]
@@ -689,7 +673,7 @@ class Scripts(scripts.Script):
 			if (batch_index == len(p.all_prompts)):
 
 				# Cleanup routines
-				Unprompted.log("Entering Cleanup routine...", False)
+				Unprompted.log.debug("Entering Cleanup routine...")
 				for i in Unprompted.cleanup_routines:
 					Unprompted.shortcode_objects[i].cleanup()
 
@@ -702,19 +686,19 @@ class Scripts(scripts.Script):
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
 		if not self.allow_postprocess or not is_enabled:
-			Unprompted.log("Bypassing After routine to avoid infinite loop.")
+			Unprompted.log.debug("Bypassing After routine to avoid infinite loop.")
 			self.allow_postprocess = True
 			return False  # Prevents endless loop with some shortcodes
 
 		if Unprompted.fix_hires_prompts:
-			Unprompted.log("Synchronizing prompt vars with hr_prompt vars")
+			Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
 			p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
 			p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
 			p.all_hr_prompts = p.all_prompts
 			p.all_hr_negative_prompts = p.all_negative_prompts
 
 		self.allow_postprocess = False
-		Unprompted.log("Entering After routine...")
+		Unprompted.log.debug("Entering After routine...")
 
 		for i in Unprompted.after_routines:
 			val = Unprompted.shortcode_objects[i].after(p, processed)

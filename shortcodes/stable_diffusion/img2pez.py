@@ -1,6 +1,5 @@
-
 class Shortcode():
-	def __init__(self,Unprompted):
+	def __init__(self, Unprompted):
 		self.Unprompted = Unprompted
 		self.description = "Optimize a hard prompt using the PEZ algorithm and CLIP encoders, AKA Hard Prompts Made Easy."
 
@@ -17,7 +16,7 @@ class Shortcode():
 		if "init_images" in self.Unprompted.shortcode_user_vars:
 			for img in self.Unprompted.shortcode_user_vars["init_images"]:
 				imgs.append(flatten(img, opts.img2img_background_color))
-		
+
 		image_path = kwargs["image_path"] if "image_path" in kwargs else ""
 		if (len(image_path) > 0):
 			from PIL import Image
@@ -26,7 +25,7 @@ class Shortcode():
 				imgs.append(Image.open(img))
 
 		if (len(imgs) < 1):
-			self.Unprompted.log("No input images found!","ERROR")
+			self.log.error("No input images found!")
 			return ""
 
 		prompt_len = int(float(kwargs["prompt_length"])) if "prompt_length" in kwargs else 16
@@ -44,18 +43,18 @@ class Shortcode():
 
 		print_step = int(float(kwargs["print_step"])) if "print_step" in kwargs else 100
 		batch_size = int(float(kwargs["batch_size"])) if "batch_size" in kwargs else 1
-		
+
 		# Set up params with argparse since it's the format used in the original repo
 		args = argparse.Namespace()
-		setattr(args,"prompt_len",prompt_len)
-		setattr(args,"iter",iterations)
-		setattr(args,"lr",learning_rate)
-		setattr(args,"weight_decay",weight_decay)
-		setattr(args,"prompt_bs",prompt_bs)
-		setattr(args,"print_step",print_step)
-		setattr(args,"batch_size",batch_size)
-		setattr(args,"clip_model",clip_model)
-		setattr(args,"clip_pretrain",clip_pretrain)
+		setattr(args, "prompt_len", prompt_len)
+		setattr(args, "iter", iterations)
+		setattr(args, "lr", learning_rate)
+		setattr(args, "weight_decay", weight_decay)
+		setattr(args, "prompt_bs", prompt_bs)
+		setattr(args, "print_step", print_step)
+		setattr(args, "batch_size", batch_size)
+		setattr(args, "clip_model", clip_model)
+		setattr(args, "clip_pretrain", clip_pretrain)
 
 		# load CLIP model
 		device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -75,14 +74,14 @@ class Shortcode():
 				torch.cuda.empty_cache()
 
 		return learned_prompt
-	
-	def ui(self,gr):
-		gr.Text(label="Image path 🡢 image_path",placeholder="Leave blank to use the initial img2img image. Supports multiple paths.")
-		gr.Number(label="Prompt length 🡢 prompt_length",value=16,interactive=True)
-		gr.Number(label="Iterations 🡢 iterations",value=200,interactive=True)
-		gr.Number(label="Learning rate 🡢 learning_rate",value=0.1,interactive=True)
-		gr.Number(label="Weight decay 🡢 weight_decay",value=0.1,interactive=True)
-		gr.Number(label="Prompt bs (well, that's what they call it) 🡢 prompt_bs",value=1,interactive=True)
-		gr.Dropdown(label="CLIP model 🡢 clip_model",choices=["ViT-L-14","ViT-H-14"],value="ViT-L-14",interactive=True)
-		gr.Dropdown(label="CLIP pretrain 🡢 clip_pretrain",choices=["openai","laion2b_s32b_b79k"],value="openai",interactive=True)
-		gr.Checkbox(label="Try freeing CLIP model from memory? 🡢 free_memory",value=False)
+
+	def ui(self, gr):
+		gr.Text(label="Image path 🡢 image_path", placeholder="Leave blank to use the initial img2img image. Supports multiple paths.")
+		gr.Number(label="Prompt length 🡢 prompt_length", value=16, interactive=True)
+		gr.Number(label="Iterations 🡢 iterations", value=200, interactive=True)
+		gr.Number(label="Learning rate 🡢 learning_rate", value=0.1, interactive=True)
+		gr.Number(label="Weight decay 🡢 weight_decay", value=0.1, interactive=True)
+		gr.Number(label="Prompt bs (well, that's what they call it) 🡢 prompt_bs", value=1, interactive=True)
+		gr.Dropdown(label="CLIP model 🡢 clip_model", choices=["ViT-L-14", "ViT-H-14"], value="ViT-L-14", interactive=True)
+		gr.Dropdown(label="CLIP pretrain 🡢 clip_pretrain", choices=["openai", "laion2b_s32b_b79k"], value="openai", interactive=True)
+		gr.Checkbox(label="Try freeing CLIP model from memory? 🡢 free_memory", value=False)

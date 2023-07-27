@@ -26,11 +26,10 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		import gc, cv2, numpy, math
-		from modules import devices
+		from modules import devices, sd_models, shared
 		from scipy import mean, interp, ravel, array
 		from PIL import Image, ImageFilter, ImageChops, ImageOps
 		from blendmodes.blend import blendLayers, BlendType
-		from modules import shared
 		from lib_unprompted.simpleeval import simple_eval
 
 		def sigmoid(x):
@@ -56,10 +55,13 @@ class Shortcode():
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0
 		self.Unprompted.p_copy.batch_index = 0
 
+		if sd_models.model_data.sd_model and sd_models.model_data.sd_model.is_sdxl: default_mask_size = 1024
+		else: default_mask_size = 512
+
 		test = int(float(self.Unprompted.parse_advanced(kwargs["test"], context))) if "test" in kwargs else 0
 		blur_radius_orig = float(self.Unprompted.parse_advanced(kwargs["blur_size"], context)) if "blur_size" in kwargs else 0.03
-		upscale_width = int(float(self.Unprompted.parse_advanced(kwargs["upscale_width"], context))) if "upscale_width" in kwargs else 512
-		upscale_height = int(float(self.Unprompted.parse_advanced(kwargs["upscale_height"], context))) if "upscale_height" in kwargs else 512
+		upscale_width = int(float(self.Unprompted.parse_advanced(kwargs["upscale_width"], context))) if "upscale_width" in kwargs else default_mask_size
+		upscale_height = int(float(self.Unprompted.parse_advanced(kwargs["upscale_height"], context))) if "upscale_height" in kwargs else default_mask_size
 		hires_size_max = int(float(self.Unprompted.parse_advanced(kwargs["hires_size_max"], context))) if "hires_size_max" in kwargs else 1024
 
 		sharpen_amount = int(float(self.Unprompted.parse_advanced(kwargs["sharpen_amount"], context))) if "sharpen_amount" in kwargs else 1.0
@@ -112,10 +114,10 @@ class Shortcode():
 
 		if "denoising_strength" in kwargs:
 			self.Unprompted.p_copy.denoising_strength = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"], context))
-			self.Unprompted.log(f"Manually setting denoise strength to {self.Unprompted.p_copy.denoising_strength}")
+			self.log.debug(f"Manually setting denoise strength to {self.Unprompted.p_copy.denoising_strength}")
 		if "cfg_scale" in kwargs:
 			self.Unprompted.p_copy.cfg_scale = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"], context))
-			self.Unprompted.log(f"Manually setting CFG scale to {self.Unprompted.p_copy.cfg_scale}")
+			self.log.debug(f"Manually setting CFG scale to {self.Unprompted.p_copy.cfg_scale}")
 
 		# vars for dynamic settings
 		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"], context)) if "denoising_max" in kwargs else 0.3
@@ -166,15 +168,15 @@ class Shortcode():
 			if show_original: append_originals.append(all_images[image_idx].copy())
 			# Workaround for compatibility between [after] block and batch processing
 			if "width" not in self.Unprompted.shortcode_user_vars:
-				self.Unprompted.log("Width variable not set - bypassing shortcode")
+				self.log.debug("Width variable not set - bypassing shortcode")
 				return ""
 
 			if not self.Unprompted.shortcode_var_is_true("bypass_adaptive_hires", pargs, kwargs):
 				total_pixels = image_pil.size[0] * image_pil.size[1]
 
-				self.Unprompted.log(f"Image size: {image_pil.size[0]}x{image_pil.size[1]} ({total_pixels}px)")
+				self.log.debug(f"Image size: {image_pil.size[0]}x{image_pil.size[1]} ({total_pixels}px)")
 				target_multiplier = max(image_pil.size[0], image_pil.size[1]) / max(self.Unprompted.shortcode_user_vars["width"], self.Unprompted.shortcode_user_vars["height"])
-				self.Unprompted.log(f"Target multiplier is {target_multiplier}")
+				self.log.debug(f"Target multiplier is {target_multiplier}")
 				# target_size_max = target_size_max_orig * target_multiplier
 				sd_unit = 64
 
@@ -197,8 +199,8 @@ class Shortcode():
 				upscale_width = min(hires_size_max, upscale_width)
 				upscale_height = min(hires_size_max, upscale_height)
 
-				self.Unprompted.log(f"Target size max scaled for image size: {target_size_max}")
-				self.Unprompted.log(f"Upscale size, accounting for original image: {upscale_width}")
+				self.log.debug(f"Target size max scaled for image size: {target_size_max}")
+				self.log.debug(f"Upscale size, accounting for original image: {upscale_width}")
 
 			image = numpy.array(image_pil)
 			if starting_image: starting_image = starting_image.resize((image_pil.size[0], image_pil.size[1]))
@@ -212,7 +214,7 @@ class Shortcode():
 
 			if debug: mask_image.save(f"zoom_enhance_1_{image_idx}.png")
 			if (image_mask_orig):
-				self.Unprompted.log("Original image mask detected")
+				self.log.debug("Original image mask detected")
 				prep_orig = image_mask_orig.resize((mask_image.size[0], mask_image.size[1])).convert("L")
 				fg_color = 255
 				if (manual_mask_mode == "subtract"):
@@ -267,16 +269,16 @@ class Shortcode():
 					(cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes), key=lambda b: b[1][i], reverse=reverse))
 
 			for c_idx, c in enumerate(cnts):
-				self.Unprompted.log(f"Processing contour #{c_idx+1}...")
+				self.log.debug(f"Processing contour #{c_idx+1}...")
 				area = cv2.contourArea(c)
 				if area >= min_area:
 					x, y, w, h = cv2.boundingRect(c)
 
-					self.Unprompted.log(f"Contour properties: {x} {y} {w} {h}")
-					target_size = (w * h) / (512 * 512 * target_multiplier)
-					self.Unprompted.log(f"Masked region size is {target_size}")
+					self.log.debug(f"Contour properties: {x} {y} {w} {h}")
+					target_size = (w * h) / (upscale_width * upscale_height * target_multiplier)
+					self.log.debug(f"Masked region size is {target_size}")
 					if target_size > 1 or target_size < 0.03:
-						self.Unprompted.log(f"This mask is either too large or too small for processing - skipping")
+						self.log.debug(f"This mask is either too large or too small for processing - skipping")
 						continue
 
 					# Make sure it's a square, 1:1 AR for stable diffusion
@@ -290,13 +292,12 @@ class Shortcode():
 						# target_size = (w * h) / (image_pil.size[0] * image_pil.size[1] * target_multiplier)
 
 						# sig = 0 # sigmoid(-6 + target_size * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
-						# self.Unprompted.log(f"Sigmoid value: {sig}")
 						if "denoising_strength" not in kwargs:
 							self.Unprompted.p_copy.denoising_strength = (1 - min(1, target_size)) * denoising_max
-							self.Unprompted.log(f"Denoising strength is {self.Unprompted.p_copy.denoising_strength}")
+							self.log.debug(f"Denoising strength is {self.Unprompted.p_copy.denoising_strength}")
 						if "cfg_scale" not in kwargs:
 							self.Unprompted.p_copy.cfg_scale = cfg_min + min(1, target_size) * (cfg_max - cfg_min)
-							self.Unprompted.log(f"CFG Scale is {self.Unprompted.p_copy.cfg_scale} (min {cfg_min}, max {cfg_min+cfg_max})")
+							self.log.debug(f"CFG Scale is {self.Unprompted.p_copy.cfg_scale} (min {cfg_min}, max {cfg_min+cfg_max})")
 
 					# Set prompt with multi-subject support
 					self.Unprompted.p_copy.prompt = all_replacements[min(c_idx, len(all_replacements) - 1)]
@@ -373,7 +374,7 @@ class Shortcode():
 								script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
 								if script.title().lower() == "unprompted":  #  or (controlnet_preset == "none" and script.title().lower() == "controlnet")
 									self.Unprompted.p_copy.scripts.alwayson_scripts.pop(i)
-									self.Unprompted.log(f"Successfully disabled {script.title()} from p_copy scripts")
+									self.log.debug(f"Successfully disabled {script.title()} from p_copy scripts")
 									i = 0  # reset loop after popping
 								else:
 									i += 1
@@ -385,7 +386,7 @@ class Shortcode():
 							self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
 						else:
 							# workaround for txt2img, not sure if compatible with controlnet
-							self.Unprompted.log("Using alternate zoom_enhance processing - may not be compatible with ControlNet", context="WARNING")
+							self.log.warning("Using alternate zoom_enhance processing - may not be compatible with ControlNet")
 
 							self.Unprompted.populate_stable_diffusion_vars(self.Unprompted.p_copy)
 
@@ -398,7 +399,7 @@ class Shortcode():
 					if color_correct_method != "none" and starting_image:
 						try:
 							if color_correct_timing == "post":
-								self.Unprompted.log("Color correcting the face...")
+								self.log.debug("Color correcting the face...")
 								if debug:
 									fixed_image.save("zoom_enhance_5a_pre_color_correct.png")
 									starting_image_face_big.save("zoom_enhance_5b_using_this_face_mask.png")
@@ -406,7 +407,7 @@ class Shortcode():
 
 								fixed_image = self.Unprompted.color_match(sub_img_big, fixed_image, color_correct_method, color_correct_strength)  # starting_image_face_big
 
-							self.Unprompted.log("Color correcting the main image to the init image...")
+							self.log.debug("Color correcting the main image to the init image...")
 							corrected_main_img = self.Unprompted.color_match(starting_image, image_pil, color_correct_method, color_correct_strength)
 							width, height = image_pil.size
 							corrected_main_img = corrected_main_img.resize((width, height))
@@ -432,7 +433,7 @@ class Shortcode():
 					if debug: fixed_image.save("zoom_enhance_5f.png")
 
 					if sharpen_amount > 0:
-						self.Unprompted.log(f"Sharpening the fixed image by {sharpen_amount}")
+						self.log.debug(f"Sharpening the fixed image by {sharpen_amount}")
 						fixed_image = unsharp_mask(fixed_image, sharpen_amount)
 
 					try:
@@ -446,21 +447,21 @@ class Shortcode():
 
 						if debug: image_pil.save("zoom_enhance_final_result.png")
 
-						self.Unprompted.log(f"Adding zoom_enhance result for image_idx {image_idx}")
+						self.log.debug(f"Adding zoom_enhance result for image_idx {image_idx}")
 						if context != "after":
-							self.Unprompted.log("Attempting to use zoom_enhance outside of an after block... good luck")
+							self.log.debug("Attempting to use zoom_enhance outside of an after block... good luck")
 							self.Unprompted.shortcode_user_vars["init_images"] = image_pil
 						# main return
 						else:
 							self.Unprompted.after_processed.images[image_idx] = image_pil
 					except Exception as e:
-						self.Unprompted.log(f"Could not append zoom_enhance result: {e}", context="ERROR")
+						self.log.error(f"Could not append zoom_enhance result: {e}")
 						return ""
 
 					# Remove temp image key in case [img2img] is used later
 					if "img2img_init_image" in self.Unprompted.shortcode_user_vars: del self.Unprompted.shortcode_user_vars["img2img_init_image"]
 
-				else: self.Unprompted.log(f"Countour area ({area}) is less than the minimum ({min_area}) - skipping")
+				else: self.log.debug(f"Countour area ({area}) is less than the minimum ({min_area}) - skipping")
 
 		# Add original image to output window
 		for appended_image in append_originals:

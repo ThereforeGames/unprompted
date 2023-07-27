@@ -11,6 +11,24 @@
 	{
 		"shortcodes":"shortcodes"
 	},
+	"logging":
+	{
+		"colors":
+		{
+			"NOTSET":"",
+			"DEBUG": "\\033[0;36m",
+			"INFO": "\\033[0;32m",
+			"WARNING": "\\033[0;33m",
+			"ERROR": "\\033[0;31m",
+			"CRITICAL": "\\033[0;37;41m",
+			"RESET": "\\033[0m"
+		},
+		"format":"%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+		"file":"",
+		"filemode":"a",
+		"level":"INFO",
+		"use_colors":true
+	},
 	"syntax":
 	{
 		"sanitize_before":{"\n":"\\n","\t":""},
@@ -34,7 +52,8 @@
 	{
 		"batch_method":"standard",
 		"show_extra_generation_params":true,
-		"template_editor":true
+		"template_editor":true,
+		"controlnet_name":"sd-webui-controlnet"
 	},
 	"ui":
 	{

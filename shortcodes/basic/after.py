@@ -11,11 +11,11 @@ class Shortcode():
 	def run_block(self, pargs, kwargs, context, content):
 		index = int(self.Unprompted.parse_advanced(pargs[0])) if len(pargs) > 0 else 0
 		if self.last_index != index or "allow_dupe_index" in pargs:
-			self.Unprompted.log(f"Queueing up content: {content}")
+			self.log.debug(f"Queueing up content: {content}")
 			self.after_content.insert(index, content)
 			self.last_index = index
 		else:
-			self.Unprompted.log("Duplicate [after] content detected, skipping - include allow_dupe_index to bypass this check")
+			self.log.info("Duplicate [after] content detected, skipping - include allow_dupe_index to bypass this check")
 		return ("")
 
 	def after(self, p=None, processed=None):

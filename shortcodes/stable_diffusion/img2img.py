@@ -39,9 +39,6 @@ class Shortcode():
 			if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(self.Unprompted.main_p, att)
 
 		try:
-			#self.Unprompted.log(f"img2img prompt = {self.Unprompted.shortcode_user_vars['prompt']}")
-			#self.Unprompted.log(f"img2img negative prompt = {self.Unprompted.shortcode_user_vars['negative_prompt']}")
-			#self.Unprompted.log(f"img2img seed = {self.Unprompted.shortcode_user_vars['seed']}")
 			temp_gr_request = lambda: None
 			temp_gr_request.username = "unprompted"
 			img2img_result = modules.img2img.img2img(
@@ -107,10 +104,10 @@ class Shortcode():
 
 		try:
 			if len(img2img_images) < 1:
-				self.Unprompted.log(f"The returned object does not appear to contain an image: {img2img_images}", context="ERROR")
+				self.log.error(f"The returned object does not appear to contain an image: {img2img_images}")
 				return ("")
 		except Exception as e:
-			print("ERROR - Could not check length of img2img_images")
+			self.log.error("Could not check length of img2img_images")
 			pass
 
 		# Add the new image(s) to our main output

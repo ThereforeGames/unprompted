@@ -194,6 +194,17 @@ Example: you set `batch_test` to `<= 3` and you run a batch process with 5 image
 
 You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
 
+### sd_base
+
+This variable contains the base type of the currently-loaded checkpoint. The possible values at the time of writing are as follows:
+
+- sdxl
+- sd2
+- sd1
+- none
+
+When you load a new model via `sd_model`, Unprompted will change the value of `sd_base` accordingly. Due to this, it is not recommended that you set the value of `sd_base` by hand; you can think of it as a soft-read-only variable.
+
 ### single_seed
 
 You can set this integer variable to lock the seed for all images in a batch run.
@@ -1770,14 +1781,6 @@ Supports the following model-specific arguments: `value_threshold`, `distance_th
 **Reason for legacy status:** This shortcode was introduced by a PR and is reportedly not compatible with recent versions of the WebUI.
 
 This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
-
-</details>
-
-<details><summary>[pix2pix_zero]</summary>
-
-**Reason for legacy status:** the pix2pix-zero method [was not what I originally thought](https://github.com/AUTOMATIC1111/stable-diffusion-webui/discussions/7711#discussioncomment-4952579) which was sort of a buzzkill. As it stands, I believe ControlNet is better suited at most tasks, but I can't make any definitive claims about that - pix2pix-zero went under the radar and does merit further testing.
-
-If you wish to use this shortcode, you will need to modify the hardcoded path to a diffusers model on line 33.
 
 </details>
 

@@ -1,7 +1,8 @@
 class Shortcode():
-	def __init__(self,Unprompted):
+	def __init__(self, Unprompted):
 		self.Unprompted = Unprompted
 		self.description = "Returns various types of metadata about the content."
+
 	def run_block(self, pargs, kwargs, context, content):
 		return_string = ""
 		delimiter = ","
@@ -22,19 +23,19 @@ class Shortcode():
 				from ldm.modules.encoders.modules import FrozenCLIPEmbedder
 				import torch
 				test = FrozenCLIPEmbedder().cuda()
-				batch_encoding = test.tokenizer(content, truncation=True, max_length=77, return_length=True,
-					return_overflowing_tokens=False, padding="max_length", return_tensors="pt")
+				batch_encoding = test.tokenizer(content, truncation=True, max_length=77, return_length=True, return_overflowing_tokens=False, padding="max_length", return_tensors="pt")
 				tokens = batch_encoding["input_ids"]
 				count = torch.count_nonzero(tokens - 49407)
 				return_string += str(count.item()) + delimiter
-			except ImportError: self.Unprompted.log(f"Could not import FrozenCLIPEmbedder",True,"ERROR")
-			
-		return(return_string[:-1])
+			except ImportError:
+				self.log.error(f"Could not import FrozenCLIPEmbedder")
 
-	def ui(self,gr):
+		return (return_string[:-1])
+
+	def ui(self, gr):
 		gr.Checkbox(label="Return the character count 🡢 character_count")
 		gr.Checkbox(label="Return the word count 🡢 word_count")
 		gr.Checkbox(label="Return the sentence count 🡢 sentence_count")
 		gr.Checkbox(label="Return the filename 🡢 filename")
 		gr.Checkbox(label="Return the CLIP token count (prompt complexity) 🡢 clip_count")
-		gr.Textbox(label="Return the count of a custom substring 🡢 string_count",max_lines=1)
+		gr.Textbox(label="Return the count of a custom substring 🡢 string_count", max_lines=1)

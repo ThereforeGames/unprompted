@@ -6,7 +6,7 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		import math
 		if not len(pargs):
-			self.Unprompted.log("No number found at pargs[0]", context="ERROR")
+			self.log.error("No number found at pargs[0]")
 			return ""
 
 		place = int(float(self.Unprompted.parse_advanced(kwargs["_place"]))) if "_place" in kwargs else 0
@@ -16,7 +16,7 @@ class Shortcode():
 		elif "_down" in pargs: round_func = math.floor
 		else: round_func = round
 
-		self.Unprompted.log(f"Rounding the following number: {num}")
+		self.log.debug(f"Rounding the following number: {num}")
 
 		def round_helper(num, place):
 			multiplier = pow(10, place)
