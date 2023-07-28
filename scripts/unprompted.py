@@ -493,7 +493,7 @@ class Scripts(scripts.Script):
 			cn_module = Unprompted.import_file(f"{Unprompted.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
 			cn_module.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
 		else:
-			Unprompted.log.warning("Could not communicate with ControlNet; proceeding without it.")
+			Unprompted.log.debug("Could not communicate with ControlNet; proceeding without it.")
 
 		if match_main_seed:
 			if p.seed == -1:

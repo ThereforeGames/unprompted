@@ -571,7 +571,7 @@ class Shortcode():
 				# return image_pil
 
 			else:
-				if ("mode" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mode"] != 5):  # 5 =  batch processing
+				if ("mode" not in self.Unprompted.shortcode_user_vars or self.Unprompted.shortcode_user_vars["mode"] != 5):  # 5 =  batch processing
 					self.Unprompted.shortcode_user_vars["mode"] = 4  # "mask upload" mode to avoid unnecessary processing
 				if ("mask_blur" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["mask_blur"] > 0):
 					from PIL import ImageFilter
@@ -596,7 +596,7 @@ class Shortcode():
 		if "return_image" in pargs: return (self.image_mask)
 
 		if "mode" in self.Unprompted.shortcode_user_vars:
-			self.Unprompted.shortcode_user_vars["mode"] = max(5, self.Unprompted.shortcode_user_vars["mode"])
+			self.Unprompted.shortcode_user_vars["mode"] = min(5, self.Unprompted.shortcode_user_vars["mode"])
 		self.Unprompted.shortcode_user_vars["image_mask"] = self.image_mask
 
 		# Copy code from modules/processing.py, necessary for batch processing

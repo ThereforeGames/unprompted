@@ -3,7 +3,25 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.10.0 - 27 July 2023</summary>
+<details open><summary>9.11.0 - 28 July 2023</summary>
+
+### Added
+- New Wizard template `Clipdrop SDXL Styles`: Clipdrop recently disclosed their prompt pre-processing terms for various SDXL presets (comic book, fantasy, etc) so I have adapted them to a simple Wizard UI
+- `[img2img]`: Can now process multiple init images (better batch support)
+- `[img2img]`: Now supports `batch_test` expression
+- `[unset]`: Now supports pattern matching with `*` to delete multiple variables from memory, useful if you need to disable ControlNet for the `[after]` block e.g. `[unset cn_* controlnet_*]`
+- `[zoom_enhance]`: Now supports `no_sync` parg which prevents updates to the `p` object, may help to ensure compatibility with other extensions
+
+### Changed
+- Adjusted a few console messages
+
+### Fixed
+- `[txt2mask]`: Fixed an issue with updating the `mode` variable at the end of the process
+- Bodysnatcher v1.3.2: Unsets the ControlNet units for `[after]` processing
+
+</details>
+
+<details><summary>9.10.0 - 27 July 2023</summary>
 
 ### About
 Unprompted v9.10.0 overhauls the logger and brings quality-of-life improvements for the newly-released SDXL. Congratulations to Stability AI for their incredible work!

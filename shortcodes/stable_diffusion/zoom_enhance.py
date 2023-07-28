@@ -49,7 +49,8 @@ class Shortcode():
 			return Image.fromarray(sharpened)
 
 		# Apply any changes from user variables such as SD checkpoint
-		self.Unprompted.update_stable_diffusion_vars(self.Unprompted.p_copy)
+		if "no_sync" not in pargs:
+			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.p_copy)
 
 		orig_batch_size = self.Unprompted.shortcode_user_vars["batch_size"]
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0

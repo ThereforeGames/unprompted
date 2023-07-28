@@ -16,13 +16,19 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 
 The following extension(s) are known to cause issues with Unprompted:
 
-- **stable-diffusion-webui-pixelization**: seems to break Unprompted when "Pixelization" is added as a postprocessing operation in the WebUI settings.
+- **adetailer**: reportedly utilizes its own prompt field(s) that do not receive Unprompted strings correctly
 
 </details>
 
-<details><summary>WebUI randomly locking up</summary>
+<details><summary>[zoom_enhance] not affecting final output</summary>
 
-Gradio v3.2.x reportedly causes some performance issues due to websocket functionality. Try adding `--no-gradio-queue` to your launch options as a possible workaround.
+I have received several reports regarding the `[zoom_enhance]` shortcode.
+
+While I have not been able to reproduce the problem on my devices, you can try using the `_alt` parg to engage an alternate means of running the img2img task for face upscaling. Specifically, this sends the task to Unprompted's `[img2img]` shortcode rather than calling the WebUI's native `process_images_inner()` method. Example of use:
+
+```
+[after][zoom_enhance _alt][/after]
+```
 
 </details>
 
@@ -495,7 +501,7 @@ It has a few settings that change how the code is formatted:
 
 This section describes all of the included basic shortcodes and their functionality.
 
-<details><summary>[#]</summary>
+<details><summary><a href="#-comment">[#]</a></summary>
 
 ## Comment
 
