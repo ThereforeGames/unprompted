@@ -44,7 +44,7 @@ class Shortcode():
 			temp_gr_request = lambda: None
 			temp_gr_request.username = "unprompted"
 
-			for image_idx, init_img in init_imgs:
+			for image_idx, init_img in enumerate(init_imgs):
 				if self.Unprompted.batch_test_bypass(image_idx): continue
 
 				img2img_result = modules.img2img.img2img(
