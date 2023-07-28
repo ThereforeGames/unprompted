@@ -370,9 +370,12 @@ class Unprompted:
 					self.shortcode_user_vars["sd_base"] = "none"
 					if new_model:
 						# Update `sd_base` special variable
-						if new_model.is_sdxl: self.shortcode_user_vars["sd_base"] = "sdxl"
-						elif new_model.is_sd2: self.shortcode_user_vars["sd_base"] = "sd2"
-						elif new_model.is_sd1: self.shortcode_user_vars["sd_base"] = "sd1"
+						try:  # temporary workaround for sd.next lacking these variables
+							if new_model.is_sdxl: self.shortcode_user_vars["sd_base"] = "sdxl"
+							elif new_model.is_sd2: self.shortcode_user_vars["sd_base"] = "sd2"
+							elif new_model.is_sd1: self.shortcode_user_vars["sd_base"] = "sd1"
+						except:
+							pass
 			# control controlnet
 			elif att.startswith("controlnet_") or att.startswith("cn_"):
 				self.update_controlnet_var(this_p, att)

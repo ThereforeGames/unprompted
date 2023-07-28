@@ -55,8 +55,12 @@ class Shortcode():
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0
 		self.Unprompted.p_copy.batch_index = 0
 
-		if sd_models.model_data.sd_model and sd_models.model_data.sd_model.is_sdxl: default_mask_size = 1024
-		else: default_mask_size = 512
+		try:
+			if sd_models.model_data.sd_model and sd_models.model_data.sd_model.is_sdxl: default_mask_size = 1024
+			else: default_mask_size = 512
+		except:  # temporary workaround for sd.next not supporting these variables
+			default_mask_size = 512
+			pass
 
 		test = int(float(self.Unprompted.parse_advanced(kwargs["test"], context))) if "test" in kwargs else 0
 		blur_radius_orig = float(self.Unprompted.parse_advanced(kwargs["blur_size"], context)) if "blur_size" in kwargs else 0.03

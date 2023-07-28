@@ -562,9 +562,12 @@ class Scripts(scripts.Script):
 		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]
 		Unprompted.shortcode_user_vars["sd_base"] = "none"
 		if sd_models.model_data.sd_model:
-			if sd_models.model_data.sd_model.is_sdxl: Unprompted.shortcode_user_vars["sd_base"] = "sdxl"
-			elif sd_models.model_data.sd_model.is_sd2: Unprompted.shortcode_user_vars["sd_base"] = "sd2"
-			elif sd_models.model_data.sd_model.is_sd1: Unprompted.shortcode_user_vars["sd_base"] = "sd1"
+			try:  # temporary workaround for sd.next lacking these variables
+				if sd_models.model_data.sd_model.is_sdxl: Unprompted.shortcode_user_vars["sd_base"] = "sdxl"
+				elif sd_models.model_data.sd_model.is_sd2: Unprompted.shortcode_user_vars["sd_base"] = "sd2"
+				elif sd_models.model_data.sd_model.is_sd1: Unprompted.shortcode_user_vars["sd_base"] = "sd1"
+			except:
+				pass
 
 		if p.seed is not None and p.seed != -1.0:
 			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
