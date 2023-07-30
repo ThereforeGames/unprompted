@@ -30,7 +30,7 @@ def parse_config(base_dir="."):
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.11.0"
+		self.VERSION = "9.12.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -49,22 +49,48 @@ class Unprompted:
 			if self.Config.logging.use_colors:
 
 				def format(self, record):
+					def set_col_width(width=8, col_string="", new_string="", increment=None):
+						if self.Config.logging.improve_alignment:
+							if not new_string: new_string = col_string
+							if not increment: increment = width
+							while (len(col_string) > width):
+								width += increment
+							num_spaces = width - len(col_string)
+							col_string = f"{new_string}{' ' * max(0,num_spaces)}"
+						return col_string
+
+					def colorize_log_string(col_seq, string):
+						reset_seq = (self.Config.logging.colors.RESET).encode().decode("unicode-escape")
+						col_seq = col_seq.encode().decode("unicode-escape")
+						return f"{col_seq}{string}{reset_seq}"
+
 					import copy
 					colored_record = copy.copy(record)
+
 					levelname = colored_record.levelname
-					color_sequence = getattr(self.Config.logging.colors, levelname, self.Config.logging.colors.RESET).encode().decode("unicode-escape")
-					colored_record.levelname = f"{color_sequence}{levelname}{(self.Config.logging.colors.RESET).encode().decode('unicode-escape')}"
+					color_sequence = getattr(self.Config.logging.colors, levelname, self.Config.logging.colors.RESET)
+					colored_levelname = f"({colorize_log_string(color_sequence,levelname)})"
+
+					colored_record.levelname = set_col_width(8, levelname, colored_levelname)
+
+					colored_name = colorize_log_string(self.Config.logging.colors.FADED, colored_record.name)
+
+					colored_record.name = colored_name
+
 					return super().format(colored_record)
 
 		self.log = logging.getLogger("Unprompted")
 		self.log.propagate = False
 		self.log.setLevel(getattr(logging, self.Config.logging.level))
+
 		if not self.log.handlers:
 			if self.Config.logging.file:
 				handler = logging.FileHandler(self.Config.logging.file, self.Config.logging.filemode)
 			else:
 				handler = logging.StreamHandler(sys.stdout)
-			handler.setFormatter(LogFormatter(self.Config.logging.format, self.Config))
+
+			log_format = self.Config.logging.format
+			handler.setFormatter(LogFormatter(log_format, self.Config))
 			self.log.addHandler(handler)
 
 		self.log.info(f"Loading Unprompted v{self.VERSION} by Therefore Games")
@@ -131,7 +157,7 @@ class Unprompted:
 			self.log.debug(f"Loaded shortcode: {shortcode_name}")
 
 		self.shortcode_parser = shortcodes.Parser(start=self.Config.syntax.tag_start, end=self.Config.syntax.tag_end, esc=self.Config.syntax.tag_escape, ignore_unknown=True)
-		self.log.debug(f"Unprompted finished loading in {time.time()-start_time} seconds.")
+		self.log.debug(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def shortcode_string_log(self):
 		return ("[" + os.path.basename(inspect.stack()[1].filename) + "]")

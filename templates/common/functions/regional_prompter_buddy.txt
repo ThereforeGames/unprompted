@@ -1,0 +1,69 @@
+[template name="Regional Prompter Buddy v0.0.1"]
+![Preview]([base_dir]/regional_prompter_buddy.png)
+
+This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension. It is currently intended for producing images with two subjects, but may be improved to support more regions in the future.
+
+⚠️ **Important:** You **must** rename your `unprompted` extension folder to `_unprompted` in order to achieve compatibility with Regional Prompter! This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically.
+
+<details><summary>Recommended Regional Prompter settings</summary>
+
+- Generation mode: Attention (this is faster than Latent mode, but works poorly with loras. However, you can easily add your loras in the zoom_enhance step!)
+- Base Ratio: 0.2
+- Use base prompt: Enabled, and make sure it matches the value of the `base_prompt` setting below
+- Use common prompt: Disabled, this template implements its own "common prompt" in a way that is more flexible
+
+</details>
+[/template]
+[set prefix _new]high detail RAW photo of[/set]
+[set simple _label="Simple Prompt" _info="This is a simple description of the overall image that should not contain specific character names." _new]man and woman standing together[/set]
+[wizard_ui_accordion _label="👩 Subject A"]
+	[set subject_a _new]woman[/set]
+	[set zoom_a _label="Zoom Enhance A" _new][get subject_a][/set]
+	[set negative_a _label="Negative Prompt A" _info="By default, the negative prompts include the name of the opposite subject to maximize difference in appearance." _new]((([get subject_b])))[/set]
+[/wizard_ui_accordion]
+[wizard_ui_accordion _label="👨 Subject B"]
+	[set subject_b _new]man[/set]
+	[set zoom_b _label="Zoom Enhance B" _new][get subject_b][/set]
+	[set negative_b _label="Negative Prompt B" _new]((([get subject_a])))[/set]
+[/wizard_ui_accordion]
+
+[set flip_chance _new _ui="slider" _label="Chance to flip subjects" _minimum="0" _maximum="100"]50[/set]
+
+[set split_type _new _ui="radio" _choices="Horizontal|Vertical" _info="This template may support more region types in the future if there is enough interest."]Horizontal[/set]
+[if split_type="Horizontal"]
+	[array region_stamps _append="black_left_half|black_right_half"]
+[/if]
+[else]
+	[array region_stamps _append="black_top_half|black_bottom_half"]
+[/else]
+
+[set affix _new _info="Optional string to append to the base prompt and both subjects."] [/set]
+
+[set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="This value MUST match your Regional Prompter setting or it won't work!"]1[/set]
+[set split_negatives _new _ui="checkbox" _info="Give a different negative prompt to each subject"]1[/set]
+
+[set do_zoom_enhance _new _ui="checkbox" _label="Zoom Enhance Postprocessing"]0[/set]
+
+[set current_neg][get negative_prompt][/set]
+
+[chance "{get flip_chance}"]
+	[set temp_subject][get subject_a][/set]
+	[set subject_a][get subject_b][/set]
+	[set subject_b][get temp_subject][/set]
+	[set temp_subject][get negative_a][/set]
+	[set negative_a][get negative_b][/set]
+	[set negative_b][get temp_subject][/set]
+[/chance]
+
+[if base_prompt]
+[get prefix] [get simple] [get affix] BREAK
+[/if]
+[get simple], [get prefix] [get subject_a] [get affix] BREAK
+[get simple], [get prefix] [get subject_b] [get affix]
+[if split_negatives]
+[set negative_prompt _append] BREAK [get negative_a] [get current_neg] BREAK [get negative_b] [get current_neg][/set]
+[/if]
+
+[if do_zoom_enhance]
+	[after][zoom_enhance no_sync stamp="{array region_stamps 0}" stamp_x=-20 replacement="face of {get zoom_b}, {get simple}" negative_replacement="{get current_neg}" denoising_max=0.6][zoom_enhance no_sync stamp="{array region_stamps 1}" stamp_x=20 replacement="face of {get zoom_a}, {get simple}" negative_replacement="{get current_neg}"][/after]
+[/if]

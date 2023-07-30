@@ -331,6 +331,8 @@ class Shortcode():
 					if blur_radius > 0:
 						sub_mask = sub_mask.filter(ImageFilter.GaussianBlur(radius=blur_radius))
 
+					# Ensure correct size
+					# sub_mask = sub_mask.resize((upscale_width, upscale_height), resample=upscale_method)
 					if debug: sub_mask.save("zoom_enhance_4.png")
 
 					if color_correct_timing == "pre" and color_correct_method != "none" and starting_image:
@@ -372,23 +374,25 @@ class Shortcode():
 
 					# run img2img now to improve face
 					try:
-						if is_img2img and "_alt" not in pargs:
-							temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
-							i = 0
-							while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
-								script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
-								if script.title().lower() == "unprompted":  #  or (controlnet_preset == "none" and script.title().lower() == "controlnet")
-									self.Unprompted.p_copy.scripts.alwayson_scripts.pop(i)
-									self.log.debug(f"Successfully disabled {script.title()} from p_copy scripts")
-									i = 0  # reset loop after popping
-								else:
-									i += 1
+						temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
+						i = 0
+						while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
+							script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
+							script_title = script.title().lower()
+							if script_title == "unprompted" or script_title == "regional prompter":  #  or (controlnet_preset == "none" and script.title().lower() == "controlnet")
+								self.Unprompted.p_copy.scripts.alwayson_scripts.pop(i)
+								self.log.debug(f"Successfully disabled {script.title()} from p_copy scripts")
+								i = 0  # reset loop after popping
+							else:
+								i += 1
+
+						if is_img2img and "_alt" not in pargs or (not is_img2img and "_alt" in pargs):
 
 							fixed_image = process_images_inner_(self.Unprompted.p_copy)
 							fixed_image = fixed_image.images[0]
 
 							# self.Unprompted.p_copy.scripts.alwayson_scripts.insert(unp_idx,temp_script)
-							self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
+
 						else:
 							# workaround for txt2img, not sure if compatible with controlnet
 							self.log.warning("Using alternate zoom_enhance processing - may not be compatible with ControlNet")
@@ -396,6 +400,9 @@ class Shortcode():
 							self.Unprompted.populate_stable_diffusion_vars(self.Unprompted.p_copy)
 
 							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, None, None)
+
+						self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
+
 						if debug: fixed_image.save("zoom_enhance_4after.png")
 					except Exception as e:
 						self.Unprompted.log_error(e)
@@ -474,6 +481,10 @@ class Shortcode():
 			# TODO: Find a way to fix the save button
 
 		self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
+
+		# Allow chaining zoom_enhance
+		if not is_img2img and hasattr(self.Unprompted.p_copy, "init_images"):
+			del self.Unprompted.p_copy.init_images
 
 		return ""
 

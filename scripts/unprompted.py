@@ -303,7 +303,9 @@ class Scripts(scripts.Script):
 
 						def handler(keyword, pargs, kwargs, context, content):
 							if "_new" in pargs:
-								friendly_name = kwargs["_label"] if "_label" in kwargs else "Setting"
+								import lib_unprompted.casefy as casefy
+
+								friendly_name = kwargs["_label"] if "_label" in kwargs else casefy.titlecase(pargs[0])
 								block_name = kwargs["_ui"] if "_ui" in kwargs else "textbox"
 								_info = kwargs["_info"] if "_info" in kwargs else ""
 
@@ -486,6 +488,7 @@ class Scripts(scripts.Script):
 		import copy
 		Unprompted.main_p = p
 		Unprompted.p_copy = copy.copy(p)
+		# Unprompted.process_images_inner_vanilla = copy.deepcopy(process_images_inner)
 
 		# Update the controlnet script args with a list of 0 units
 		cn_path = Unprompted.extension_path(Unprompted.Config.stable_diffusion.controlnet_name)
@@ -588,6 +591,8 @@ class Scripts(scripts.Script):
 			Unprompted.update_stable_diffusion_vars(p)
 
 			if (Unprompted.Config.stable_diffusion.batch_method == "legacy"):
+				Unprompted.log.warning("Engaging Legacy batch processing mode per the config")
+
 				for i, val in enumerate(p.all_prompts):
 					if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[i] = Unprompted.shortcode_user_vars["single_seed"]
 					if (i == 0):
@@ -606,6 +611,8 @@ class Scripts(scripts.Script):
 					Unprompted.log.debug(f"Result {i}: {p.all_prompts[i]}")
 			# Keep the same prompt between runs
 			elif (Unprompted.Config.stable_diffusion.batch_method == "none"):
+				Unprompted.log.warning("Batch processing mode disabled per the config - all images will share the same prompt")
+
 				for i, val in enumerate(p.all_prompts):
 					p.all_prompts[i] = Unprompted.shortcode_user_vars["prompt"]
 					p.all_negative_prompts[i] = Unprompted.shortcode_user_vars["negative_prompt"]
@@ -624,6 +631,12 @@ class Scripts(scripts.Script):
 			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
 			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
+			if "single_seed" in Unprompted.shortcode_user_vars:
+				p.seed = Unprompted.shortcode_user_vars["single_seed"]
+				p.all_seeds = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
+				Unprompted.shortcode_user_vars["seed"] = Unprompted.shortcode_user_vars["single_seed"]
+				Unprompted.shortcode_user_vars["all_seeds"] = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
+
 			# TODO: Determine if there are any side effects with filling up the all_prompts array with prompt 0 at this step
 			Unprompted.shortcode_user_vars["all_prompts"] = [Unprompted.shortcode_user_vars["prompt"]] * len(p.all_prompts)
 			Unprompted.shortcode_user_vars["all_negative_prompts"] = [Unprompted.shortcode_user_vars["negative_prompt"]] * len(p.all_prompts)
@@ -637,8 +650,6 @@ class Scripts(scripts.Script):
 			Unprompted.log.debug(f"Starting process_batch() for batch_index #{batch_index}...")
 
 			if batch_index > 0:
-				if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[batch_index] = Unprompted.shortcode_user_vars["single_seed"]
-
 				for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
 					if key not in Unprompted.shortcode_objects["remember"].globals and key != "batch_index":
 						del Unprompted.shortcode_user_vars[key]
@@ -683,6 +694,17 @@ class Scripts(scripts.Script):
 				if unprompted_seed != -1:
 					import random
 					random.seed()
+
+				if Unprompted.fix_hires_prompts:
+					Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
+					p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
+					p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
+					p.all_hr_prompts = p.all_prompts
+					p.all_hr_negative_prompts = p.all_negative_prompts
+					# SDXL is using hr_prompts instead of hr_all_prompts
+					# TODO: Check if all_hr_prompts is used anywhere else anymore
+					p.hr_prompts = p.all_prompts
+					p.hr_negative_prompts = p.all_negative_prompts
 			else:
 				Unprompted.shortcode_user_vars["batch_index"] = batch_index
 
@@ -692,13 +714,6 @@ class Scripts(scripts.Script):
 			Unprompted.log.debug("Bypassing After routine to avoid infinite loop.")
 			self.allow_postprocess = True
 			return False  # Prevents endless loop with some shortcodes
-
-		if Unprompted.fix_hires_prompts:
-			Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
-			p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
-			p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
-			p.all_hr_prompts = p.all_prompts
-			p.all_hr_negative_prompts = p.all_negative_prompts
 
 		self.allow_postprocess = False
 		Unprompted.log.debug("Entering After routine...")

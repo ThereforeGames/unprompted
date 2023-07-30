@@ -3,7 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.11.0 - 28 July 2023</summary>
+<details open><summary>9.12.0 - 30 July 2023</summary>
+
+### Added
+- New template `Regional Prompter Buddy v0.0.1`: This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension (thank you to @hako-mikan for helping make this possible)
+- `[after]`: Now handles the bypassing of specific extensions that have known compatibility issues
+- `[after]`: Supports `allow_unsafe_scripts` parg to bypass the bypasser
+- New config setting `logging.improve_alignment`: responsible for handling separation space between columns of console messages
+
+### Changed
+- Clipdrop SDXL Styles v0.0.2: Negative prompt terms will be appended to your existing negative prompt, rather than overwriting it
+- The default label of a Wizard UI element has been changed from "Setting" to the variable name in titlecase format
+- Added top border to Wizard "autoinclude" UI element
+- Further improvements to formatting of console messages
+
+### Fixed
+- `[after]`: Bypasses the Regional Prompter extension as it was causing errors with additional img2img tasks
+- Fixed an issue with `single_seed` variable
+- Fixed crash related to SDXL and hires fix
+
+</details>
+
+<details><summary>9.11.0 - 28 July 2023</summary>
 
 ### Added
 - New Wizard template `Clipdrop SDXL Styles`: Clipdrop recently disclosed their prompt pre-processing terms for various SDXL presets (comic book, fantasy, etc) so I have adapted them to a simple Wizard UI

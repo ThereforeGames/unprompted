@@ -48,6 +48,23 @@ details[open]
 	display: block;
 }
 
+.gradio-group div .wizard-autoinclude
+{
+	margin-top: 20px;
+	margin-right: 0;
+}
+
+.wizard-autoinclude:before
+{
+	position: absolute;
+	width: 100%;
+	left: 0;
+	border-top: 1px solid var(--border-color-primary);
+	display: block;
+	content: " ";
+	top: -10px;
+}
+
 .wizard-autoinclude span
 {
 	font-weight: 1000;

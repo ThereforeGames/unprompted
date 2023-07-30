@@ -10,12 +10,13 @@ class Shortcode():
 
 		did_error = False
 
-		# Synchronize any changes from user vars
-		self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
-
 		# temporary bypass alwayson scripts to ensure vanilla img2img task
 		temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
 		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()
+
+		# Synchronize any changes from user vars
+		if "no_sync" not in pargs:
+			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
 
 		if "mask_mode" not in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars["mask_mode"] = 0
 		init_mask = None
@@ -124,7 +125,6 @@ class Shortcode():
 		else:
 			self.Unprompted.after_processed.images.extend(img2img_images)
 			self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
-			print(self.Unprompted.after_processed.images)
 		return ""
 
 	def ui(self, gr):

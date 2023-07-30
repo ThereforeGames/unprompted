@@ -1,4 +1,4 @@
-[template name="Clipdrop SDXL Styles v0.0.1"]
+[template name="Clipdrop SDXL Styles v0.0.2"]
 ![Preview]([base_dir]/clipdrop.png)
 This template allows you to use the various presets developed by Clipdrop during SDXL's early access state. You can use them with SD1.5 models too, they generally work well across the board. Enjoy!
 [/template]
@@ -15,23 +15,23 @@ This template allows you to use the various presets developed by Clipdrop during
 	[/case]
 	[case photographic]
 		cinematic photo [get subject] . 35mm photograph, film, bokeh, professional, 4k, highly detailed
-		[set negative_prompt]drawing, painting, crayon, sketch, graphite, impressionist, noisy, blurry, soft, deformed, ugly[/set]
+		[set negative_prompt _append]drawing, painting, crayon, sketch, graphite, impressionist, noisy, blurry, soft, deformed, ugly[/set]
 	[/case]
 	[case "digital art"]
 		concept art [get subject] . digital artwork, illustrative, painterly, matte painting, highly detailed
-		[set negative_prompt]photo, photorealistic, realism, ugly[/set]
+		[set negative_prompt _append]photo, photorealistic, realism, ugly[/set]
 	[/case]
 	[case "comic book"]
 		comic [get subject] . graphic illustration, comic art, graphic novel art, vibrant, highly detailed
-		[set negative_prompt]photograph, deformed, glitch, noisy, realistic, stock photo[/set]
+		[set negative_prompt _append]photograph, deformed, glitch, noisy, realistic, stock photo[/set]
 	[/case]
 	[case "fantasy art"]
 		ethereal fantasy concept art of [get subject] . magnificent, celestial, ethereal, painterly, epic, majestic, magical, fantasy art, cover art, dreamy
-		[set negative_prompt]photographic, realistic, realism, 35mm film, dslr, cropped, frame, text, deformed, glitch, noise, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, sloppy, duplicate, mutated, black and white[/set]
+		[set negative_prompt _append]photographic, realistic, realism, 35mm film, dslr, cropped, frame, text, deformed, glitch, noise, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, sloppy, duplicate, mutated, black and white[/set]
 	[/case]
 	[case "analog film"]
 		analog film photo [get subject] . faded film, desaturated, 35mm photo, grainy, vignette, vintage, Kodachrome, Lomography, stained, highly detailed, found footage
-		[set negative_prompt]painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured[/set]
+		[set negative_prompt _append]painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured[/set]
 	[/case]
 	[case neonpunk]
 		neonpunk style [get subject] . cyberpunk, vaporwave, neon, vibes, vibrant, stunningly beautiful, crisp, detailed, sleek, ultramodern, magenta highlights, dark purple shadows, high contrast, cinematic, ultra detailed, intricate, professional
@@ -39,39 +39,39 @@ This template allows you to use the various presets developed by Clipdrop during
 	[/case]
 	[case isometric]
 		isometric style [get subject] . vibrant, beautiful, crisp, detailed, ultra detailed, intricate
-		[set negative_prompt]deformed, mutated, ugly, disfigured, blur, blurry, noise, noisy, realistic, photographic[/set]
+		[set negative_prompt _append]deformed, mutated, ugly, disfigured, blur, blurry, noise, noisy, realistic, photographic[/set]
 	[/case]
 	[case lowpoly]
 		low-poly style [get subject] . low-poly game art, polygon mesh, jagged, blocky, wireframe edges, centered composition
-		[set negative_prompt]noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
+		[set negative_prompt _append]noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
 	[/case]
 	[case origami]
 		origami style [get subject] . paper art, pleated paper, folded, origami art, pleats, cut and fold, centered composition
-		[set negative_prompt]noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
+		[set negative_prompt _append]noisy, sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
 	[/case]
 	[case "line art"]
 		line art drawing [get subject] . professional, sleek, modern, minimalist, graphic, line art, vector graphics
-		[set negative_prompt]anime, photorealistic, 35mm film, deformed, glitch, blurry, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, mutated, realism, realistic, impressionism, expressionism, oil, acrylic[/set]
+		[set negative_prompt _append]anime, photorealistic, 35mm film, deformed, glitch, blurry, noisy, off-center, deformed, cross-eyed, closed eyes, bad anatomy, ugly, disfigured, mutated, realism, realistic, impressionism, expressionism, oil, acrylic[/set]
 	[/case]
 	[case "craft clay"]
 		play-doh style [get subject] . sculpture, clay art, centered composition, Claymation
-		[set negative_prompt]sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
+		[set negative_prompt _append]sloppy, messy, grainy, highly detailed, ultra textured, photo[/set]
 	[/case]
 	[case cinematic]
 		cinematic film still [get subject] . shallow depth of field, vignette, highly detailed, high budget Hollywood movie, bokeh, cinemascope, moody, epic, gorgeous, film grain, grainy
-		[set negative_prompt]anime, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, disfigured[/set]
+		[set negative_prompt _append]anime, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, disfigured[/set]
 	[/case]
 	[case 3d-model]
 		professional 3d model [get subject] . octane render, highly detailed, volumetric, dramatic lighting
-		[set negative_prompt]ugly, deformed, noisy, low poly, blurry, painting[/set]
+		[set negative_prompt _append]ugly, deformed, noisy, low poly, blurry, painting[/set]
 	[/case]
 	[case "pixel art"]
 		pixel-art [get subject] . low-res, blocky, pixel art style, 8-bit graphics
-		[set negative_prompt]sloppy, messy, blurry, noisy, highly detailed, ultra textured, photo, realistic[/set]
+		[set negative_prompt _append]sloppy, messy, blurry, noisy, highly detailed, ultra textured, photo, realistic[/set]
 	[/case]
 	[case texture]
 		texture [get subject] top down close-up
-		[set negative_prompt]ugly, deformed, noisy, blurry[/set]
+		[set negative_prompt _append]ugly, deformed, noisy, blurry[/set]
 	[/case]
 	[case none]
 		[get subject]

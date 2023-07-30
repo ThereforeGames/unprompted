@@ -20,13 +20,15 @@
 			"WARNING": "\\033[0;33m",
 			"ERROR": "\\033[0;31m",
 			"CRITICAL": "\\033[0;37;41m",
-			"RESET": "\\033[0m"
+			"RESET": "\\033[0m",
+			"FADED": "\\033[1;30m"
 		},
-		"format":"%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+		"format":"%(asctime)s  %(levelname)s [%(name)s] %(message)s",
 		"file":"",
 		"filemode":"a",
 		"level":"INFO",
-		"use_colors":true
+		"use_colors":true,
+		"improve_alignment":true
 	},
 	"syntax":
 	{
