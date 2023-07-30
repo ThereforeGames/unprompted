@@ -30,7 +30,7 @@ def parse_config(base_dir="."):
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.13.0"
+		self.VERSION = "9.13.1"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}

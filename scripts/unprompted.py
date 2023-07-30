@@ -672,6 +672,7 @@ class Scripts(scripts.Script):
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
 		if (is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):
+			from modules.processing import extra_networks
 
 			batch_count_index = Unprompted.shortcode_user_vars["batch_count_index"]
 
@@ -685,6 +686,12 @@ class Scripts(scripts.Script):
 				Unprompted.log.debug(f"Current value of batch_real_index: {batch_real_index}")
 
 				if batch_count_index > 0:
+					try:
+						Unprompted.log.debug("Attempting to deactivate extra networks...")
+						extra_networks.deactivate(p, p.extra_network_data)
+					except Exception as e:
+						Unprompted.log_error(e, "Error occurred while trying to deactivate extra networks")
+
 					for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
 						if key not in Unprompted.shortcode_objects["remember"].globals:
 							del Unprompted.shortcode_user_vars[key]
@@ -731,6 +738,14 @@ class Scripts(scripts.Script):
 
 			p.all_prompts[batch_real_index] = prompt_result
 			p.all_negative_prompts[batch_real_index] = negative_prompt_result
+
+			if (batch_count_index > 0):
+				try:
+					Unprompted.log.debug("Attempting to re-parse and re-activate extra networks...")
+					_, p.extra_network_data = extra_networks.parse_prompts([prompt_result, negative_prompt_result])
+					extra_networks.activate(p, p.extra_network_data)
+				except Exception as e:
+					Unprompted.log_error(e, "An error occurred while trying to activate extra networks")
 
 			# Check for final iteration
 			if (batch_real_index == len(p.all_seeds) - 1):
