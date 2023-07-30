@@ -558,8 +558,11 @@ class Scripts(scripts.Script):
 			    "Unprompted Seed": unprompted_seed
 			})
 
-		# Extra vars
-		Unprompted.shortcode_user_vars["batch_index"] = 0
+		# Instantiate special vars
+		Unprompted.shortcode_user_vars["batch_index"] = 0  # legacy name for batch_count_index
+		Unprompted.shortcode_user_vars["batch_count_index"] = 0
+		Unprompted.shortcode_user_vars["batch_size_index"] = 0
+		Unprompted.shortcode_user_vars["batch_real_index"] = 0
 		Unprompted.shortcode_user_vars["batch_test"] = None
 		Unprompted.original_model = opts.data["sd_model_checkpoint"]
 		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]
@@ -580,7 +583,7 @@ class Scripts(scripts.Script):
 			p.seed = fix_seed(p)
 
 		# Legacy processing support
-		if (Unprompted.Config.stable_diffusion.batch_method != "standard"):
+		if (Unprompted.Config.stable_diffusion.batch_count_method != "standard"):
 			# Set up system var support - copy relevant p attributes into shortcode var object
 			Unprompted.populate_stable_diffusion_vars(p)
 
@@ -590,13 +593,13 @@ class Scripts(scripts.Script):
 			# Apply any updates to system vars
 			Unprompted.update_stable_diffusion_vars(p)
 
-			if (Unprompted.Config.stable_diffusion.batch_method == "legacy"):
-				Unprompted.log.warning("Engaging Legacy batch processing mode per the config")
+			if (Unprompted.Config.stable_diffusion.batch_count_method == "safe"):
+				Unprompted.log.warning("Engaging Safe batch_count processing mode per the config")
 
 				for i, val in enumerate(p.all_prompts):
 					if "single_seed" in Unprompted.shortcode_user_vars: p.all_seeds[i] = Unprompted.shortcode_user_vars["single_seed"]
 					if (i == 0):
-						Unprompted.shortcode_user_vars["batch_index"] = i
+						Unprompted.shortcode_user_vars["batch_count_index"] = i
 						p.all_prompts[0] = Unprompted.shortcode_user_vars["prompt"]
 						p.all_negative_prompts[0] = Unprompted.shortcode_user_vars["negative_prompt"]
 					else:
@@ -604,13 +607,13 @@ class Scripts(scripts.Script):
 							if key not in Unprompted.shortcode_objects["remember"].globals:
 								del Unprompted.shortcode_user_vars[key]
 
-						Unprompted.shortcode_user_vars["batch_index"] = i
+						Unprompted.shortcode_user_vars["batch_count_index"] = i
 						p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
 						p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
 
 					Unprompted.log.debug(f"Result {i}: {p.all_prompts[i]}")
 			# Keep the same prompt between runs
-			elif (Unprompted.Config.stable_diffusion.batch_method == "none"):
+			elif (Unprompted.Config.stable_diffusion.batch_count_method == "unify"):
 				Unprompted.log.warning("Batch processing mode disabled per the config - all images will share the same prompt")
 
 				for i, val in enumerate(p.all_prompts):
@@ -623,68 +626,114 @@ class Scripts(scripts.Script):
 				Unprompted.shortcode_objects[i].cleanup()
 
 			if unprompted_seed != -1: random.seed()
-		# In standard mode,
-		# it is essential to evalute the prompt here at least once to set up our Extra Networks correctly.
+		# In standard mode, it is essential to evaluate the prompt here at least once to set up our Extra Networks correctly.
 		else:
 			Unprompted.populate_stable_diffusion_vars(p)
 
-			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+			batch_size_index = 0
+			while batch_size_index < p.batch_size:
 
-			if "single_seed" in Unprompted.shortcode_user_vars:
-				p.seed = Unprompted.shortcode_user_vars["single_seed"]
-				p.all_seeds = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
-				Unprompted.shortcode_user_vars["seed"] = Unprompted.shortcode_user_vars["single_seed"]
-				Unprompted.shortcode_user_vars["all_seeds"] = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
+				prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+				negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
-			# TODO: Determine if there are any side effects with filling up the all_prompts array with prompt 0 at this step
-			Unprompted.shortcode_user_vars["all_prompts"] = [Unprompted.shortcode_user_vars["prompt"]] * len(p.all_prompts)
-			Unprompted.shortcode_user_vars["all_negative_prompts"] = [Unprompted.shortcode_user_vars["negative_prompt"]] * len(p.all_prompts)
+				Unprompted.shortcode_user_vars["prompt"] = prompt_result
+				Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
 
-			Unprompted.update_stable_diffusion_vars(p)
+				if "single_seed" in Unprompted.shortcode_user_vars and batch_size_index == 0:
+					p.seed = Unprompted.shortcode_user_vars["single_seed"]
+					p.all_seeds = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
+					Unprompted.shortcode_user_vars["seed"] = Unprompted.shortcode_user_vars["single_seed"]
+					Unprompted.shortcode_user_vars["all_seeds"] = [Unprompted.shortcode_user_vars["single_seed"]] * len(p.all_seeds)
+
+				# Instantiate vars for batch processing
+				if batch_size_index == 0:
+					total_images = len(p.all_seeds)
+
+					Unprompted.shortcode_user_vars["all_prompts"] = [prompt_result] * total_images
+					Unprompted.shortcode_user_vars["all_negative_prompts"] = [negative_prompt_result] * total_images
+					Unprompted.shortcode_user_vars["prompts"] = [prompt_result] * p.batch_size
+					Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result] * p.batch_size
+
+				# Fill all prompts with the same value in unify mode
+				if Unprompted.Config.stable_diffusion.batch_size_method == "unify":
+					Unprompted.shortcode_user_vars["all_prompts"] = [prompt_result] * total_images
+					Unprompted.shortcode_user_vars["all_negative_prompts"] = [negative_prompt_result] * total_images
+				else:
+					Unprompted.shortcode_user_vars["all_prompts"][batch_size_index] = prompt_result
+					Unprompted.shortcode_user_vars["all_negative_prompts"][batch_size_index] = negative_prompt_result
+
+					Unprompted.shortcode_user_vars["prompts"][batch_size_index] = prompt_result
+					Unprompted.shortcode_user_vars["negative_prompts"][batch_size_index] = negative_prompt_result
+
+				Unprompted.update_stable_diffusion_vars(p)
+				batch_size_index += 1
+				Unprompted.shortcode_user_vars["batch_size_index"] += 1
+				Unprompted.shortcode_user_vars["batch_real_index"] += 1
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
-		if (is_enabled and Unprompted.Config.stable_diffusion.batch_method == "standard"):
-			batch_index = Unprompted.shortcode_user_vars["batch_index"]
+		if (is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):
 
-			Unprompted.log.debug(f"Starting process_batch() for batch_index #{batch_index}...")
+			batch_count_index = Unprompted.shortcode_user_vars["batch_count_index"]
 
-			if batch_index > 0:
-				for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
-					if key not in Unprompted.shortcode_objects["remember"].globals and key != "batch_index":
-						del Unprompted.shortcode_user_vars[key]
+			Unprompted.log.debug(f"Starting process_batch() routine for batch_count_index #{batch_count_index}/{p.n_iter - 1}...")
 
-				Unprompted.populate_stable_diffusion_vars(p)
+			batch_size_index = 0
+			while batch_size_index < p.batch_size:
+				Unprompted.log.debug(f"Starting subroutine for batch_size_index #{batch_size_index}/{p.batch_size - 1}...")
+				batch_real_index = batch_count_index * p.batch_size + batch_size_index
 
-				prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-				negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
-			# On the first image, we have already evaluted the prompt in the process() function
-			else:
-				prompt_result = Unprompted.shortcode_user_vars["prompt"]
-				negative_prompt_result = Unprompted.shortcode_user_vars["negative_prompt"]
+				Unprompted.log.debug(f"Current value of batch_real_index: {batch_real_index}")
 
-				p.prompt = prompt_result
-				p.negative_prompt = negative_prompt_result
+				if batch_count_index > 0:
+					for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
+						if key not in Unprompted.shortcode_objects["remember"].globals:
+							del Unprompted.shortcode_user_vars[key]
 
-			Unprompted.shortcode_user_vars["prompt"] = prompt_result
-			Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
-			# TODO: Determine if Unprompted should handle batch_size in a more sophisticated fashion than simply filling the prompts list with one result
-			Unprompted.shortcode_user_vars["prompts"] = [prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
-			Unprompted.shortcode_user_vars["negative_prompts"] = [negative_prompt_result] * Unprompted.shortcode_user_vars["batch_size"]
+					# Update special vars
+					Unprompted.shortcode_user_vars["batch_index"] = batch_count_index
+					Unprompted.shortcode_user_vars["batch_count_index"] = batch_count_index
+					Unprompted.shortcode_user_vars["batch_size_index"] = batch_size_index
+					Unprompted.shortcode_user_vars["batch_real_index"] = batch_real_index
 
-			p.prompts = Unprompted.shortcode_user_vars["prompts"]
-			p.negative_prompts = Unprompted.shortcode_user_vars["negative_prompts"]
+					Unprompted.populate_stable_diffusion_vars(p)
 
-			if (batch_index > 0): Unprompted.update_stable_diffusion_vars(p)
+					# Main string process
+					prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+					negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+				# On the first image, we have already evaluted the prompt in the process() function
+				else:
+					Unprompted.log.debug("Inheriting prompt vars for batch_count_index 0 from process() routine")
 
-			p.all_prompts[batch_index] = prompt_result
-			p.all_negative_prompts[batch_index] = negative_prompt_result
+					prompt_result = Unprompted.shortcode_user_vars["all_prompts"][batch_size_index]
+					negative_prompt_result = Unprompted.shortcode_user_vars["all_negative_prompts"][batch_size_index]
 
-			# Increment batch index
-			batch_index += 1
+					p.prompt = prompt_result
+					p.negative_prompt = negative_prompt_result
+
+				Unprompted.shortcode_user_vars["prompt"] = prompt_result
+				Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
+
+				if batch_count_index > 0 and Unprompted.Config.stable_diffusion.batch_size_method == "standard":
+					# Unprompted.shortcode_user_vars["prompts"][batch_real_index] = prompt_result
+					# Unprompted.shortcode_user_vars["negative_prompts"][batch_real_index] = negative_prompt_result
+					Unprompted.shortcode_user_vars["all_prompts"][batch_real_index] = prompt_result
+					Unprompted.shortcode_user_vars["all_negative_prompts"][batch_real_index] = negative_prompt_result
+
+				p.all_prompts = Unprompted.shortcode_user_vars["all_prompts"]
+				p.all_negative_prompts = Unprompted.shortcode_user_vars["all_negative_prompts"]
+
+				Unprompted.shortcode_user_vars["prompts"][batch_size_index] = prompt_result
+				Unprompted.shortcode_user_vars["negative_prompts"][batch_size_index] = negative_prompt_result
+
+				batch_size_index += 1
+
+			if (batch_count_index > 0): Unprompted.update_stable_diffusion_vars(p)
+
+			p.all_prompts[batch_real_index] = prompt_result
+			p.all_negative_prompts[batch_real_index] = negative_prompt_result
 
 			# Check for final iteration
-			if (batch_index == len(p.all_prompts)):
+			if (batch_real_index == len(p.all_seeds) - 1):
 
 				# Cleanup routines
 				Unprompted.log.debug("Entering Cleanup routine...")
@@ -706,7 +755,12 @@ class Scripts(scripts.Script):
 					p.hr_prompts = p.all_prompts
 					p.hr_negative_prompts = p.all_negative_prompts
 			else:
-				Unprompted.shortcode_user_vars["batch_index"] = batch_index
+				Unprompted.log.debug("Proceeding to next batch_count batch")
+				# Increment batch index
+				batch_count_index += 1
+				# Will retrieve this var with the next process_batch() routine
+				Unprompted.shortcode_user_vars["batch_count_index"] = batch_count_index
+				Unprompted.shortcode_user_vars["batch_index"] = batch_count_index  # TODO: this is for legacy support, remove eventually?
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):

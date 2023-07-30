@@ -3,6 +3,26 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>9.13.0 - 30 July 2023</summary>
+
+### About
+This update improves compatibility with `batch_size`. You can now mix `batch_size` and `batch_count` to your heart's content, and Unprompted will parse each prompt independently. Give it a try!
+
+### Added
+- New shortcode `[seed]`: Allows you to call the `random.seed()` method at will, setting it to the `p.seed` value by default
+- New config setting `stable_diffusion.batch_size_method`: allows you to determine how Unprompted will handle tasks where `batch_size` > 1
+- New special variable `batch_size_index`: Returns the batch_size counter of the current process, e.g. if your batch_size is 4 this will return 0 to 3
+- New proxy variable `batch_count_index`: Returns the same thing as `batch_index`, which may be removed in a future update as the name lacks specificity
+
+### Changed
+
+- Config setting `stable_diffusion.batch_method` renamed to `stable_diffusion.batch_count_method`
+- The `stable_diffusion.batch_count_method` value of `legacy` has been renamed to `safe` for clarity
+- The `stable_diffusion.batch_count_method` value of `none` has been renamed to `unify` for clarity
+- Tested compatibility with WebUI v1.5.1 and updated compatibility blurb as such
+
+</details>
+
 <details open><summary>9.12.0 - 30 July 2023</summary>
 
 ### Added

@@ -339,9 +339,9 @@ Determines how Unprompted will process images when `batch_count` or `batch_size`
 
 The default method is `standard` which utilizes the WebUI's `process_batch()` routine to evaluate your prompt before each image generation.
 
-Supports `legacy` method which pre-processes all images at the beginning of the batch run. This method prevents system variables such as CFG scale or model checkpoint from being altered mid-run but may have better compatibility with some shortcodes.
+Supports `safe` method which pre-processes all images at the beginning of the batch run. This method prevents system variables such as CFG scale or model checkpoint from being altered mid-run but may have better compatibility with some shortcodes or extensions.
 
-Supports `none` method which causes all images in a batch run to have the same settings as the first image.
+Supports `unify` method which causes all images in a batch run to have the same settings as the first image.
 
 </details>
 
