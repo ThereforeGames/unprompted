@@ -19,6 +19,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 ### Fixed
 - `[after]`: Bypasses the Regional Prompter extension as it was causing errors with additional img2img tasks
+- `[zoom_enhance]`: It is now possible to chain together `[zoom_enhance]` blocks, at least in txt2img mode
 - Fixed an issue with `single_seed` variable
 - Fixed crash related to SDXL and hires fix
 
