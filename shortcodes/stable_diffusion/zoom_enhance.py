@@ -15,6 +15,10 @@ class Shortcode():
 		self.is_fixing = False
 		self.wizard_prepend = f"{Unprompted.Config.syntax.tag_start}if batch_index=0{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start}after{Unprompted.Config.syntax.tag_end}{Unprompted.Config.syntax.tag_start}zoom_enhance"
 
+		# This saves images that are processed outside of an [after] block
+		# We append them to p.processed once img2img is done
+		self.images_queued = []
+
 		self.wizard_append = Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "if" + Unprompted.Config.syntax.tag_end
 		self.resample_methods = {}
 		self.resample_methods["Nearest Neighbor"] = 0
@@ -50,11 +54,11 @@ class Shortcode():
 
 		# Apply any changes from user variables such as SD checkpoint
 		if "no_sync" not in pargs:
-			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.p_copy)
+			self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
 
 		orig_batch_size = self.Unprompted.shortcode_user_vars["batch_size"]
 		self.Unprompted.shortcode_user_vars["batch_index"] = 0
-		self.Unprompted.p_copy.batch_index = 0
+		self.Unprompted.main_p.batch_index = 0
 
 		try:
 			if sd_models.model_data.sd_model and sd_models.model_data.sd_model.is_sdxl: default_mask_size = 1024
@@ -85,24 +89,24 @@ class Shortcode():
 		upscale_method = self.resample_methods[upscale_method]
 
 		# Ensure standard img2img mode
-		if (hasattr(self.Unprompted.p_copy, "image_mask")):
-			image_mask_orig = self.Unprompted.p_copy.image_mask
+		if (hasattr(self.Unprompted.main_p, "image_mask")):
+			image_mask_orig = self.Unprompted.main_p.image_mask
 		else:
 			image_mask_orig = None
 
-		self.Unprompted.p_copy.mode = 0
-		self.Unprompted.p_copy.image_mask = None
-		self.Unprompted.p_copy.mask = None
-		self.Unprompted.p_copy.init_img_with_mask = None
-		self.Unprompted.p_copy.init_mask = None
-		self.Unprompted.p_copy.mask_mode = 0
-		self.Unprompted.p_copy.init_mask_inpaint = None
-		self.Unprompted.p_copy.batch_size = 1
-		self.Unprompted.p_copy.n_iter = 1
-		self.Unprompted.p_copy.mask_for_overlay = None
+		self.Unprompted.main_p.mode = 0
+		self.Unprompted.main_p.image_mask = None
+		self.Unprompted.main_p.mask = None
+		self.Unprompted.main_p.init_img_with_mask = None
+		self.Unprompted.main_p.init_mask = None
+		self.Unprompted.main_p.mask_mode = 0
+		self.Unprompted.main_p.init_mask_inpaint = None
+		self.Unprompted.main_p.batch_size = 1
+		self.Unprompted.main_p.n_iter = 1
+		self.Unprompted.main_p.mask_for_overlay = None
 
 		try:
-			starting_image = self.Unprompted.p_copy.init_images[0]
+			starting_image = self.Unprompted.main_p.init_images[0]
 			is_img2img = True
 		except:
 			starting_image = self.Unprompted.after_processed.images[0]
@@ -118,11 +122,11 @@ class Shortcode():
 			current_mask = None
 
 		if "denoising_strength" in kwargs:
-			self.Unprompted.p_copy.denoising_strength = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"], context))
-			self.log.debug(f"Manually setting denoise strength to {self.Unprompted.p_copy.denoising_strength}")
+			self.Unprompted.main_p.denoising_strength = float(self.Unprompted.parse_advanced(kwargs["denoising_strength"], context))
+			self.log.debug(f"Manually setting denoise strength to {self.Unprompted.main_p.denoising_strength}")
 		if "cfg_scale" in kwargs:
-			self.Unprompted.p_copy.cfg_scale = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"], context))
-			self.log.debug(f"Manually setting CFG scale to {self.Unprompted.p_copy.cfg_scale}")
+			self.Unprompted.main_p.cfg_scale = float(self.Unprompted.parse_advanced(kwargs["cfg_scale"], context))
+			self.log.debug(f"Manually setting CFG scale to {self.Unprompted.main_p.cfg_scale}")
 
 		# vars for dynamic settings
 		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"], context)) if "denoising_max" in kwargs else 0.3
@@ -146,6 +150,9 @@ class Shortcode():
 		if context == "after":
 			all_images = self.Unprompted.after_processed.images
 		else:
+			if not is_img2img:
+				self.Unprompted.log.error("You attempted to use zoom_enhance outside of an after block, but you're not in img2img mode. Me confused, me exit early.")
+				return ""
 			all_images = self.Unprompted.shortcode_user_vars["init_images"]
 
 		append_originals = []
@@ -154,10 +161,10 @@ class Shortcode():
 		for image_idx, image_pil in enumerate(all_images):
 			if self.Unprompted.batch_test_bypass(image_idx): continue
 			if image_idx > 0:
-				self.Unprompted.p_copy.seed += 1
+				self.Unprompted.main_p.seed += 1
 				# Only increment batch_index after we finish a set per batch_size value
 				if image_idx % orig_batch_size == 0:
-					self.Unprompted.p_copy.batch_index += 1
+					self.Unprompted.main_p.batch_index += 1
 					self.Unprompted.shortcode_user_vars["batch_index"] += 1
 
 			all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"], context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)
@@ -170,10 +177,15 @@ class Shortcode():
 				else:
 					all_negative_replacements[0] = self.Unprompted.main_p.negative_prompt
 
+			self.Unprompted.main_p.prompts = all_replacements
+			self.Unprompted.main_p.negative_prompts = all_negative_replacements
+			self.Unprompted.main_p.all_prompts = all_replacements
+			self.Unprompted.main_p.all_negative_prompts = all_negative_replacements
+
 			if show_original: append_originals.append(all_images[image_idx].copy())
 			# Workaround for compatibility between [after] block and batch processing
 			if "width" not in self.Unprompted.shortcode_user_vars:
-				self.log.debug("Width variable not set - bypassing shortcode")
+				self.log.error("Width variable not set - bypassing shortcode")
 				return ""
 
 			if not self.Unprompted.shortcode_var_is_true("bypass_adaptive_hires", pargs, kwargs):
@@ -189,7 +201,7 @@ class Shortcode():
 				denoise_unit = (denoising_max / 8) * 0.125
 				cfg_min_unit = (cfg_min / 2) * 0.125
 				cfg_max_unit = (cfg_max / 2) * 0.125
-				# step_unit = math.ceil(self.Unprompted.p_copy.steps * 0.125)
+				# step_unit = math.ceil(self.Unprompted.main_p.steps * 0.125)
 				upscale_size_test = upscale_width * target_multiplier
 				while (upscale_width < min(upscale_size_test, hires_size_max)):
 					upscale_width += sd_unit
@@ -199,7 +211,7 @@ class Shortcode():
 					cfg_max += cfg_max_unit
 					sharpen_amount += 0.125  # TODO: Calculate blurriness of original image to determine sharpen amount
 					denoising_max -= denoise_unit
-					# self.Unprompted.p_copy.steps += step_unit
+					# self.Unprompted.main_p.steps += step_unit
 
 				upscale_width = min(hires_size_max, upscale_width)
 				upscale_height = min(hires_size_max, upscale_height)
@@ -298,15 +310,15 @@ class Shortcode():
 
 						# sig = 0 # sigmoid(-6 + target_size * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
 						if "denoising_strength" not in kwargs:
-							self.Unprompted.p_copy.denoising_strength = (1 - min(1, target_size)) * denoising_max
-							self.log.debug(f"Denoising strength is {self.Unprompted.p_copy.denoising_strength}")
+							self.Unprompted.main_p.denoising_strength = (1 - min(1, target_size)) * denoising_max
+							self.log.debug(f"Denoising strength is {self.Unprompted.main_p.denoising_strength}")
 						if "cfg_scale" not in kwargs:
-							self.Unprompted.p_copy.cfg_scale = cfg_min + min(1, target_size) * (cfg_max - cfg_min)
-							self.log.debug(f"CFG Scale is {self.Unprompted.p_copy.cfg_scale} (min {cfg_min}, max {cfg_min+cfg_max})")
+							self.Unprompted.main_p.cfg_scale = cfg_min + min(1, target_size) * (cfg_max - cfg_min)
+							self.log.debug(f"CFG Scale is {self.Unprompted.main_p.cfg_scale} (min {cfg_min}, max {cfg_min+cfg_max})")
 
 					# Set prompt with multi-subject support
-					self.Unprompted.p_copy.prompt = all_replacements[min(c_idx, len(all_replacements) - 1)]
-					self.Unprompted.p_copy.negative_prompt = all_negative_replacements[min(c_idx, len(all_negative_replacements) - 1)]
+					self.Unprompted.main_p.prompt = all_replacements[min(c_idx, len(all_replacements) - 1)]
+					self.Unprompted.main_p.negative_prompt = all_negative_replacements[min(c_idx, len(all_negative_replacements) - 1)]
 
 					y1 = max(0, y - padding)
 					y2 = min(image.shape[0], y + h + padding)
@@ -338,74 +350,75 @@ class Shortcode():
 					if color_correct_timing == "pre" and color_correct_method != "none" and starting_image:
 						sub_img_big = self.Unprompted.color_match(starting_image_face_big, sub_img_big, color_correct_method, color_correct_strength)
 
-					self.Unprompted.p_copy.init_images = [sub_img_big]
-					self.Unprompted.p_copy.width = upscale_width
-					self.Unprompted.p_copy.height = upscale_height
+					self.Unprompted.main_p.init_images = [sub_img_big]
+					set_kwargs["img2img_init_image"] = sub_img_big  # for _alt method zoom_enhance
+					self.Unprompted.main_p.width = upscale_width
+					self.Unprompted.main_p.height = upscale_height
 
 					# Ensure standard img2img mode again... JUST IN CASE
-					self.Unprompted.p_copy.mode = 0
-					self.Unprompted.p_copy.image_mask = None
-					self.Unprompted.p_copy.mask = None
-					self.Unprompted.p_copy.init_img_with_mask = None
-					self.Unprompted.p_copy.init_mask = None
-					self.Unprompted.p_copy.mask_mode = 0
-					self.Unprompted.p_copy.init_mask_inpaint = None
-					self.Unprompted.p_copy.latent_mask = None
-					self.Unprompted.p_copy.batch_size = 1
-					self.Unprompted.p_copy.n_iter = 1
+					self.Unprompted.main_p.mode = 0
+					self.Unprompted.main_p.image_mask = None
+					self.Unprompted.main_p.mask = None
+					self.Unprompted.main_p.init_img_with_mask = None
+					self.Unprompted.main_p.init_mask = None
+					self.Unprompted.main_p.mask_mode = 0
+					self.Unprompted.main_p.init_mask_inpaint = None
+					self.Unprompted.main_p.latent_mask = None
+					self.Unprompted.main_p.batch_size = 1
+					self.Unprompted.main_p.n_iter = 1
 
 					if controlnet_preset != "none" and len(controlnet_preset) > 0:
 						set_pargs = [f"common/presets/controlnet/{controlnet_preset}"]
-						set_kwargs = {}
-						file_contents = self.Unprompted.shortcode_objects["file"].run_atomic(set_pargs, set_kwargs, context)
+						set_cn_kwargs = {}
+						file_contents = self.Unprompted.shortcode_objects["file"].run_atomic(set_pargs, set_cn_kwargs, context)
 						# temporarily disable user vars to avoid applying old controlnet values
 						temp_user_vars = self.Unprompted.shortcode_user_vars
 						self.Unprompted.shortcode_user_vars.clear()
 						self.Unprompted.process_string(file_contents, context)
 						for att in self.Unprompted.shortcode_user_vars:
-							if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(self.Unprompted.p_copy, att)
+							if att.startswith("controlnet_") or att.startswith("cn_"): self.Unprompted.update_controlnet_var(self.Unprompted.main_p, att)
 
 						# restore user vars
 						self.Unprompted.shortcode_user_vars = temp_user_vars
 
 					if self.Unprompted.shortcode_var_is_true("use_starting_face", pargs, kwargs):
-						self.Unprompted.p_copy.init_images = [starting_image_face_big]
+						self.Unprompted.main_p.init_images = [starting_image_face_big]
 						color_correct_timing = "post"
 
 					# run img2img now to improve face
 					try:
-						temp_alwayson = self.Unprompted.p_copy.scripts.alwayson_scripts.copy()
-						i = 0
-						while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
-							script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
-							script_title = script.title().lower()
-							if script_title == "unprompted" or script_title == "regional prompter":  #  or (controlnet_preset == "none" and script.title().lower() == "controlnet")
-								self.Unprompted.p_copy.scripts.alwayson_scripts.pop(i)
-								self.log.debug(f"Successfully disabled {script.title()} from p_copy scripts")
-								i = 0  # reset loop after popping
-							else:
-								i += 1
+						temp_scripts = self.Unprompted.main_p.scripts
+						self.Unprompted.main_p.scripts = None
 
 						if is_img2img and "_alt" not in pargs or (not is_img2img and "_alt" in pargs):
 
-							fixed_image = process_images_inner_(self.Unprompted.p_copy)
+							self.Unprompted.main_p.disable_extra_networks = True
+							# self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
+
+							#if is_img2img:
+							#	self.Unprompted.main_p.img2img_image_conditioning()
+
+							# self.Unprompted.main_p.init(self.Unprompted.main_p.all_seeds, self.Unprompted.main_p.all_prompts, self.Unprompted.main_p.all_subseeds)
+							fixed_image = process_images_inner_(self.Unprompted.main_p)
 							fixed_image = fixed_image.images[0]
-
-							# self.Unprompted.p_copy.scripts.alwayson_scripts.insert(unp_idx,temp_script)
-
 						else:
 							# workaround for txt2img, not sure if compatible with controlnet
-							self.log.warning("Using alternate zoom_enhance processing - may not be compatible with ControlNet")
+							self.log.warning("Running alternate zoom_enhance processing mode - may not be compatible with ControlNet")
 
-							self.Unprompted.populate_stable_diffusion_vars(self.Unprompted.p_copy)
+							# The img2img shortcode refers to the user vars for its operation
+							# so we take a backup of the vars to restore later
+							temp_vars = self.Unprompted.shortcode_user_vars.copy()
+							self.Unprompted.update_user_vars(self.Unprompted.main_p)
 
-							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, None, None)
+							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, set_kwargs, None)
 
-						self.Unprompted.p_copy.scripts.alwayson_scripts = temp_alwayson
+							self.Unprompted.shortcode_user_vars = temp_vars
+
+						self.Unprompted.main_p.scripts = temp_scripts
 
 						if debug: fixed_image.save("zoom_enhance_4after.png")
 					except Exception as e:
-						self.Unprompted.log_error(e)
+						self.log.exception("Exception while running the img2img task")
 						return ""
 
 					if color_correct_method != "none" and starting_image:
@@ -439,7 +452,7 @@ class Shortcode():
 								image_pil.paste(corrected_main_img, (0, 0), current_mask)
 								if debug: image_pil.save("zoom_enhance_5e_corrected_main_image.png")
 						except Exception as e:
-							self.Unprompted.log_error(e)
+							self.log.exception("Exception while applying color correction")
 
 					# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
 					if debug: fixed_image.save("zoom_enhance_5f.png")
@@ -461,8 +474,9 @@ class Shortcode():
 
 						self.log.debug(f"Adding zoom_enhance result for image_idx {image_idx}")
 						if context != "after":
-							self.log.debug("Attempting to use zoom_enhance outside of an after block... good luck")
-							self.Unprompted.shortcode_user_vars["init_images"] = image_pil
+							self.log.debug("We are outside of the [after] block, so this image will be appended to your results once the main img2img task is complete.")
+							self.Unprompted.shortcode_user_vars["init_images"] = [image_pil]
+							self.images_queued.append(image_pil)
 						# main return
 						else:
 							self.Unprompted.after_processed.images[image_idx] = image_pil
@@ -475,18 +489,27 @@ class Shortcode():
 
 				else: self.log.debug(f"Countour area ({area}) is less than the minimum ({min_area}) - skipping")
 
-		# Add original image to output window
-		for appended_image in append_originals:
-			self.Unprompted.after_processed.images.append(appended_image)
-			# TODO: Find a way to fix the save button
+		if context == "after":
 
-		self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
+			# Add original image to output window
+			for appended_image in append_originals:
+				self.Unprompted.after_processed.images.append(appended_image)
+				# TODO: Find a way to fix the save button
+				# note - a1111 1.5.2 dev branch has some changes to batch save handling
+
+			self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
 
 		# Allow chaining zoom_enhance
-		if not is_img2img and hasattr(self.Unprompted.p_copy, "init_images"):
-			del self.Unprompted.p_copy.init_images
+		if not is_img2img and hasattr(self.Unprompted.main_p, "init_images"):
+			del self.Unprompted.main_p.init_images
 
 		return ""
+
+	def after(self, p=None, processed=None):
+		if self.images_queued:
+			self.log.debug("Appending zoom_enhanced image(s) to final results")
+			processed.images.extend(self.images_queued)
+		self.images_queued = []
 
 	def ui(self, gr):
 

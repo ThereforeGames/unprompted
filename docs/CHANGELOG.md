@@ -3,14 +3,35 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.13.1 - 30 July 2023</summary>
+<details open><summary>9.13.2 - 1 August 2023</summary>
+
+### Added
+- New special variable `sd_vae`: allows you to change the vae file programmatically, similar to `sd_model`
+
+### Changed
+- Unprompted will warn you if you try to `[get]` or `[set]` a deprecated variable
+- Unprompted will warn you if you haven't renamed the extension folder for compatibility with other scripts
+- The `populate_stable_diffusion_vars()` method has been renamed to `update_user_vars()`
+- Updated documentation
+
+### Fixed
+- The `p_copy` object was not functioning correctly in the latest versions of the WebUI, so it has been replaced with direct modifications to the main `p` object instead, hopefully fixing recent issues with `[img2img]` and `[zoom_enhance]`
+- Generating a shortcode with the Wizard no longer strips lora tags from text fields (escapes HTML characters)
+- `[zoom_enhance]`: Fixed multiple issues that prevented the use of this shortcode outside of an after block (now you can!)
+
+### Removed
+- Retired the `log_error()`function in favor of `log.exception` which preserves the shortcode name as the logger id
+
+</details>
+
+<details><summary>9.13.1 - 30 July 2023</summary>
 
 ### Fixed
 - Fixed an issue with updating Extra Networks during batch processing
 
 </details>
 
-<details open><summary>9.13.0 - 30 July 2023</summary>
+<details><summary>9.13.0 - 30 July 2023</summary>
 
 ### About
 This update improves compatibility with `batch_size`. You can now mix `batch_size` and `batch_count` to your heart's content, and Unprompted will parse each prompt independently. Give it a try!
@@ -30,7 +51,7 @@ This update improves compatibility with `batch_size`. You can now mix `batch_siz
 
 </details>
 
-<details open><summary>9.12.0 - 30 July 2023</summary>
+<details><summary>9.12.0 - 30 July 2023</summary>
 
 ### Added
 - New template `Regional Prompter Buddy v0.0.1`: This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension (thank you to @hako-mikan for helping make this possible)

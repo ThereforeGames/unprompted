@@ -13,14 +13,19 @@ from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
 from enum import IntEnum, auto
-import sys, os
+import sys, os, html
 
 base_dir = scripts.basedir()
+
 sys.path.append(base_dir)
 # Main object
 from lib_unprompted.shared import Unprompted
 
 Unprompted = Unprompted(base_dir)
+
+ext_dir = os.path.split(os.path.normpath(base_dir))[1]
+if ext_dir == "unprompted":
+	Unprompted.log.warning("The extension folder must be renamed from unprompted to _unprompted in order to ensure compatibility with other extensions. Please see this A1111 WebUI issue for more details: https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011")
 
 WizardModes = IntEnum("WizardModes", ["TEMPLATES", "SHORTCODES"], start=0)
 
@@ -108,7 +113,7 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 					this_val = str(Unprompted.autocast(gr_obj.value))
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
-					result += f" {arg_name}={this_val}"
+					result += f" {arg_name}={html.escape(this_val)}"
 		except:
 			pass
 		return (result)
@@ -161,7 +166,7 @@ def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
 					elif (block_name == "number" or block_name == "slider"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
 					elif (block_name == "textbox"):
 						if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
-					else: result += f" {arg_name}=\"{gr_obj.value}\""
+					else: result += f" {arg_name}=\"{html.escape(gr_obj.value)}\""
 
 		except:
 			pass
@@ -220,7 +225,7 @@ def wizard_generate_capture(include_inference, include_prompt, include_neg_promp
 								if isinstance(att_val, bool): att_val = int(att_val == True)  # convert bool to 0 or 1
 								if att_val == 0 and include_inference != "verbose": continue
 								elif (att_val == float("inf") or att_val == float("-inf")) and include_inference != "verbose": continue
-								result += f"{prefix}{att_val}"
+								result += f"{prefix}{html.escape(att_val)}"
 
 			if include_inference != "none" or include_model: result += f"{Unprompted.Config.syntax.tag_end}"
 			if include_prompt != "none": result += prompt
@@ -228,7 +233,7 @@ def wizard_generate_capture(include_inference, include_prompt, include_neg_promp
 
 		else: result = "<strong>ERROR:</strong> Could not detect your inference settings. Try generating an image first."
 	except Exception as e:
-		Unprompted.log_error(e)
+		Unprompted.log.exception("Exception caught during Wizard Capture generation")
 		result = f"<strong>ERROR:</strong> {e}"
 
 	return result
@@ -485,18 +490,11 @@ class Scripts(scripts.Script):
 			return p
 
 		# test compatibility with controlnet
-		import copy
 		Unprompted.main_p = p
-		Unprompted.p_copy = copy.copy(p)
-		# Unprompted.process_images_inner_vanilla = copy.deepcopy(process_images_inner)
 
-		# Update the controlnet script args with a list of 0 units
-		cn_path = Unprompted.extension_path(Unprompted.Config.stable_diffusion.controlnet_name)
-		if cn_path:
-			cn_module = Unprompted.import_file(f"{Unprompted.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
-			cn_module.update_cn_script_in_processing(Unprompted.p_copy, [], is_ui=False)
-		else:
-			Unprompted.log.debug("Could not communicate with ControlNet; proceeding without it.")
+		# as of webui 1.5.1, creating a shallow copy of the p object no longer seems to work.
+		# deepcopy throws errors as well.
+		# Unprompted.p_copy = copy.copy(p)
 
 		if match_main_seed:
 			if p.seed == -1:
@@ -515,7 +513,7 @@ class Scripts(scripts.Script):
 				if p.hr_prompt == p.prompt and p.hr_negative_prompt == p.negative_prompt:
 					Unprompted.fix_hires_prompts = True
 			except Exception as e:
-				Unprompted.log_error(e, "Could not read hires variables from p object")
+				Unprompted.log.exception("Exception while trying to read hires variables from p object")
 				pass
 
 		# Reset vars
@@ -585,7 +583,7 @@ class Scripts(scripts.Script):
 		# Legacy processing support
 		if (Unprompted.Config.stable_diffusion.batch_count_method != "standard"):
 			# Set up system var support - copy relevant p attributes into shortcode var object
-			Unprompted.populate_stable_diffusion_vars(p)
+			Unprompted.update_user_vars(p)
 
 			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
 			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
@@ -628,7 +626,7 @@ class Scripts(scripts.Script):
 			if unprompted_seed != -1: random.seed()
 		# In standard mode, it is essential to evaluate the prompt here at least once to set up our Extra Networks correctly.
 		else:
-			Unprompted.populate_stable_diffusion_vars(p)
+			Unprompted.update_user_vars(p)
 
 			batch_size_index = 0
 			while batch_size_index < p.batch_size:
@@ -690,7 +688,7 @@ class Scripts(scripts.Script):
 						Unprompted.log.debug("Attempting to deactivate extra networks...")
 						extra_networks.deactivate(p, p.extra_network_data)
 					except Exception as e:
-						Unprompted.log_error(e, "Error occurred while trying to deactivate extra networks")
+						self.log.exception("Exception while deactiating extra networks")
 
 					for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
 						if key not in Unprompted.shortcode_objects["remember"].globals:
@@ -702,7 +700,7 @@ class Scripts(scripts.Script):
 					Unprompted.shortcode_user_vars["batch_size_index"] = batch_size_index
 					Unprompted.shortcode_user_vars["batch_real_index"] = batch_real_index
 
-					Unprompted.populate_stable_diffusion_vars(p)
+					Unprompted.update_user_vars(p)
 
 					# Main string process
 					prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
@@ -745,7 +743,7 @@ class Scripts(scripts.Script):
 					_, p.extra_network_data = extra_networks.parse_prompts([prompt_result, negative_prompt_result])
 					extra_networks.activate(p, p.extra_network_data)
 				except Exception as e:
-					Unprompted.log_error(e, "An error occurred while trying to activate extra networks")
+					Unprompted.log.exception("Exception while trying to activate extra networks")
 
 			# Check for final iteration
 			if (batch_real_index == len(p.all_seeds) - 1):

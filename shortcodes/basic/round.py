@@ -28,7 +28,7 @@ class Shortcode():
 		elif self.Unprompted.is_int(num):
 			return round_helper(num, place)
 		else:
-			self.Unprompted.log_error("The number is not a valid type: ", num)
+			self.log.error(f"The number does not appear to be a valid type: {num}")
 			return ""
 
 	def ui(self, gr):

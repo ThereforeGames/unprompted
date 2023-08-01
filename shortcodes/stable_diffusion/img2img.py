@@ -11,8 +11,12 @@ class Shortcode():
 		did_error = False
 
 		# temporary bypass alwayson scripts to ensure vanilla img2img task
-		temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
-		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()
+		temp_alwayson = None
+		try:
+			temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
+			self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()
+		except:
+			pass
 
 		# Synchronize any changes from user vars
 		if "no_sync" not in pargs:
@@ -104,11 +108,12 @@ class Shortcode():
 				img2img_images.append(img2img_result[0][0])
 
 		except Exception as e:
-			self.Unprompted.log_error(e)
+			self.log.exception("Exception while running the img2img task")
 			did_error = True
 
 		# Re-enable alwayson scripts
-		self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
+		if temp_alwayson:
+			self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
 
 		try:
 			if len(img2img_images) < 1:

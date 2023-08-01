@@ -26,4 +26,4 @@ while True:
 		command = input("(INPUT) Unprompted string:")
 		do_unprompted(command)
 	except Exception as e:
-		Unprompted.log_error(e, "Exception occurred.")
+		Unprompted.log.exception("Exception occurred.")

@@ -27,7 +27,7 @@ class Shortcode():
 				try:
 					this_kwarg = int(self.Unprompted.shortcode_user_vars[kwarg])
 				except Exception as e:
-					self.Unprompted.log_error(e, f"Could not parse the following kwarg as an array index: {kwarg}")
+					self.log.exception(f"Exception while trying to parse the following kwarg as an array index: {kwarg}")
 					continue
 			# Initialize null values if we're outside the array's length
 			while (len(self.Unprompted.shortcode_user_vars[parg]) <= this_kwarg):

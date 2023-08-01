@@ -186,9 +186,15 @@ Do note, however, that your mileage may vary if you are not using the default sa
 
 In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
 
-### batch_index
+### batch_count_index
 
-An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_index` will return a value from 0 to 4.
+An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_count_index` will return a value from 0 to 4.
+
+**Note:** This was formerly known as `batch_index`, which still works but is considered deprecated due to its lack of specificity. It may be removed from a future update.
+
+### batch_size_index
+
+An integer that corresponds to your progress within a specific batch. For example, if your batch size is set to 5, then `batch_size_index` will return a value from 0 to 4.
 
 ### batch_test
 
@@ -301,14 +307,6 @@ Also note that this setting **must** be specified in `config_user.json` - it has
 
 </details>
 
-<details><summary>log_contexts (str)</summary>
-
-This is a comma-delimited list that determines what types of messages will appear in the output console. Defaults to `RESULT,WARNING,ERROR`.
-
-Note: `log_contexts` replaces the old `debug` config setting. If you want to see debug messages, simply add `DEBUG` to the list.
-
-</details>
-
 <details><summary>advanced_expressions (bool)</summary>
 
 This determines whether expressions will be processed by simpleeval. Disable for slightly better performance at the cost of breaking some templates.
@@ -333,15 +331,25 @@ This is the file extension that Unprompted will assume you're looking for with `
 
 </details>
 
-<details><summary>stable_diffusion.batch_method (str)</summary>
+<details><summary>stable_diffusion.batch_count_method (str)</summary>
 
-Determines how Unprompted will process images when `batch_count` or `batch_size` > 1.
+Determines how Unprompted will process images when `batch_count` > 1.
 
 The default method is `standard` which utilizes the WebUI's `process_batch()` routine to evaluate your prompt before each image generation.
 
 Supports `safe` method which pre-processes all images at the beginning of the batch run. This method prevents system variables such as CFG scale or model checkpoint from being altered mid-run but may have better compatibility with some shortcodes or extensions.
 
 Supports `unify` method which causes all images in a batch run to have the same settings as the first image.
+
+</details>
+
+<details><summary>stable_diffusion.batch_size_method (str)</summary>
+
+Determines how Unprompted will process images when `batch_size` > 1.
+
+The default method is `standard` which evaluates the prompt before each image generation.
+
+Supports `unify` method which causes all images in one batch to have the same prompt settings.
 
 </details>
 
@@ -475,6 +483,8 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 - `dropdown`: A dropdown menu that is populated by the `_choices` argument, constructed as a delimited list.
 - `slider`: Limits selection to a range of numbers. You must also specify `_minimum`, `_maximum` and `_step` (step size, normally 1) for this element to work properly.
 
+The `[set]` block supports `_label` which is the friendly text to use above the UI element. If not set, the label will default to the variable name you're calling with `[set]` in titlecase format (e.g. "my_variable" becomes "My Variable.")
+
 The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
 
 Supports the `[wizard_ui_accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
@@ -501,7 +511,7 @@ It has a few settings that change how the code is formatted:
 
 This section describes all of the included basic shortcodes and their functionality.
 
-<details><summary><a href="#-comment">[#]</a></summary>
+<details>[#]</summary>
 
 ## Comment
 
@@ -535,6 +545,8 @@ This is particularly useful with the A1111 WebUI, as it gives you the ability to
 Supports the optional `after_index` argument which lets you control the order of multiple `[after]` blocks. Defaults to 0. For example, the `[after 2]` block will execute before the `[after 3]` block.
 
 You can `[get after_index]` inside of the `[after]` block, which can be useful when working with arrays and for loops.
+
+Supports the optional `allow_unsafe_scripts` parg which will disable the shortcode's normal behavior of bypassing extensions with known compatibility issues.
 
 ```
 Photo of a cat
@@ -1347,6 +1359,8 @@ Removes one or more variables from memory.
 
 Note that variables are automatically deleted at the end of each run - you do **not** need to manually clean memory in most cases. The `[unset]` shortcode is for advanced use.
 
+Supports pattern matching with `*` to delete many variables at once. This may be useful, for example, if you're trying to disable ControlNet inside of an `[after]` block: `[unset cn_* controlnet_*]`.
+
 ```
 [set var_a=10 var_b="something"]
 [unset var_a var_b]
@@ -1606,6 +1620,20 @@ To do this, we can create an `[array]` and append a new value to it each step of
 
 </details>
 
+<details><summary>[seed]</summary>
+
+Allows you to run the `random.seed()` method at will.
+
+It is a more comprehensive operation than `[set seed]`, as it will update several seed-related variables used by the WebUI, including `seed`, `all_seeds` and `seeds`.
+
+The first parg determines the new seed value. If not provided, it will default to the value of `seed` user variable.
+
+```
+[seed 100]
+```
+
+</details>
+
 <details><summary>[txt2img]</summary>
 
 Runs a txt2img task inside of an `[after]` block.
@@ -1717,7 +1745,7 @@ Supports the `min_area` keyword argument. Defaults to `50`. If the pixel area of
 
 Supports the `contour_padding` keyword argument. This is the radius in pixels to extend the mask region by. Defaults to `0`.
 
-Supports the `upscale_width` and `upscale_height` arguments. Default to `512`. This is the resolution to use with `[img2img]` and should usually match the native resolution of your Stable Diffusion model.
+Supports the `upscale_width` and `upscale_height` arguments. This is the resolution to use with `[img2img]` and should usually match the native resolution of your Stable Diffusion model. Defaults to `512` unless an SDXL model is loaded, in which case it defaults to `1024`.
 
 Supports the `include_original` positional argument. This will append the original, "non-zoom-enhanced" image to your output window. Useful for before-after comparisons.
 
@@ -1735,8 +1763,7 @@ Supports the experimental `use_starting_face` parg which will upscale the initia
 
 Supports the `debug` positional argument, which will output a series of images to your WebUI folder over the course of processing.
 
-This shortcode is compatible with batch count and batch size.
-
+Supports the `no_sync` parg which will prevent synchronization between your user variables and Stable Diffusion's `p` object at runtime. This may improve compatibility with other shortcodes or extensions.
 
 ```
 [after][zoom_enhance][/after]

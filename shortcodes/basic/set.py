@@ -9,6 +9,8 @@ class Shortcode():
 
 		if (content is None or len(content) < 1): return ""
 
+		self.Unprompted.is_var_deprecated(pargs[0])
+
 		# Prep content with override support
 		if (pargs[0] in overrides.shortcode_overrides):
 			content = overrides.shortcode_overrides[pargs[0]]

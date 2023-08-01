@@ -1,6 +1,30 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Zoom Enhance Enhanced — 1 August 2023</summary>
+
+Hi folks,
+
+Over the last few weeks, I have released many improvements to Unprompted's logging capabilities. The motivation for these updates was in part due to a longstanding issue with zoom_enhance that I was having trouble figuring out.
+
+Well, I can say now with reasonable confidence that the problem was related to the way I was copying the WebUI's `p` object. In recent versions of the WebUI, my shallow copy of `p` led to numerous problems with image processing. Switching to a deep copy was not a viable alternative, because the object contains custom modules that Python's `copy()` method doesn't know what to do with.
+
+Now in Unprompted v9.13.2, all processes in the `[after]` routine will refer to the original `p` object instead. The reason I didn't do this in the first place is because it means I have to temporarily disable other scripts with compatibility issues, such as ControlNet and Regional Prompter. Some scripts are more difficult to disable than others, but I think I got the major ones sorted out.
+
+Let's go over some other exciting changes to `[zoom_enhance]`:
+
+- If a certain extension isn't playing nice with my bypass rules, **you can use the `_alt` parg to engage alternate image processing.** This sends the generation task off to `[img2img]`, which instantiates its own `p` object and should prove more compatible (at the cost of some performance and overhead.)
+
+- In img2img mode, **you can now use `[zoom_enhance]` outside of the `[after]` block!** This means the shortcode will run on your init image before the WebUI has a chance to modify it. Very useful if you just want to enhance an existing image without re-processing the entire thing. Keep in mind that the normal img2img task will still run afterwards and output a second picture. Until I find a way to disable that, you can simply lower the stepcount to 1 to minimize runtime.
+
+- **You can now chain together multiple `[zoom_enhance]` blocks which will run independently of each other.** Prior to this, you would have to specify multiple masks and replacement rules using the vertical pipe delimiter, e.g. `mask="face|hands" replacement="better face|better hands"`, but this was a bit unintuitive and prone to error on certain kinds of images. (The option is still there if you need it.)
+
+With the longstanding bugs solved, I plan to experiment with other interesting features for `[zoom_enhance]` as well as the companion template Bodysnatcher. Let me know if you have any ideas you would like to see added, either for this shortcode or Unprompted in general. 🙂
+
+Thanks for reading!
+
+</details>
+
 <details><summary>Hot Summer Update — 24 June 2023</summary>
 
 Hello! It's been a couple months since I've had time to work on Unprompted, but I'm happy to finally announce the arrival of v9.3.0 - just in time for the summer. 😎

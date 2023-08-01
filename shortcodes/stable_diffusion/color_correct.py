@@ -36,7 +36,7 @@ class Shortcode():
 		except:
 			self.log.error("This must be used inside of an [after] block")
 			return ("")
-		starting_image = self.Unprompted.p_copy.init_images[0]
+		starting_image = self.Unprompted.main_p.init_images[0]
 
 		orig_image = image_to_fix.copy()
 		if self.Unprompted.shortcode_user_vars["image_mask"]:

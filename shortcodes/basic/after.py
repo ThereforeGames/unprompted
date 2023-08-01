@@ -28,18 +28,31 @@ class Shortcode():
 
 			# Disable or unload other extensions that cause trouble with [after] processing
 			if not self.allow_unsafe_scripts:
+				self.log.debug("Unloading incompatible scripts...")
 				i = 0
-				while i < len(self.Unprompted.p_copy.scripts.alwayson_scripts):
-					script = self.Unprompted.p_copy.scripts.alwayson_scripts[i]
+				success_string = "Sucessfully unloaded"
+				while i < len(self.Unprompted.main_p.scripts.alwayson_scripts):
+					script = self.Unprompted.main_p.scripts.alwayson_scripts[i]
 					script_title = script.title().lower()
 					try:
 						if script_title == "regional prompter" and script.active:
 							rp_path = self.Unprompted.extension_path("sd-webui-regional-prompter")
 							rp_mod = self.Unprompted.import_file(f"sd-webui-regional-prompter.scripts.rp", f"{rp_path}/scripts/rp.py")
-							rp_mod.unloader(script, self.Unprompted.p_copy)
-							self.log.debug("Successfully unloaded Regional Prompter")
+							rp_mod.unloader(script, self.Unprompted.main_p)
+							self.log.debug(f"{success_string} Regional Prompter")
+						elif script_title == "controlnet":
+							# Update the controlnet script args with a list of 0 units
+							cn_path = self.Unprompted.extension_path(self.Unprompted.Config.stable_diffusion.controlnet_name)
+							if cn_path:
+								cn_module = self.Unprompted.import_file(f"{self.Unprompted.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
+								cn_module.update_cn_script_in_processing(self.Unprompted.main_p, [], is_ui=False)
+								self.log.debug(f"{success_string} ControlNet")
+							else:
+								self.log.error("Could not communicate with ControlNet.")
+
+							pass
 					except Exception as e:
-						self.Unprompted.log_error(e, f"An error ocurred while trying to bypass an extension: {script_title}")
+						self.log.exception(f"Exception while trying to bypass an extension: {script_title}")
 					i += 1
 
 			if processed:

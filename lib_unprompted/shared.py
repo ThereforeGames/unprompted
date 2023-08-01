@@ -30,7 +30,7 @@ def parse_config(base_dir="."):
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.13.1"
+		self.VERSION = "9.13.2"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -252,11 +252,6 @@ class Unprompted:
 
 		return (parser.parse(string, context))
 
-	def log_error(self, e, msg=""):
-		"""Helper function that formats the exception e for easy reading"""
-		import traceback
-		self.log.error(msg + ''.join(traceback.TracebackException.from_exception(e).format()))
-
 	def strip_str(self, string, chop):
 		while True:
 			if chop and string.endswith(chop):
@@ -370,12 +365,13 @@ class Unprompted:
 		except Exception as e:
 			self.log.error(f"Could not set ControlNet value ({att}): {e}")
 
-	def populate_stable_diffusion_vars(self, this_p):
+	def update_user_vars(self, this_p, user_vars=None):
+		if not user_vars: user_vars = self.shortcode_user_vars
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(this_p):
 			if not att.startswith("__") and att != "sd_model" and att != "batch_index":
 				# self.log.debug(f"Setting {att} to {getattr(this_p, att)}")
-				self.shortcode_user_vars[att] = getattr(this_p, att)
+				user_vars[att] = getattr(this_p, att)
 
 	def update_stable_diffusion_vars(self, this_p):
 		from modules import sd_models
@@ -388,7 +384,7 @@ class Unprompted:
 				try:
 					setattr(this_p, att, self.shortcode_user_vars[att])
 				except Exception as e:
-					self.log_error(e, "Could not update Stable Diffusion attr: ")
+					self.log.exception(f"Exception while trying to update the Stable Diffusion attr: {att}")
 			elif att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
 				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
 				if info:
@@ -402,6 +398,11 @@ class Unprompted:
 							elif new_model.is_sd1: self.shortcode_user_vars["sd_base"] = "sd1"
 						except:
 							pass
+			elif att == "sd_vae":
+				from modules import sd_vae
+				info = sd_vae.find_vae_near_checkpoint(self.shortcode_user_vars[att])
+				if info:
+					sd_vae.reload_vae_weights(None, info)
 			# control controlnet
 			elif att.startswith("controlnet_") or att.startswith("cn_"):
 				self.update_controlnet_var(this_p, att)
@@ -434,3 +435,13 @@ class Unprompted:
 
 		spec.loader.exec_module(mod)
 		return mod
+
+	def is_var_deprecated(self, var_name):
+		deprecated_vars = {}
+		deprecated_vars["batch_index"] = "batch_count_index"
+
+		if var_name in deprecated_vars:
+			self.log.warning(f"The variable {var_name} is deprecated! You may want to use {deprecated_vars[var_name]} instead.")
+			return True
+
+		return False

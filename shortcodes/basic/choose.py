@@ -74,7 +74,7 @@ class Shortcode():
 					del parts[part_index]  # Prevent the same choice from being made again
 					final_string += _sep
 		except Exception as e:
-			self.Unprompted.log_error(e)
+			self.log.exception("Exception while parsing the list of choices")
 			pass
 
 		# Reset to original value
