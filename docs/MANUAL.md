@@ -217,6 +217,14 @@ This variable contains the base type of the currently-loaded checkpoint. The pos
 
 When you load a new model via `sd_model`, Unprompted will change the value of `sd_base` accordingly. Due to this, it is not recommended that you set the value of `sd_base` by hand; you can think of it as a soft-read-only variable.
 
+### sd_vae
+
+Similar to the `sd_model` variable, you can load a VAE by setting to this a filename sans extension.
+
+```
+[sets sd_vae="vae-ft-mse-840000-ema-pruned"]
+```
+
 ### single_seed
 
 You can set this integer variable to lock the seed for all images in a batch run.
