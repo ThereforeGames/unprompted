@@ -3,7 +3,21 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.13.2 - 1 August 2023</summary>
+<details open><summary>9.13.3 - 1 August 2023</summary>
+
+### Added
+- `[zoom_enhance]`: Now supports `upscale_min` which is the minimum area that a selected mask must occupy in order to be eligible for enhancement, defaults to 0.03 (which is what it was previously hardcoded to)
+
+### Changed
+- `[zoom_enhance]`: The `upscale_min` value is specifically compared against the size of a 512x512 canvas
+- `[zoom_enhance]`: Updated debug image names and log messages for clarity
+
+### Fixed
+- `[zoom_enhance]`: Fixed alignment issue related to using the `_alt` parg in txt2img mode
+
+</details>
+
+<details><summary>9.13.2 - 1 August 2023</summary>
 
 ### Added
 - New special variable `sd_vae`: allows you to change the vae file programmatically, similar to `sd_model`

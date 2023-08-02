@@ -72,6 +72,11 @@ class Shortcode():
 		upscale_width = int(float(self.Unprompted.parse_advanced(kwargs["upscale_width"], context))) if "upscale_width" in kwargs else default_mask_size
 		upscale_height = int(float(self.Unprompted.parse_advanced(kwargs["upscale_height"], context))) if "upscale_height" in kwargs else default_mask_size
 		hires_size_max = int(float(self.Unprompted.parse_advanced(kwargs["hires_size_max"], context))) if "hires_size_max" in kwargs else 1024
+		upscale_min = float(self.Unprompted.parse_advanced(kwargs["upscale_min"], context)) if "upscale_min" in kwargs else 0.03
+		# (upscale_width + upscale_height) / 1024
+		upscale_min = upscale_min * (512**2)  # Scale the minimum area up depending on the canvas size
+
+		self.log.debug(f"The upscale_min for this image is {upscale_min}")
 
 		sharpen_amount = int(float(self.Unprompted.parse_advanced(kwargs["sharpen_amount"], context))) if "sharpen_amount" in kwargs else 1.0
 
@@ -139,9 +144,6 @@ class Shortcode():
 		padding_original = int(float(self.Unprompted.parse_advanced(kwargs["contour_padding"], context))) if "contour_padding" in kwargs else 0
 		min_area = int(float(self.Unprompted.parse_advanced(kwargs["min_area"], context))) if "min_area" in kwargs else 50
 		target_mask = self.Unprompted.parse_alt_tags(kwargs["mask"], context) if "mask" in kwargs else "face"
-
-		if "skip_idx" in kwargs: skip_idx = (self.Unprompted.parse_advanced(kwargs["skip_idx"], context)).split(self.Unprompted.Config.syntax.delimiter)
-		else: skip_idx = []
 
 		set_pargs = pargs
 		set_kwargs = kwargs
@@ -222,14 +224,16 @@ class Shortcode():
 			image = numpy.array(image_pil)
 			if starting_image: starting_image = starting_image.resize((image_pil.size[0], image_pil.size[1]))
 
-			if debug: image_pil.save("zoom_enhance_0.png")
+			if debug:
+				self.log.warning("Since you are using the debug flag, Zoom Enhance will save test images to the root of your WebUI folder - don't forget!")
+				image_pil.save(f"zoom_enhance_img{image_idx}_0_starting_image.png")
 
 			if "mask_method" in kwargs: set_kwargs["method"] = self.Unprompted.parse_alt_tags(kwargs["mask_method"], context)
 
 			set_kwargs["txt2mask_init_image"] = image_pil
 			mask_image = self.Unprompted.shortcode_objects["txt2mask"].run_block(set_pargs, set_kwargs, None, target_mask)
 
-			if debug: mask_image.save(f"zoom_enhance_1_{image_idx}.png")
+			if debug: mask_image.save(f"zoom_enhance_img{image_idx}_1_mask_image.png")
 			if (image_mask_orig):
 				self.log.debug("Original image mask detected")
 				prep_orig = image_mask_orig.resize((mask_image.size[0], mask_image.size[1])).convert("L")
@@ -252,7 +256,7 @@ class Shortcode():
 				# Overlay mask
 				mask_image.paste(prep_orig, (0, 0), prep_orig)
 
-			if debug: mask_image.save(f"zoom_enhance_2_{image_idx}.png")
+			if debug: mask_image.save(f"zoom_enhance_img{image_idx}_2_mask_with_overlay.png")
 			# Make it grayscale
 			mask_image = cv2.cvtColor(numpy.array(mask_image), cv2.COLOR_BGR2GRAY)
 
@@ -291,10 +295,10 @@ class Shortcode():
 				if area >= min_area:
 					x, y, w, h = cv2.boundingRect(c)
 
-					self.log.debug(f"Contour properties: {x} {y} {w} {h}")
+					self.log.debug(f"Contour properties: x={x}, y={y}, w={w}, h={h}")
 					target_size = (w * h) / (upscale_width * upscale_height * target_multiplier)
 					self.log.debug(f"Masked region size is {target_size}")
-					if target_size > 1 or target_size < 0.03:
+					if target_size > 1 or (w * h) < upscale_min:
 						self.log.debug(f"This mask is either too large or too small for processing - skipping")
 						continue
 
@@ -306,8 +310,6 @@ class Shortcode():
 					padding = min(padding_original, x, y)
 
 					if "denoising_strength" not in kwargs or "cfg_scale" not in kwargs:
-						# target_size = (w * h) / (image_pil.size[0] * image_pil.size[1] * target_multiplier)
-
 						# sig = 0 # sigmoid(-6 + target_size * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
 						if "denoising_strength" not in kwargs:
 							self.Unprompted.main_p.denoising_strength = (1 - min(1, target_size)) * denoising_max
@@ -331,12 +333,12 @@ class Shortcode():
 
 					sub_img = Image.fromarray(image[y1:y2, x1:x2])
 					if starting_image:
-						if debug: starting_image.save("zoom_enhance_2b_this is the starting image.png")
+						# if debug: starting_image.save("zoom_enhance_2b_this is the starting image.png")
 						starting_image_face = Image.fromarray(numpy.array(starting_image)[y1:y2, x1:x2])
 						starting_image_face_big = starting_image_face.resize((upscale_width, upscale_height), resample=upscale_method)
 					sub_mask = Image.fromarray(mask_image[y1:y2, x1:x2])
 					sub_img_big = sub_img.resize((upscale_width, upscale_height), resample=upscale_method)
-					if debug: sub_img_big.save("zoom_enhance_3.png")
+					if debug: sub_img_big.save(f"zoom_enhance_img{image_idx}_3_cropped.png")
 
 					# blur radius is relative to canvas size, should be odd integer
 					blur_radius = math.ceil(w * blur_radius_orig) // 2 * 2 + 1
@@ -345,13 +347,12 @@ class Shortcode():
 
 					# Ensure correct size
 					# sub_mask = sub_mask.resize((upscale_width, upscale_height), resample=upscale_method)
-					if debug: sub_mask.save("zoom_enhance_4.png")
+					if debug: sub_mask.save(f"zoom_enhance_img{image_idx}_4_mask_with_blur.png")
 
 					if color_correct_timing == "pre" and color_correct_method != "none" and starting_image:
 						sub_img_big = self.Unprompted.color_match(starting_image_face_big, sub_img_big, color_correct_method, color_correct_strength)
 
 					self.Unprompted.main_p.init_images = [sub_img_big]
-					set_kwargs["img2img_init_image"] = sub_img_big  # for _alt method zoom_enhance
 					self.Unprompted.main_p.width = upscale_width
 					self.Unprompted.main_p.height = upscale_height
 
@@ -390,33 +391,31 @@ class Shortcode():
 						temp_scripts = self.Unprompted.main_p.scripts
 						self.Unprompted.main_p.scripts = None
 
-						if is_img2img and "_alt" not in pargs or (not is_img2img and "_alt" in pargs):
+						if is_img2img and "_alt" not in pargs:  #  or (not is_img2img and "_alt" in pargs)
+							self.log.debug("Processing mode: Native")
 
-							self.Unprompted.main_p.disable_extra_networks = True
-							# self.Unprompted.update_stable_diffusion_vars(self.Unprompted.main_p)
-
-							#if is_img2img:
-							#	self.Unprompted.main_p.img2img_image_conditioning()
+							# self.Unprompted.main_p.disable_extra_networks = True
 
 							# self.Unprompted.main_p.init(self.Unprompted.main_p.all_seeds, self.Unprompted.main_p.all_prompts, self.Unprompted.main_p.all_subseeds)
 							fixed_image = process_images_inner_(self.Unprompted.main_p)
 							fixed_image = fixed_image.images[0]
-						else:
-							# workaround for txt2img, not sure if compatible with controlnet
-							self.log.warning("Running alternate zoom_enhance processing mode - may not be compatible with ControlNet")
+						else:  # Alternate processing mode that relies on [img2img]
+							self.log.warning("Processing mode: Shortcode-Based (may not be compatible with ControlNet)")
 
 							# The img2img shortcode refers to the user vars for its operation
 							# so we take a backup of the vars to restore later
 							temp_vars = self.Unprompted.shortcode_user_vars.copy()
 							self.Unprompted.update_user_vars(self.Unprompted.main_p)
 
-							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, set_kwargs, None)
+							self.Unprompted.shortcode_user_vars["img2img_init_image"] = self.Unprompted.main_p.init_images[0]
+
+							fixed_image = self.Unprompted.shortcode_objects["img2img"].run_atomic(set_pargs, None, None)
 
 							self.Unprompted.shortcode_user_vars = temp_vars
 
 						self.Unprompted.main_p.scripts = temp_scripts
 
-						if debug: fixed_image.save("zoom_enhance_4after.png")
+						if debug: fixed_image.save(f"zoom_enhance_img{image_idx}_5_enhanced.png")
 					except Exception as e:
 						self.log.exception("Exception while running the img2img task")
 						return ""
@@ -425,10 +424,6 @@ class Shortcode():
 						try:
 							if color_correct_timing == "post":
 								self.log.debug("Color correcting the face...")
-								if debug:
-									fixed_image.save("zoom_enhance_5a_pre_color_correct.png")
-									starting_image_face_big.save("zoom_enhance_5b_using_this_face_mask.png")
-									starting_image.save("zoom_enhance_5c_main_starting_image.png")
 
 								fixed_image = self.Unprompted.color_match(sub_img_big, fixed_image, color_correct_method, color_correct_strength)  # starting_image_face_big
 
@@ -448,14 +443,11 @@ class Shortcode():
 									current_mask = current_mask.filter(ImageFilter.GaussianBlur(radius=blur_radius))
 								width, height = corrected_main_img.size
 								current_mask = current_mask.resize((width, height))
-								if debug: current_mask.save("zoom_enhance_5d_current_main_mask.png")
+								if debug: current_mask.save(f"zoom_enhance_img{image_idx}_6_color_correction_mask.png")
 								image_pil.paste(corrected_main_img, (0, 0), current_mask)
-								if debug: image_pil.save("zoom_enhance_5e_corrected_main_image.png")
+								if debug: image_pil.save(f"zoom_enhance_img{image_idx}_7_after_color_correct.png")
 						except Exception as e:
 							self.log.exception("Exception while applying color correction")
-
-					# self.Unprompted.shortcode_user_vars["init_images"].append(fixed_image)
-					if debug: fixed_image.save("zoom_enhance_5f.png")
 
 					if sharpen_amount > 0:
 						self.log.debug(f"Sharpening the fixed image by {sharpen_amount}")
@@ -470,7 +462,7 @@ class Shortcode():
 						elif test == 2: image_pil = image_pil.paste(fixed_image, (x1 - padding, y1 - padding), sub_mask).copy()
 						else: image_pil.paste(fixed_image, (x1 - padding, y1 - padding), sub_mask)
 
-						if debug: image_pil.save("zoom_enhance_final_result.png")
+						if debug: image_pil.save(f"zoom_enhance_img{image_idx}_8_final_result.png")
 
 						self.log.debug(f"Adding zoom_enhance result for image_idx {image_idx}")
 						if context != "after":
