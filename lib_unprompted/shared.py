@@ -369,7 +369,7 @@ class Unprompted:
 		if not user_vars: user_vars = self.shortcode_user_vars
 		# Set up system var support - copy relevant p attributes into shortcode var object
 		for att in dir(this_p):
-			if not att.startswith("__") and att != "sd_model" and att != "batch_index":
+			if not att.startswith("__") and att not in ["sd_model", "batch_count_index", "batch_size_index", "extra_network_data"]:
 				# self.log.debug(f"Setting {att} to {getattr(this_p, att)}")
 				user_vars[att] = getattr(this_p, att)
 

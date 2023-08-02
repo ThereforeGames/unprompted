@@ -20,15 +20,9 @@ The following extension(s) are known to cause issues with Unprompted:
 
 </details>
 
-<details><summary>[zoom_enhance] not affecting final output</summary>
+<details><summary>A1111 "Lora/Networks: Use Old Method"</summary>
 
-I have received several reports regarding the `[zoom_enhance]` shortcode.
-
-While I have not been able to reproduce the problem on my devices, you can try using the `_alt` parg to engage an alternate means of running the img2img task for face upscaling. Specifically, this sends the task to Unprompted's `[img2img]` shortcode rather than calling the WebUI's native `process_images_inner()` method. Example of use:
-
-```
-[after][zoom_enhance _alt][/after]
-```
+The WebUI setting "Lora/Networks: use old method [...]" is not compatible with Unprompted and will cause a crash during image generation.
 
 </details>
 
