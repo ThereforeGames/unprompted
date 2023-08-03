@@ -8,7 +8,8 @@
 	"base_dir":"",
 	"subdirectories":
 	{
-		"shortcodes":"shortcodes"
+		"shortcodes":"shortcodes",
+		"models":"models"
 	},
 	"logging":
 	{

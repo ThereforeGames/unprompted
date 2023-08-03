@@ -39,68 +39,6 @@ These are mutually exclusive. Shortcodes must be defined as one or the other.
 
 </details>
 
-<details><summary>Creating Your Own Shortcodes</summary>
-
-Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within a subdirectory called `custom`.)
-
-The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
-
-A shortcode is structured as follows:
-
-```
-class Shortcode():
-	"""A description of the shortcode goes here."""
-	def __init__(self,Unprompted):
-		self.Unprompted = Unprompted
-
-	def run_block(self, pargs, kwargs, context,content):
-		
-		return("")
-
-	def cleanup(self):
-		
-		return("")
-```
-
-You can declare an atomic shortcode by replacing `run_block()` with `run_atomic()`:
-
-```
-def run_atomic(self, pargs, kwargs, context):
-```
-
-Unlike Blocks, our Atomic shortcode does not receive a `content` variable.
-
-The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
-
-The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following list was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
-
-- `pargs`: a list of the shortcode's positional arguments.
-- `kwargs`: a dictionary of the shortcode's keyword arguments.
-- `context`: an optional arbitrary context object supplied by the caller.
-- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
-
-Positional arguments (`pargs`) and keyword arguments (`kwargs`) are passed as strings. The `run_` function itself returns a string which will replace the shortcode in the parsed text.
-
-The `cleanup()` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
-
-Regarding Blocks, it is important to understand that **the parser evalutes inner shortcodes before outer shortcodes.** Sometimes this is not desirable, such as when dealing with a "conditional" shortcode like `[if]`. Let's consider the following example:
-
-```
-[if my_var=1][set another_var]0[/set][/if]
-```
-
-In this case, we **do not** want to set `another_var` to 0 unless the outer `[if]` statement succeeds. For this reason, the `[if]` shortcode includes a special `preprocess_block()` function:
-
-```
-def preprocess_block(self,pargs,kwargs,context): return True
-```
-
-When the parser encounters a block shortcode, it runs the `preprocess_block()` function if it exists. If that function returns True, then any future shortcodes are "blocked" by the parser until it finds the endtag (`[/if]`). This is what allows us to override the normal "inner-before-outer" processing flow.
-
-The `preprocess_block()` function is also useful for executing arbitrary code before parsing the remaining text. Just be aware that the function is not aware of the shortcode's content, and that no `run_...()` functions have executed before this step.
-
-</details>
-
 <details><summary>Secondary Shortcode Tags</summary>
 
 You can use shortcodes directly in the arguments of other shortcodes with **secondary tags.**
@@ -421,6 +359,121 @@ Same as above, but for the negative prompt.
 
 </details>
 
+## 👨‍💻 For Programmers
+
+<details><summary>Creating Your Own Shortcodes</summary>
+
+Shortcodes are loaded as Python modules from `unprompted/shortcodes`. You can make your own shortcodes by creating files there (preferably within a subdirectory called `custom`.)
+
+The shortcode name is defined by the filename, e.g. `override.py` will give you the ability to use `[override]`. Shortcode filenames should be unique.
+
+A shortcode is structured as follows:
+
+```
+class Shortcode():
+	"""A description of the shortcode goes here."""
+	def __init__(self,Unprompted):
+		self.Unprompted = Unprompted
+
+	def run_block(self, pargs, kwargs, context,content):
+		
+		return("")
+
+	def cleanup(self):
+		
+		return("")
+```
+
+You can declare an atomic shortcode by replacing `run_block()` with `run_atomic()`:
+
+```
+def run_atomic(self, pargs, kwargs, context):
+```
+
+Unlike Blocks, our Atomic shortcode does not receive a `content` variable.
+
+The `__init__` function gives the shortcode access to our main Unprompted object, and it's where you should declare any unique variables for your shortcode.
+
+The `run_block` function contains the main logic for your shortcode. It has access to these special variables (the following list was pulled from the [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) library, on which Unprompted depends):
+
+- `pargs`: a list of the shortcode's positional arguments.
+- `kwargs`: a dictionary of the shortcode's keyword arguments.
+- `context`: an optional arbitrary context object supplied by the caller.
+- `content`: the string within the shortcode tags, e.g. `[tag]content[/tag]`
+
+Positional arguments (`pargs`) and keyword arguments (`kwargs`) are passed as strings. The `run_` function itself returns a string which will replace the shortcode in the parsed text.
+
+The `cleanup()` function runs at the end of the processing chain. You can free any unnecessary variables from memory here.
+
+Regarding Blocks, it is important to understand that **the parser evalutes inner shortcodes before outer shortcodes.** Sometimes this is not desirable, such as when dealing with a "conditional" shortcode like `[if]`. Let's consider the following example:
+
+```
+[if my_var=1][set another_var]0[/set][/if]
+```
+
+In this case, we **do not** want to set `another_var` to 0 unless the outer `[if]` statement succeeds. For this reason, the `[if]` shortcode includes a special `preprocess_block()` function:
+
+```
+def preprocess_block(self,pargs,kwargs,context): return True
+```
+
+When the parser encounters a block shortcode, it runs the `preprocess_block()` function if it exists. If that function returns True, then any future shortcodes are "blocked" by the parser until it finds the endtag (`[/if]`). This is what allows us to override the normal "inner-before-outer" processing flow.
+
+The `preprocess_block()` function is also useful for executing arbitrary code before parsing the remaining text. Just be aware that the function is not aware of the shortcode's content, and that no `run_...()` functions have executed before this step.
+
+</details>
+
+<details><summary>Implementing support for [else]</summary>
+
+In most programming languages, the "else" statement is joined at the hip with "if." However, thanks to the modular nature of Unprompted, we can use "else" with a variety of blocks and they do not even have to be placed next to each other.
+
+One such example is `[chance]`; you can follow a statement like `[chance 30]` with `[else]` to catch the 70% of cases where the chance fails.
+
+As of Unprompted v9.14.0, any shortcode can implement full compatibility with `[else]` in just a few lines of code. Here's how:
+
+1. Conditional shortcodes need to instantiate the `preprocess_block()` method in order to prevent execution of content unless the condition evaluates to true.
+
+```
+def preprocess_block(self, pargs, kwargs, context):
+	return True
+```
+
+2. Now in the `run_block()` method, immediately after testing our condition and finding that it's true, you must call `self.Unprompted.prevent_else()` as shown:
+
+```
+if some_condition:
+	self.Unprompted.prevent_else(else_id)
+```
+
+This will tell the `[else]` block not to execute at the current conditional depth level. It also increments our depth level by 1 (`self.Unprompted.conditional_depth += 1`) to acocunt for the possibility of further if/else-type statements in the content.
+
+You should also define `else_id` can be near the top of your `run_block()` like this:
+
+```
+else_id = kwargs["_else_id"] if "_else_id" in kwargs else str(self.Unprompted.conditional_depth)
+```
+
+The `else_id` is a string variable that defaults to our conditional depth. By letting the user specify a custom `else_id`, they can tie the "if" statement to a specific `[else]` block anywhere in the script. 
+
+3. On the other hand, if our statement evalutes to false, we need to give `[else]` the green light:
+
+```
+else: self.Unprompted.shortcode_objects["else"].do_else[else_id] = True
+```
+
+4. Finally, just before the return statement, we must reset the conditional depth to 0:
+
+```
+self.Unprompted.conditional_depth = 0
+return some_value
+```
+
+And you're set!
+
+
+
+</details>
+
 ## 🧙 The Wizard
 
 <details><summary>What is the Wizard?</summary>
@@ -513,9 +566,7 @@ It has a few settings that change how the code is formatted:
 
 This section describes all of the included basic shortcodes and their functionality.
 
-<details>[#]</summary>
-
-## Comment
+<details><summary>[#]</summary>
 
 Use this to write comments in your templates. Comments are ultimately discarded by Unprompted and will not affect your final output.
 
@@ -695,6 +746,39 @@ RESULT: print me
 
 </details>
 
+<details><summary>[call]</summary>
+
+Processes the first parg as either a `[function]` name or filepath, returning the result.
+
+Functions take precedence over filepaths. You can declare a function with `[function some_method]` and execute it with `[call some_method]`.
+
+As for filepaths, `unprompted/templates` is the base directory for this shortcode, e.g. `[call example/main]` will target `unprompted/templates/example/main.txt`.
+
+Do not enter a file extension, `.txt` is assumed.
+
+Supports relative paths by starting the `path` with `./`, e.g. `[call ./main]` will target the folder that the previously-called `[call]` resides in.
+
+This shortcode is powered by Python's glob module, which means it supports wildcards and other powerful syntax expressions. For example, if you wanted to process a random file inside of the `common` directory, you would do so like this: `[call common/*]`
+
+You can set arbitrary user variables with kwargs, e.g. `[call roman_numeral_converter number=7]`.
+
+The file is expected to be `utf-8` encoding. You can change this with the optional `_encoding` argument.
+
+This shortcode is compatible with `[else]`. Here are the situations that will cause `[else]` to fire:
+
+- The function has a `_required` argument that was not met.
+
+- The filepath doesn't exist.
+
+- Either the function or file return the term `_false`. (By the way, if this term is returned, it will not be printed.)
+
+
+```
+[call my_template/common/adjective]
+```
+
+</details>
+
 <details><summary>[case]</summary>
 
 See `[switch]`.
@@ -854,7 +938,7 @@ Shorthand "else if." Equivalent to `[else][if my_var="something"]content[/if][/e
 
 Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) failed its check, otherwise discards content.
 
-**Note:** In its current implementation, `[else]` should appear immediately after the conditional shortcode - don't try to get too crazy with nesting or delayed statements or it will probably fail.
+Supports the `id` kwarg. You can assign `_else_id` as a kwarg of the conditional block to associate it with a particular `[else]` block. Match the `id` to the `_else_id`. This means the two blocks don't have to appear next to each other.
 
 ```
 [if my_var=0]Print something[/if][else]It turns out my_var did not equal 0.[/else]
@@ -870,28 +954,6 @@ simpleeval is designed to prevent the security risks of Python's stock `eval` fu
 
 ```
 [eval]5 + 5[/eval]
-```
-
-</details>
-
-<details><summary>[file path(str)]</summary>
-
-Processes the content of `path` (including any shortcodes therein) and returns the result.
-
-`unprompted/templates` is the base directory for this shortcode, e.g. `[file example/main]` will target `unprompted/templates/example/main.txt`.
-
-Do not enter a file extension, `.txt` is assumed.
-
-Supports relative paths by starting the `path` with `./`, e.g. `[file ./main]` will target the folder that the previously-called `[file]` resides in.
-
-This shortcode is powered by Python's glob module, which means it supports wildcards and other powerful syntax expressions. For example, if you wanted to process a random file inside of the `common` directory, you would do so like this: `[file common/*]`
-
-Supports optional keyword arguments that are passed to `[set]` for your convenience. This effectively allows you to use `[file]` like a function in programming, e.g. `[file convert_to_roman_numeral number=7]`.
-
-The file is expected to be `utf-8` encoding. You can change this with the optional `_encoding` argument.
-
-```
-[file my_template/common/adjective]
 ```
 
 </details>
@@ -934,6 +996,35 @@ Current value of i: [get i]
 
 </details>
 
+<details><summary>[function]</summary>
+
+Allows you to declare your own named function (arbitrary code) and execute it with `[call]`.
+
+The first parg is the name of your function, e.g. `[function my_method]` can be referenced later with `[call my_method]`.
+
+Supports the `_const` parg which marks your function as a constant function. By including this argument, another script will not be able to initialize a function by the same name.
+
+Supports "default arguments" by way of arbitrary pargs and kwargs:
+
+- Parg example: `[function my_method my_parg]` will set the user variable `my_parg` to 1 when you `[call my_method]`.
+- Kwarg example: `[function my_method my_kwarg=apple]` will set the user variable `my_kwarg` to `apple` when you `[call my_method]`.
+
+Supports the `_required` kwarg which lets you specify one or more variable names delimited by `Unprompted.Config.syntax.delimiter`. If any are not set, the function will be bypassed.
+
+```
+[function my_method]
+A picture of [random 10] houses.
+[/function]
+
+[call my_method]
+```
+```
+POSSIBLE RESULT:
+A picture of 5 houses.
+```
+
+</details>
+
 <details><summary>[get variable]</summary>
 
 Returns the value of `variable`.
@@ -951,6 +1042,29 @@ You can change the default separator with `_sep`.
 ```
 My name is [get name]
 ```
+
+</details>
+
+<details><summary>[gpt]</summary>
+
+Processes the content with a given GPT model. This is similar to the "Magic Prompts" feature of Dynamic Prompts, if you're familiar with that.
+
+This shortcode requires the "transformers" package which is included with the WebUI by default, but you may need to install the package manually if you're using Unprompted as a standalone program.
+
+You can leave the content blank for a completely randomized prompt.
+
+Supports the `model` kwarg which can accept a pretrained model identifier from the HuggingSpace hub. Defaults to `Gustavosta/MagicPrompt-Stable-Diffusion`. The first time you use a new model, it will be downloaded to the `unprompted/models/gpt` folder.
+
+Please see the Wizard UI for a list of suggested models.
+
+Supports the `task` kwarg which determines behavior of the transformers pipeline module. Defaults to `text-generation`. You can set this to `summarization` if you want to shorten your prompts a la Midjourney.
+
+Supports the `max_length` kwarg which is the maximum number of words to be returned by the shortcode. Defaults to 50.
+
+Supports the `min_length` kwarg which is the minimum number of words to be returned by the shortcode. Defaults to 1.
+
+Supports the `cache` parg to keep the model and tokenizer in memory between runs.
+
 
 </details>
 
@@ -1816,6 +1930,30 @@ Supports the following model-specific arguments: `value_threshold`, `distance_th
 **Reason for legacy status:** This shortcode was introduced by a PR and is reportedly not compatible with recent versions of the WebUI.
 
 This is a helper shortcode that should be used if multiple init images, multiple masks or in combination with instance2mask per_instance should be used. Use this shortcode at the very end of the prompt, such that it can gather the correct init images and masks. Note that this operator will change the batch_size and batch_count (n_iter).
+
+</details>
+
+<details><summary>[file path(str)]</summary>
+
+**Reason for legacy status:** Superceded by the `[call]` shortcode, which works with both filepaths and `[function]` names. That said, `[file]` may stick around for a while given its widespread use.
+
+Processes the content of `path` (including any shortcodes therein) and returns the result.
+
+`unprompted/templates` is the base directory for this shortcode, e.g. `[file example/main]` will target `unprompted/templates/example/main.txt`.
+
+Do not enter a file extension, `.txt` is assumed.
+
+Supports relative paths by starting the `path` with `./`, e.g. `[file ./main]` will target the folder that the previously-called `[file]` resides in.
+
+This shortcode is powered by Python's glob module, which means it supports wildcards and other powerful syntax expressions. For example, if you wanted to process a random file inside of the `common` directory, you would do so like this: `[file common/*]`
+
+Supports optional keyword arguments that are passed to `[set]` for your convenience. This effectively allows you to use `[file]` like a function in programming, e.g. `[file convert_to_roman_numeral number=7]`.
+
+The file is expected to be `utf-8` encoding. You can change this with the optional `_encoding` argument.
+
+```
+[file my_template/common/adjective]
+```
 
 </details>
 

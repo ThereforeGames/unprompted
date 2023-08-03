@@ -44,11 +44,8 @@ def do_dry_run(string):
 	Unprompted.log.debug(string)
 	# Reset vars
 	Unprompted.shortcode_user_vars = {}
-	unp_result = Unprompted.process_string(string)
-	# Cleanup routines
-	Unprompted.log.debug("Entering cleanup routine...")
-	for i in Unprompted.cleanup_routines:
-		Unprompted.shortcode_objects[i].cleanup()
+	unp_result = Unprompted.start(string)
+	Unprompted.cleanup()
 	return f"<strong>RESULT:</strong> {unp_result}"
 
 
@@ -93,7 +90,7 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 	filepath = os.path.relpath(Unprompted.wizard_template_files[option], f"{base_dir}/{Unprompted.Config.template_directory}")
 	# Remove file extension
 	filepath = os.path.splitext(filepath)[0]
-	result = f"{Unprompted.Config.syntax.tag_start}file \"{filepath}\""
+	result = f"{Unprompted.Config.syntax.tag_start}call \"{filepath}\""
 	filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
 	group = filtered_templates[Unprompted.wizard_template_files[option]]
 
@@ -431,7 +428,7 @@ class Scripts(scripts.Script):
 								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
 
 							with gr.Tab("Capture"):
-								gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and call it later using `[file]`, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
+								gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and `[call]` it later, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
 								# wizard_capture_include_inference = gr.Checkbox(label="Include inference settings",value=True)
 								wizard_capture_include_inference = gr.Radio(label="Include inference settings:", choices=["none", "simple", "verbose"], value="simple", interactive=True)
 								wizard_capture_include_prompt = gr.Radio(label="Include prompt:", choices=["none", "original", "postprocessed"], value="original", interactive=True)
@@ -585,8 +582,8 @@ class Scripts(scripts.Script):
 			# Set up system var support - copy relevant p attributes into shortcode var object
 			Unprompted.update_user_vars(p)
 
-			Unprompted.shortcode_user_vars["prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+			Unprompted.shortcode_user_vars["prompt"] = Unprompted.start(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+			Unprompted.shortcode_user_vars["negative_prompt"] = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
 			# Apply any updates to system vars
 			Unprompted.update_stable_diffusion_vars(p)
@@ -606,8 +603,8 @@ class Scripts(scripts.Script):
 								del Unprompted.shortcode_user_vars[key]
 
 						Unprompted.shortcode_user_vars["batch_count_index"] = i
-						p.all_prompts[i] = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-						p.all_negative_prompts[i] = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+						p.all_prompts[i] = Unprompted.start(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+						p.all_negative_prompts[i] = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
 
 					Unprompted.log.debug(f"Result {i}: {p.all_prompts[i]}")
 			# Keep the same prompt between runs
@@ -631,8 +628,8 @@ class Scripts(scripts.Script):
 			batch_size_index = 0
 			while batch_size_index < p.batch_size:
 
-				prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-				negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+				prompt_result = Unprompted.start(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
+				negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
 				Unprompted.shortcode_user_vars["prompt"] = prompt_result
 				Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
@@ -703,8 +700,8 @@ class Scripts(scripts.Script):
 					Unprompted.update_user_vars(p)
 
 					# Main string process
-					prompt_result = Unprompted.process_string(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-					negative_prompt_result = Unprompted.process_string(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+					prompt_result = Unprompted.start(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
+					negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
 				# On the first image, we have already evaluted the prompt in the process() function
 				else:
 					Unprompted.log.debug("Inheriting prompt vars for batch_count_index 0 from process() routine")
@@ -747,11 +744,7 @@ class Scripts(scripts.Script):
 
 			# Check for final iteration
 			if (batch_real_index == len(p.all_seeds) - 1):
-
-				# Cleanup routines
-				Unprompted.log.debug("Entering Cleanup routine...")
-				for i in Unprompted.cleanup_routines:
-					Unprompted.shortcode_objects[i].cleanup()
+				Unprompted.cleanup()
 
 				if unprompted_seed != -1:
 					import random
@@ -783,11 +776,7 @@ class Scripts(scripts.Script):
 			return False  # Prevents endless loop with some shortcodes
 
 		self.allow_postprocess = False
-		Unprompted.log.debug("Entering After routine...")
-
-		for i in Unprompted.after_routines:
-			val = Unprompted.shortcode_objects[i].after(p, processed)
-			if val: processed = val
+		processed = Unprompted.after(p, processed)
 
 		self.allow_postprocess = True
 

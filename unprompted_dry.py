@@ -13,12 +13,10 @@ def do_unprompted(string):
 	Unprompted.shortcode_user_vars = {}
 
 	# TODO: We may want to declare our own log level for the result message
-	Unprompted.log.info(Unprompted.process_string(string))
+	Unprompted.log.info(Unprompted.start(string))
 
 	# Cleanup routines
-	Unprompted.log.debug("Entering cleanup routine...")
-	for i in Unprompted.cleanup_routines:
-		Unprompted.shortcode_objects[i].cleanup()
+	Unprompted.cleanup()
 
 
 while True:

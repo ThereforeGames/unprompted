@@ -30,7 +30,7 @@ def parse_config(base_dir="."):
 class Unprompted:
 	def __init__(self, base_dir="."):
 		start_time = time.time()
-		self.VERSION = "9.13.2"
+		self.VERSION = "9.14.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -161,6 +161,26 @@ class Unprompted:
 
 	def shortcode_string_log(self):
 		return ("[" + os.path.basename(inspect.stack()[1].filename) + "]")
+
+	def start(self, string):
+		self.log.debug("Main routine started...")
+		self.conditional_depth = 0
+		return self.process_string(string)
+
+	def cleanup(self):
+		self.log.debug("Cleanup routine started...")
+		self.conditional_depth = 0
+		for i in self.cleanup_routines:
+			self.shortcode_objects[i].cleanup()
+		self.log.debug("Cleanup routine completed.")
+
+	def after(self, p=None, processed=None):
+		self.log.debug("After routine started...")
+		for i in self.after_routines:
+			val = self.shortcode_objects[i].after(p, processed)
+			if val: processed = val
+		self.log.debug("After routine completed.")
+		return processed
 
 	def process_string(self, string, context=None, cleanup_extra_spaces=True):
 		# First, sanitize contents
@@ -445,3 +465,14 @@ class Unprompted:
 			return True
 
 		return False
+
+	# Helper function to set array indexes that are outside the array's current length
+	def list_set(self, this_list, index, value, null_value=False):
+		while (len(this_list) <= index):
+			this_list.append(null_value)
+		this_list[index] = value
+
+	def prevent_else(self, else_id=None):
+		if not else_id: else_id = self.conditional_depth
+		self.shortcode_objects["else"].do_else[else_id] = False
+		self.conditional_depth += 1

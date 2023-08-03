@@ -233,7 +233,7 @@ class Shortcode():
 						show_cpu = cv2.resize(show_cpu, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
 					return show_cpu
 
-				sam_model_dir = f"{self.Unprompted.base_dir}/models/fastsam"
+				sam_model_dir = f"{self.Unprompted.base_dir}/{self.Unprompted.Config.subdirectories.models}/fastsam"
 				os.makedirs(sam_model_dir, exist_ok=True)
 				if fastsam_model_type == "YOLOv8x": sam_filename = "FastSAM-x.pt"
 				else: sam_filename = "FastSAM-s.pt"
@@ -379,7 +379,7 @@ class Shortcode():
 
 						# Init SAM
 						if self.cached_predictor == -1 or self.cached_model_method != method:
-							sam_model_dir = f"{self.Unprompted.base_dir}/models/segment_anything"
+							sam_model_dir = f"{self.Unprompted.base_dir}/{self.Unprompted.Config.subdirectories.models}/segment_anything"
 							os.makedirs(sam_model_dir, exist_ok=True)
 							sam_filename = "sam_vit_h_4b8939.pth"
 							sam_file = f"{sam_model_dir}/{sam_filename}"
@@ -440,7 +440,7 @@ class Shortcode():
 			else:
 				from lib_unprompted.stable_diffusion.clipseg.models.clipseg import CLIPDensePredT
 
-				model_dir = f"{self.Unprompted.base_dir}/models/clipseg"
+				model_dir = f"{self.Unprompted.base_dir}/{self.Unprompted.Config.subdirectories.models}/clipseg"
 
 				os.makedirs(model_dir, exist_ok=True)
 

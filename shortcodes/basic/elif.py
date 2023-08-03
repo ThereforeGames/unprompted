@@ -1,17 +1,21 @@
 class Shortcode():
-	def __init__(self,Unprompted):
+	def __init__(self, Unprompted):
 		self.Unprompted = Unprompted
 		self.description = "Shorthand 'else-if.'"
 
-	def preprocess_block(self,pargs,kwargs,context): return True
+	def preprocess_block(self, pargs, kwargs, context):
+		return True
 
 	def run_block(self, pargs, kwargs, context, content):
-		if (self.Unprompted.shortcode_objects["else"].do_else):
+		to_return = ""
+		else_id = kwargs["_else_id"] if "_else_id" in kwargs else str(self.Unprompted.conditional_depth)
+		if (self.Unprompted.shortcode_objects["else"].do_else[else_id]):
+			self.Unprompted.prevent_else(else_id)
 			# Calls 'if' directly
-			if_result = self.Unprompted.shortcode_objects["if"].run_block(pargs,kwargs,context,content)
-			return(if_result) # alt tags were already processed by 'if'
-		else:
-			return("")
+			to_return = self.Unprompted.shortcode_objects["if"].run_block(pargs, kwargs, context, content)
 
-	def ui(self,gr):
+		self.Unprompted.conditional_depth = 0
+		return (to_return)
+
+	def ui(self, gr):
 		pass

@@ -3,10 +3,8 @@ import re
 
 __version__ = "5.4.0"
 
-
 # Globally-registered handler functions indexed by keyword.
 global_keywords = {}
-
 
 # The set of all end-words for globally-registered block-scoped shortcodes.
 global_endwords = set()
@@ -14,7 +12,6 @@ global_endwords = set()
 
 # Decorator function for globally registering shortcode handlers.
 def register(keyword, endword=None, preprocessor=None):
-
 	def register_function(func):
 		global_keywords[keyword] = (func, endword, preprocessor)
 		if endword:
@@ -51,7 +48,6 @@ class ShortcodeRenderingError(ShortcodeError):
 
 # Input text is parsed into a tree of Node instances.
 class Node:
-
 	def __init__(self):
 		self.children = []
 
@@ -61,7 +57,6 @@ class Node:
 
 # Represents ordinary text not enclosed in tag delimiters.
 class Text(Node):
-
 	def __init__(self, text):
 		self.text = text
 
@@ -122,14 +117,15 @@ class AtomicShortcode(Shortcode):
 			msg = f"An exception was raised while rendering the "
 			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
 			raise ShortcodeRenderingError(msg) from ex
-	
-	def render_preprocess(self,context):
+
+	def render_preprocess(self, context):
 		try:
 			return self.preprocess(self.token.keyword, self.pargs, self.kwargs, context)
 		except Exception as ex:
 			msg = f"An exception was raised while pre-processing the "
 			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
 			raise ShortcodeRenderingError(msg) from ex
+
 
 # A block-scoped shortcode is a shortcode with a closing tag.
 class BlockShortcode(Shortcode):
@@ -147,13 +143,14 @@ class BlockShortcode(Shortcode):
 			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
 			raise ShortcodeRenderingError(msg) from ex
 
-	def run_preprocess(self,context):
+	def run_preprocess(self, context):
 		try:
 			return self.preprocess(self.token.keyword, self.pargs, self.kwargs, context)
 		except Exception as ex:
 			msg = f"An exception was raised while pre-processing the "
 			msg += f"'{self.token.keyword}' shortcode in line {self.token.line_number}."
 			raise ShortcodeRenderingError(msg) from ex
+
 
 # -------- #
 #  Parser  #
@@ -171,7 +168,6 @@ class BlockShortcode(Shortcode):
 # If `ignore_unknown` is true, unknown shortcodes are ignored. If this parameter
 # is false (the default), unknown shortcodes cause an error.
 class Parser:
-
 	def __init__(self, start='[%', end='%]', esc='\\', inherit_globals=True, ignore_unknown=False):
 		self.start = start
 		self.end = end
@@ -179,6 +175,7 @@ class Parser:
 		self.keywords = global_keywords.copy() if inherit_globals else {}
 		self.endwords = global_endwords.copy() if inherit_globals else set()
 		self.ignore_unknown = ignore_unknown
+		self.blocking_depth = 0
 
 	def register(self, func, keyword, endword=None, preprocessor=None):
 		self.keywords[keyword] = (func, endword, preprocessor)
@@ -189,13 +186,13 @@ class Parser:
 		if not self.start in text:
 			return text
 
-		stack  = [Node()]
+		stack = [Node()]
 		expecting = []
-		blocking_depth = 0
+		self.blocking_depth = 0
 
 		lexer = Lexer(text, self.start, self.end, self.esc_start)
 		for token in lexer.tokenize():
-			if blocking_depth > 0: token.blocked = True
+			if self.blocking_depth > 0: token.blocked = True
 
 			if token.type == "TEXT":
 				stack[-1].children.append(Text(token.text))
@@ -204,14 +201,14 @@ class Parser:
 				if endword:
 					node = BlockShortcode(token, handler, preprocessor)
 
-					if blocking_depth: blocking_depth += 1
+					if self.blocking_depth: self.blocking_depth += 1
 					elif preprocessor:
 						added_depth = int(node.run_preprocess(context))
-						blocking_depth += added_depth
+						self.blocking_depth += added_depth
 
 					expecting.append(endword)
 					stack[-1].children.append(node)
-					if blocking_depth < 2: stack.append(node)
+					if self.blocking_depth < 2: stack.append(node)
 				else:
 					node = AtomicShortcode(token, handler, preprocessor)
 					if preprocessor: node.render_preprocess(context)
@@ -221,10 +218,10 @@ class Parser:
 					msg = f"Unexpected '{token.keyword}' tag in line {token.line_number}."
 					raise ShortcodeSyntaxError(msg)
 				elif token.keyword == expecting[-1]:
-					if blocking_depth > 0: blocking_depth -= 1
+					if self.blocking_depth > 0: self.blocking_depth -= 1
 					expecting.pop()
-					
-					if blocking_depth > 0: stack[-1].children.append(Text(token.raw_text))
+
+					if self.blocking_depth > 0: stack[-1].children.append(Text(token.raw_text))
 					else: stack.pop()
 
 				elif token.blocked: stack[-1].children.append(Text(token.raw_text))
@@ -258,7 +255,6 @@ class Parser:
 
 
 class Token:
-
 	def __init__(self, token_type, token_text, raw_text, line_number):
 		words = token_text.split()
 		self.keyword = words[0] if words else ''
@@ -273,7 +269,6 @@ class Token:
 
 
 class Lexer:
-
 	def __init__(self, text, start, end, esc_start):
 		self.text = text
 		self.start = start
@@ -314,7 +309,7 @@ class Lexer:
 		while self.index < len(self.text):
 			if self.match(self.end):
 				text = self.text[start_index:self.index].strip()
-				raw_text = self.text[start_index-len(self.start):self.index+len(self.end)]
+				raw_text = self.text[start_index - len(self.start):self.index + len(self.end)]
 				self.tokens.append(Token("TAG", text, raw_text, start_line_number))
 				self.index += len(self.end)
 				return

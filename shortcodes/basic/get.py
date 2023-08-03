@@ -4,7 +4,7 @@ class Shortcode():
 		self.description = "Returns the value of a variable."
 
 	def run_atomic(self, pargs, kwargs, context):
-		_default = self.Unprompted.parse_advanced(kwargs["_default"], context) if "_default" in kwargs else ""
+		_default = str(self.Unprompted.parse_advanced(kwargs["_default"], context)) if "_default" in kwargs else ""
 		_sep = str(self.Unprompted.parse_advanced(kwargs["_sep"], context)) if "_sep" in kwargs else " "
 
 		return_string = ""

@@ -3,7 +3,31 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.13.3 - 1 August 2023</summary>
+<details open><summary>9.14.0 - 3 August 2023</summary>
+
+### About
+Unprompted v9.14.0 introduces support for custom functions, greatly improves flexibility of `[else]` statements, and perhaps most exciting of all: implements `[gpt]` for text autocompletion and summarization. Enjoy!
+
+### Added
+- New shortcode `[gpt]`: Autocompletes the content with a given GPT model (similar to "Magic Prompt" from Dynamic Prompts)
+- New shortcode `[function]`: Contains arbitrary code that you can call at will
+- New shortcode `[call]`: Allows you to execute a specific `[function]` or filepath
+- `[else]`: Now supports `id` kwarg which lets you tie specific if/else statements together (thus the `[else]` block can appear anywhere in the script) - do this by matching the if block's `_else_id` kwarg with the else block's `id` kwarg
+- `[call]`: Compatible with `[else]` if a function fails, if the filepath doesn't exist, or if either return the term `_false`
+- New config setting `subdirectories.models`: determines the folder within your Unprompted directory to store various model files in
+- New manual category: "For Programmers"
+
+### Changed
+- `[else]`: Improved comprehension of nested if/else statements
+- `[file]`: Now considered a legacy shortcode in favor of `[call]`, but will remain available for a while due to widespread use
+- Separated processing flow into new methods for the Unprompted object: `start()`, `cleanup()` and `after()`
+
+### Fixed
+- `[get]`: Fixed a crash related to the `_default` kwarg
+
+</details>
+
+<details><summary>9.13.3 - 1 August 2023</summary>
 
 ### Added
 - `[zoom_enhance]`: Now supports `upscale_min` which is the minimum area that a selected mask must occupy in order to be eligible for enhancement, defaults to 0.03 (which is what it was previously hardcoded to)
