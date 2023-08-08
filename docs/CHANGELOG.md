@@ -3,7 +3,17 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.15.0 - 7 August 2023</summary>
+<details open><summary>9.15.1 - 8 August 2023</summary>
+
+### Added
+- Github form templates for bug reports and feature requests
+
+### Fixed
+- Fixed a potential crash related to the `[base_dir]` shortcode of the Wizard UI
+
+</details>
+
+<details><summary>9.15.0 - 7 August 2023</summary>
 
 ### Added
 - Refresh buttons for Wizard Templates and Shortcodes

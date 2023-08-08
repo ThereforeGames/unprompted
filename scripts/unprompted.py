@@ -358,7 +358,9 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "template", f"{Unprompted.Config.syntax.tag_close}template")
 
 						def handler(keyword, pargs, kwargs, context):
-							return get_local_file_dir(Unprompted.wizard_template_files[-1])  # filename
+							if self.dropdown_item_name:
+								return get_local_file_dir(self.dropdown_item_name)
+							return get_local_file_dir()  # filename
 
 						wizard_shortcode_parser.register(handler, "base_dir")
 
