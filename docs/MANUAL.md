@@ -17,7 +17,7 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 The following extension(s) are known to cause issues with Unprompted:
 
 - **adetailer**: reportedly utilizes its own prompt field(s) that do not receive Unprompted strings correctly
-
+- **Regional Prompter**: This extension throws an error while processing images in the `[after]` block, however the error does not seem to interfere with the final result and is likely safe to disregard.
 </details>
 
 <details><summary>A1111 "Lora/Networks: Use Old Method"</summary>
@@ -445,7 +445,7 @@ if some_condition:
 	self.Unprompted.prevent_else(else_id)
 ```
 
-This will tell the `[else]` block not to execute at the current conditional depth level. It also increments our depth level by 1 (`self.Unprompted.conditional_depth += 1`) to acocunt for the possibility of further if/else-type statements in the content.
+This will tell the `[else]` block not to execute at the current conditional depth level. It also increments our depth level by 1 (`self.Unprompted.conditional_depth += 1`) to account for the possibility of further if/else-type statements in the content.
 
 You should also define `else_id` can be near the top of your `run_block()` like this:
 
@@ -1329,12 +1329,20 @@ Sets a variable to the given content.
 
 `_prepend` will instead add the content to the beginning of the variable's current value.
 
-Supports the optional `_new` argument which will bypass the shortcode if the variable already exists.
+Supports the optional `_new` parg which will bypass the shortcode if the variable you're trying to `[set]` already exists. For example:
+
+```
+[set my_var]apple[/set]
+[set my_var _new]orange[/set]
+[get my_var]
+```
+
+This example will return `apple`.
 
 Supports the optional `_choices` argument, which is a delimited string of accepted values. The behavior of this argument depends on whether or not the `_new` argument is present:
 
-- If `_new` and the variable exists with a value that is not accepted by `_choices`, then `_new` is bypassed.
-- If not `_new` and we're trying to set a value that is not accepted by `_choices`, then the `[set]` block is bypassed.
+- If `_new` and the variable exists as a value that is **not** accepted by `_choices`, then `_new` is ignored and this shortcode will run.
+- If **not** `_new` and we're trying to set the variable to a value that is **not** accepted by `_choices`, then the `[set]` block is bypassed.
 - In the Wizard UI for certain kinds of elements, `_choices` is used to populate the element, such as a dropdown menu or radio group.
 
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.

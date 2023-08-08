@@ -1,4 +1,4 @@
-[template name="Regional Prompter Buddy v0.0.1"]
+[template name="Regional Prompter Buddy v0.0.2"]
 ![Preview]([base_dir]/regional_prompter_buddy.png)
 
 This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension. It is currently intended for producing images with two subjects, but may be improved to support more regions in the future.
@@ -37,6 +37,10 @@ This is an experimental template that streamlines and optimizes the prompt for u
 	[array region_stamps _append="black_top_half|black_bottom_half"]
 [/else]
 
+[set prompt_style _new _info="Determines the overall prompt structure." _choices="Basic|Regional Prompter" _ui="dropdown"]Regional Prompter[/set]
+
+[set region_delimiter _new _info="Term to separate each region; use `AND` for Latent Couple`"]BREAK[/set]
+
 [set affix _new _info="Optional string to append to the base prompt and both subjects."] [/set]
 
 [set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="This value MUST match your Regional Prompter setting or it won't work!"]1[/set]
@@ -55,15 +59,21 @@ This is an experimental template that streamlines and optimizes the prompt for u
 	[set negative_b][get temp_subject][/set]
 [/chance]
 
-[if base_prompt]
-[get prefix] [get simple] [get affix] BREAK
+[if prompt_style=="Basic"]
+	[get prefix] [get subject_a] and [get subject_b] [get simple]
 [/if]
-[get simple], [get prefix] [get subject_a] [get affix] BREAK
-[get simple], [get prefix] [get subject_b] [get affix]
+[else]
+	[if base_prompt]
+	[get prefix] [get simple] [get affix] [get region_delimiter]
+	[/if]
+	[get prefix] [get subject_a] [get affix], [get simple] [get region_delimiter]
+	[get prefix] [get subject_b] [get affix], [get simple]
+[/else]
+
 [if split_negatives]
-[set negative_prompt _append] BREAK [get negative_a] [get current_neg] BREAK [get negative_b] [get current_neg][/set]
+[set negative_prompt _append] [get region_delimiter] [get negative_a] [get current_neg] [get region_delimiter] [get negative_b] [get current_neg][/set]
 [/if]
 
 [if do_zoom_enhance]
-	[after][zoom_enhance no_sync stamp="{array region_stamps 0}" stamp_x=-20 replacement="face of {get zoom_b}, {get simple}" negative_replacement="{get current_neg}" denoising_max=0.6][zoom_enhance no_sync stamp="{array region_stamps 1}" stamp_x=20 replacement="face of {get zoom_a}, {get simple}" negative_replacement="{get current_neg}"][/after]
+	[after][zoom_enhance no_sync stamp="{array region_stamps 0}" stamp_x=-20 replacement="face of {get zoom_b}" negative_replacement="{get negative_b} {get current_neg}"][zoom_enhance no_sync stamp="{array region_stamps 1}" stamp_x=20 replacement="face of {get zoom_a}" negative_replacement="{get current_neg}"][/after]
 [/if]

@@ -29,7 +29,8 @@
 		"filemode":"a",
 		"level":"INFO",
 		"use_colors":true,
-		"improve_alignment":true
+		"improve_alignment":true,
+		"deprecated_warnings":true
 	},
 	"syntax":
 	{

@@ -513,7 +513,7 @@ class Shortcode():
 			gr.Checkbox(label="Inherit your negative prompt for replacement 🡢 inherit_negative")
 		with gr.Accordion("🎭 Mask Settings", open=False):
 			gr.Radio(label="Masking tech method 🡢 mask_method", choices=["clipseg", "clip_surgery", "fastsam"], value="clipseg", interactive=True)  # Passed to txt2mask as "method"
-			gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method", value="left-to-right", choices=["left-to-right", "right-to-left", "top-to-bottom", "bottom-to-top", "big-to-small", "small-to-big", "unsorted"])
+			gr.Dropdown(label="Mask sorting method 🡢 mask_sort_method", info="When multiple, non-contiguous masks are detected, they will be processed in this order.", value="left-to-right", choices=["left-to-right", "right-to-left", "top-to-bottom", "bottom-to-top", "big-to-small", "small-to-big", "unsorted"])
 			gr.Number(label="Minimum mask size in pixels 🡢 min_area", value=50, interactive=True)
 			gr.Slider(label="Maximum mask size area 🡢 mask_size_max", value=0.5, maximum=1.0, minimum=0.0, interactive=True, step=0.01, info="Example: 0.6 = 60% of the canvas")
 			gr.Slider(label="Blur edges size 🡢 blur_size", value=0.03, maximum=1.0, minimum=0.0, interactive=True, step=0.01)
@@ -524,7 +524,7 @@ class Shortcode():
 			gr.Number(label="Sharpen amount 🡢 sharpen_amount", value=1.0, interactive=True)
 			gr.Number(label="Upscale width 🡢 upscale_width", value=512, interactive=True)
 			gr.Number(label="Upscale height 🡢 upscale_height", value=512, interactive=True)
-			gr.Number(label="Hires size max 🡢 hires_size_max", value=1024, interactive=True)
+			gr.Number(label="Hires size max 🡢 hires_size_max", info="This is a safety measure to prevent OOM errors.", value=1024, interactive=True)
 			gr.Checkbox(label="Bypass adaptive hires 🡢 bypass_adaptive_hires")
 		with gr.Accordion("🎨 Inference Settings", open=False):
 			gr.Slider(label="Minimum CFG scale 🡢 cfg_scale_min", value=7.0, maximum=15.0, minimum=0.0, interactive=True, step=0.5)

@@ -3,7 +3,23 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.14.0 - 3 August 2023</summary>
+<details open><summary>9.15.0 - 7 August 2023</summary>
+
+### Added
+- Refresh buttons for Wizard Templates and Shortcodes
+- Regional Prompter Buddy v0.0.2: New setting `region_delimiter` which lets you customize the term that separates each region (defaults to `BREAK`, but you may want to switch it to `AND` for Latent Couple)
+- Regional Prompter Buddy v0.0.2: New setting `prompt_style` which determines the overall prompt structure, try setting it to `Basic` if you want to use this template without another extension
+- New config setting `logging.deprecated_warnings`: Turn this off if you don't wish to see console messages about the use of deprecated or legacy code
+
+### Changed
+- Updated documentation
+
+### Fixed
+- `[img2pez]`: Workaround for conflict between `optim_utils.py` and WebUI batch processing
+
+</details>
+
+<details><summary>9.14.0 - 3 August 2023</summary>
 
 ### About
 Unprompted v9.14.0 introduces support for custom functions, greatly improves flexibility of `[else]` statements, and perhaps most exciting of all: implements `[gpt]` for text autocompletion and summarization. Enjoy!

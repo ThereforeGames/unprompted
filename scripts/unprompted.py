@@ -9,6 +9,7 @@ import gradio as gr
 import modules.scripts as scripts
 from modules.processing import process_images, fix_seed, Processed
 from modules.shared import opts, cmd_opts, state, Options
+from modules.ui_components import ToolButton
 from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
 from pathlib import Path
@@ -30,7 +31,7 @@ if ext_dir == "unprompted":
 WizardModes = IntEnum("WizardModes", ["TEMPLATES", "SHORTCODES"], start=0)
 
 Unprompted.wizard_groups = [[{}, {}] for _ in range(len(WizardModes))]  # Two subdictionaries for txt2img and img2img
-Unprompted.wizard_dropdown = None
+# shortcodes_dropdown = None
 Unprompted.main_p = None
 Unprompted.original_prompt = None
 Unprompted.original_negative_prompt = ""
@@ -50,12 +51,16 @@ def do_dry_run(string):
 
 
 def wizard_select_item(option, is_img2img, mode=WizardModes.SHORTCODES):
-	Unprompted.wizard_dropdown.value = option
+	# self.shortcodes_dropdown.value = option
 
 	this_list = Unprompted.wizard_groups[mode][int(is_img2img)]
 
 	# Retrieve corresponding template filepath
-	if (mode == WizardModes.TEMPLATES): option = Unprompted.wizard_template_files[option]
+	try:
+		if (mode == WizardModes.TEMPLATES): option = Unprompted.wizard_template_files[option]
+	except Exception as e:
+		Unprompted.log.debug("Unexpected wizard_select_item error")
+		pass
 
 	results = [gr.update(visible=(option == key)) for key in this_list.keys()]
 	return results
@@ -266,8 +271,13 @@ def apply_prompt_template(string, template):
 class Scripts(scripts.Script):
 	allow_postprocess = True
 
-	# infotext_fields = []
-	# paste_field_names = []
+	# Lists with two positions - one for txt2img, one for img2img
+	templates_region = [None] * 2
+	templates_dropdown = [None] * 2
+	shortcodes_region = [None] * 2
+	shortcodes_dropdown = [None] * 2
+
+	# templates_dropdown = [None] * 2
 
 	def title(self):
 		return "Unprompted"
@@ -348,7 +358,7 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "template", f"{Unprompted.Config.syntax.tag_close}template")
 
 						def handler(keyword, pargs, kwargs, context):
-							return get_local_file_dir(filename)
+							return get_local_file_dir(Unprompted.wizard_template_files[-1])  # filename
 
 						wizard_shortcode_parser.register(handler, "base_dir")
 
@@ -363,67 +373,107 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "wizard_ui_accordion", f"{Unprompted.Config.syntax.tag_close}wizard_ui_accordion", preprocess)
 
 						with gr.Tabs():
-							filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
-							filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
+							self.filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
+							self.filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
 
-							def wizard_add_template(show_me=False):
-								self.dropdown_item_name = filename
-								with gr.Group(visible=show_me) as filtered_templates[filename]:
-									# Render the text file's UI with special parser object
-									wizard_shortcode_parser.parse(file.read())
-									# Auto-include is always the last element
-									gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
-									# Add event listeners
-									wizard_prep_event_listeners(filtered_templates[filename])
-
-							with gr.Tab("Templates"):
+							def wizard_populate_templates(region, first_load=False):
 								import glob
-								txt_files = glob.glob(f"{base_dir}/{Unprompted.Config.template_directory}/**/*.txt", recursive=True) if not is_img2img else Unprompted.wizard_template_files
+
+								self.filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
+
+								def wizard_add_template(show_me=False):
+									self.dropdown_item_name = filename
+									with gr.Group(visible=show_me) as self.filtered_templates[filename]:
+										# Render the text file's UI with special parser object
+										wizard_shortcode_parser.parse(file.read())
+										# Auto-include is always the last element
+										gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
+										# Add event listeners
+										wizard_prep_event_listeners(self.filtered_templates[filename])
+
+								txt_files = glob.glob(f"{base_dir}/{Unprompted.Config.template_directory}/**/*.txt", recursive=True) if (not is_img2img or not first_load) else Unprompted.wizard_template_files
 								is_first = True
 
-								templates_dropdown = gr.Dropdown(choices=[], label="Select template:", type="index", info="These are your GUI templates - you can think of them like custom scripts, except you can run an unlimited number of them at the same time.")
+								with region:
+									for filename in txt_files:
+										with open(filename, encoding="utf8") as file:
+											if is_img2img and first_load: wizard_add_template()
+											else:
+												first_line = file.readline()
+												# Make sure this text file starts with the [template] tag - this identifies it as a valid template
+												if first_line.startswith(f"{Unprompted.Config.syntax.tag_start}template"):
+													# if not first_load: print(f"adding {filename}")
+													file.seek(0)  # Go back to start of file
+													wizard_add_template(is_first)
+													Unprompted.wizard_template_names.append(self.dropdown_item_name)
+													Unprompted.wizard_template_files.append(filename)
+													Unprompted.wizard_template_kwargs.append(self.wizard_template_kwargs)
+													if (is_first):
+														self.templates_dropdown[int(is_img2img)].value = self.dropdown_item_name
+														is_first = False
 
-								for filename in txt_files:
-									with open(filename, encoding="utf8") as file:
-										if is_img2img: wizard_add_template()
-										else:
-											first_line = file.readline()
-											# Make sure this text file starts with the [template] tag - this identifies it as a valid template
-											if first_line.startswith(f"{Unprompted.Config.syntax.tag_start}template"):
-												file.seek(0)  # Go back to start of file
-												wizard_add_template(is_first)
-												Unprompted.wizard_template_names.append(self.dropdown_item_name)
-												Unprompted.wizard_template_files.append(filename)
-												Unprompted.wizard_template_kwargs.append(self.wizard_template_kwargs)
-												if (is_first):
-													templates_dropdown.value = self.dropdown_item_name
-													is_first = False
+									if (len(self.filtered_templates) > 1):
+										self.templates_dropdown[int(is_img2img)].change(fn=wizard_select_item, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value=WizardModes.TEMPLATES)], outputs=list(self.filtered_templates.values()))
 
-								# Refresh dropdown list
-								templates_dropdown.choices = Unprompted.wizard_template_names
+								return gr.Dropdown.update(choices=Unprompted.wizard_template_names)  # Unprompted.wizard_template_names
 
-								if (len(filtered_templates) > 1):
-									templates_dropdown.change(fn=wizard_select_item, inputs=[templates_dropdown, gr.Variable(value=is_img2img), gr.Variable(value=WizardModes.TEMPLATES)], outputs=list(filtered_templates.values()))
+							def wizard_populate_shortcodes(region, first_load=False):
+								if not first_load:
+									Unprompted.load_shortcodes()
 
-								wizard_template_btn = gr.Button(value="Generate Shortcode")
+								with region:
+									for key in shortcode_list:
+										if (hasattr(Unprompted.shortcode_objects[key], "ui")):
+											with gr.Group(visible=(key == self.shortcodes_dropdown[int(is_img2img)].value)) as self.filtered_shortcodes[key]:
+												gr.Label(label="Options", value=f"{key}: {Unprompted.shortcode_objects[key].description}")
+												if hasattr(Unprompted.shortcode_objects[key], "run_block"): gr.Textbox(label="Content", max_lines=2, min_lines=2)
+												# Run the shortcode's UI template to populate
+												Unprompted.shortcode_objects[key].ui(gr)
+												# Auto-include is always the last element
+												gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
+												# Add event listeners
+												wizard_prep_event_listeners(self.filtered_shortcodes[key])
+
+									self.shortcodes_dropdown[int(is_img2img)].change(fn=wizard_select_item, inputs=[self.shortcodes_dropdown[int(is_img2img)], gr.Variable(value=is_img2img)], outputs=list(self.filtered_shortcodes.values()))
+
+								return gr.Dropdown.update(choices=list(Unprompted.shortcode_objects.keys()))
+
+							def wizard_refresh_templates():
+								Unprompted.log.debug("Refreshing the Wizard Templates")
+								Unprompted.wizard_template_names.clear()
+								Unprompted.wizard_template_files.clear()
+								Unprompted.wizard_template_kwargs.clear()
+								return wizard_populate_templates(self.templates_region[int(is_img2img)])
+
+							def wizard_refresh_shortcodes():
+								Unprompted.log.debug("Refreshing the Wizard Shortcodes")
+								Unprompted.shortcode_modules = {}
+								Unprompted.shortcode_objects = {}
+								Unprompted.shortcode_user_vars = {}
+								Unprompted.cleanup_routines = []
+								Unprompted.after_routines = []
+								return wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)])
+
+							with gr.Tab("Templates"):
+								with gr.Row():
+									self.templates_dropdown[int(is_img2img)] = gr.Dropdown(choices=[], label="Select template:", type="index", info="These are your GUI templates - you can think of them like custom scripts, except you can run an unlimited number of them at the same time.")
+									templates_refresh = ToolButton(value='\U0001f504', elem_id=f"templates-refresh")
+									templates_refresh.click(fn=wizard_refresh_templates, outputs=self.templates_dropdown[int(is_img2img)])
+
+								self.templates_region[int(is_img2img)] = gr.Blocks()
+								wizard_populate_templates(self.templates_region[int(is_img2img)], True)
+
+							self.templates_dropdown[int(is_img2img)].choices = Unprompted.wizard_template_names
 
 							with gr.Tab("Shortcodes"):
 								shortcode_list = list(Unprompted.shortcode_objects.keys())
-								Unprompted.wizard_dropdown = gr.Dropdown(choices=shortcode_list, label="Select shortcode:", value=Unprompted.Config.ui.wizard_default_shortcode, info="GUI for setting up any shortcode in Unprompted. More engaging than reading the manual!")
+								with gr.Row():
+									self.shortcodes_dropdown[int(is_img2img)] = gr.Dropdown(choices=shortcode_list, label="Select shortcode:", value=Unprompted.Config.ui.wizard_default_shortcode, info="GUI for setting up any shortcode in Unprompted. More engaging than reading the manual!")
+									shortcodes_refresh = ToolButton(value='\U0001f504', elemn_id=f"shortcodes-refresh")
+									shortcodes_refresh.click(fn=wizard_refresh_shortcodes, outputs=self.shortcodes_dropdown[int(is_img2img)])
 
-								for key in shortcode_list:
-									if (hasattr(Unprompted.shortcode_objects[key], "ui")):
-										with gr.Group(visible=(key == Unprompted.wizard_dropdown.value)) as filtered_shortcodes[key]:
-											gr.Label(label="Options", value=f"{key}: {Unprompted.shortcode_objects[key].description}")
-											if hasattr(Unprompted.shortcode_objects[key], "run_block"): gr.Textbox(label="Content", max_lines=2, min_lines=2)
-											# Run the shortcode's UI template to populate
-											Unprompted.shortcode_objects[key].ui(gr)
-											# Auto-include is always the last element
-											gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
-											# Add event listeners
-											wizard_prep_event_listeners(filtered_shortcodes[key])
-
-								Unprompted.wizard_dropdown.change(fn=wizard_select_item, inputs=[Unprompted.wizard_dropdown, gr.Variable(value=is_img2img)], outputs=list(filtered_shortcodes.values()))
+								self.shortcodes_region[int(is_img2img)] = gr.Blocks()
+								wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)], True)
 
 								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
 
@@ -438,9 +488,10 @@ class Scripts(scripts.Script):
 								wizard_capture_btn = gr.Button(value="Generate code for my last image")
 
 							wizard_result = gr.HTML(label="wizard_result", value="", elem_id="unprompted_result")
-							wizard_shortcode_btn.click(fn=wizard_generate_shortcode, inputs=[Unprompted.wizard_dropdown, gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
-							wizard_template_btn.click(fn=wizard_generate_template, inputs=[templates_dropdown, gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
+							wizard_shortcode_btn.click(fn=wizard_generate_shortcode, inputs=[self.shortcodes_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
 							wizard_capture_btn.click(fn=wizard_generate_capture, inputs=[wizard_capture_include_inference, wizard_capture_include_prompt, wizard_capture_include_neg_prompt, wizard_capture_include_model, wizard_capture_add_template_block], outputs=wizard_result)
+							wizard_template_btn = gr.Button(value="Generate Shortcode")
+							wizard_template_btn.click(fn=wizard_generate_template, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
 
 					else:
 						gr.HTML(label="wizard_debug", value="You have disabled the Wizard in your config.")

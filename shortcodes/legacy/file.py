@@ -9,7 +9,9 @@ class Shortcode():
 		self.description = "Processes the file content of 'path.'"
 
 	def run_atomic(self, pargs, kwargs, context):
-		self.log.warning(f"As of v9.14.0, [file] is a legacy shortcode and will eventually be removed in favor of [call] - the main difference is that [call] also works with functions.")
+
+		if self.Unprompted.Config.logging.deprecated_warnings: self.log.warning(f"As of v9.14.0, [file] is a legacy shortcode and will eventually be removed in favor of [call] - the main difference is that [call] also works with functions.")
+
 		if "_bypass_if" in kwargs:
 			if self.Unprompted.parse_advanced(kwargs["_bypass_if"], context): return ""
 
