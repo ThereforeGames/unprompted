@@ -15,14 +15,14 @@ body:
           required: true
         - label: I disabled my other extensions but the problem persists.
           required: true
-  - type: markdown
+  - type: textarea
     id: description
     attributes:
       label: Describe the bug
       description: A clear and concise description of what the bug is.
     validations:
       required: true
-  - type: markdown
+  - type: textarea
     id: prompt
     attributes:
       label: Prompt
