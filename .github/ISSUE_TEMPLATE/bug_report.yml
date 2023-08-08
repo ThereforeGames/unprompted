@@ -3,51 +3,51 @@ description: Notify us about a problem with Unprompted
 labels: ["bug"]
 
 body:
-	- type: checkboxes
-		id: due-diligence
-		attributes:
-			label: Due diligence
-			description: Before filing an issue, please confirm that you have performed your due diligence as described below.
-			options:
-				- label: I checked for similar issues and couldn't find any.
-					required: true
-				- label: My WebUI and Unprompted are both up-to-date.
-					required: true
-				- label: I disabled my other extensions but the problem persists.
-					required: true
-	- type: markdown
-		id: description
-		attributes:
-			label: Describe the bug
-			description: A clear and concise description of what the bug is.
-		validations:
-			required: true
-	- type: markdown
-		id: prompt
-		attributes:
-			label: Prompt
-			description: If applicable, provide an example prompt that we can use to reproduce the problem. 
-	- type: textarea
-		id: log-output
-		attributes:
-			label: Log output
-			description: If applicable, copy and paste your console output so we can look for errors and other diagnostic messages. (This field will be converted to a codeblock automatically, so no need for backticks.)
-			render: shell
-	- type: input
-		id: unprompted-version
-		attributes:
-			label: Unprompted version
-			description: You can find this in the 'About' tab of the WebUI
-		validations:
-			required: true
-	- type: input
-		id: webui-version
-		attributes:
-			label: WebUI version
-		validations:
-			required: true
-	- type: textarea
-		id: other-comments
-		attributes:
-			label: Other comments
-			description: What else do we need to know? For example, you can use this field to talk about the weather, share movie recommendations, or describe how the past is a work of fiction designed by the criminal ruling class in order to keep the human race from knowing about its true potential.
+  - type: checkboxes
+    id: due-diligence
+    attributes:
+      label: Due diligence
+      description: Before filing an issue, please confirm that you have performed your due diligence as described below.
+      options:
+        - label: I checked for similar issues and couldn't find any.
+          required: true
+        - label: My WebUI and Unprompted are both up-to-date.
+          required: true
+        - label: I disabled my other extensions but the problem persists.
+          required: true
+  - type: markdown
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: markdown
+    id: prompt
+    attributes:
+      label: Prompt
+      description: If applicable, provide an example prompt that we can use to reproduce the problem. 
+  - type: textarea
+    id: log-output
+    attributes:
+      label: Log output
+      description: If applicable, copy and paste your console output so we can look for errors and other diagnostic messages. (This field will be converted to a codeblock automatically, so no need for backticks.)
+      render: shell
+  - type: input
+    id: unprompted-version
+    attributes:
+      label: Unprompted version
+      description: You can find this in the 'About' tab of the WebUI
+    validations:
+      required: true
+  - type: input
+    id: webui-version
+    attributes:
+      label: WebUI version
+    validations:
+      required: true
+  - type: textarea
+    id: other-comments
+    attributes:
+      label: Other comments
+      description: What else do we need to know? For example, you can use this field to talk about the weather, share movie recommendations, or describe how the past is a work of fiction designed by the criminal ruling class in order to keep the human race from knowing about its true potential.

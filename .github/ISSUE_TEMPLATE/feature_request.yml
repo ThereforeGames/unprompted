@@ -3,16 +3,16 @@ description: Suggest an idea for Unprompted
 labels: ["enhancement"]
 
 body:
-	- type: checkboxes
-		id: due-diligence
-		attributes:
-			label: Due diligence
-			description: Before filing a feature request, please confirm that you have performed your due diligence as described below.
-			options:
-				- label: I checked for similar requests and couldn't find any.
-					required: true
-				- label: I read the manual and am at least reasonably sure this idea/feature doesn't already exist.
-					required: true
+  - type: checkboxes
+    id: due-diligence
+    attributes:
+      label: Due diligence
+      description: Before filing a feature request, please confirm that you have performed your due diligence as described below.
+      options:
+        - label: I checked for similar requests and couldn't find any.
+          required: true
+        - label: I read the manual and am at least reasonably sure this idea/feature doesn't already exist.
+          required: true
   - type: textarea
     id: feature
     attributes:
