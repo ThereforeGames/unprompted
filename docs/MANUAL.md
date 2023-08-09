@@ -253,12 +253,6 @@ This determines whether expressions will be processed by simpleeval. Disable for
 
 </details>
 
-<details><summary>skip_requirements (bool)</summary>
-
-Bypasses the startup requirements check (`install.py`) to minimize startup time.
-
-</details>
-
 <details><summary>template_directory (str)</summary>
 
 This is the base directory for your text files.
@@ -417,7 +411,7 @@ In this case, we **do not** want to set `another_var` to 0 unless the outer `[if
 def preprocess_block(self,pargs,kwargs,context): return True
 ```
 
-When the parser encounters a block shortcode, it runs the `preprocess_block()` function if it exists. If that function returns True, then any future shortcodes are "blocked" by the parser until it finds the endtag (`[/if]`). This is what allows us to override the normal "inner-before-outer" processing flow.
+When the parser encounters a block shortcode, it runs the `preprocess_block()` function if it exists. If that function returns True, then any future shortcodes are temporarily blocked by the parser until it finds the endtag (`[/if]`). This is what allows us to override the normal "inner-before-outer" processing flow.
 
 The `preprocess_block()` function is also useful for executing arbitrary code before parsing the remaining text. Just be aware that the function is not aware of the shortcode's content, and that no `run_...()` functions have executed before this step.
 
@@ -447,7 +441,7 @@ if some_condition:
 
 This will tell the `[else]` block not to execute at the current conditional depth level. It also increments our depth level by 1 (`self.Unprompted.conditional_depth += 1`) to account for the possibility of further if/else-type statements in the content.
 
-You should also define `else_id` can be near the top of your `run_block()` like this:
+You should also define `else_id` near the top of your `run_block()` like this:
 
 ```
 else_id = kwargs["_else_id"] if "_else_id" in kwargs else str(self.Unprompted.conditional_depth)
