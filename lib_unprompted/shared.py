@@ -96,7 +96,7 @@ class Unprompted:
 		self.log.debug(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "9.15.0"
+		self.VERSION = "9.15.1"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
