@@ -77,12 +77,20 @@ if Config.stable_diffusion.template_editor:
 						save_name = gr.Textbox(value="", label="Save Name", elem_id="save_name")
 				with gr.Column(scale=4, min_width=900):
 					main_edit_space = gr.Textbox(value="", label="Text Editor", interactive=True, lines=20, elem_id="unprompted_edit_space_prompt")
-					extra_networks_button = ToolButton(value=extra_networks_symbol, elem_id=f"unprompted_edit_space_extra_networks_button")
-					with FormRow(elem_id="unprompted_edit_space_extra_networks", visible=False) as extra_networks:
-						from modules import ui_extra_networks
-						extra_networks_ui_unprompted_edit_space = ui_extra_networks.create_ui(extra_networks, extra_networks_button, 'unprompted_edit_space')
-						extra_networks_ui_unprompted_gallery = gr.Textbox(visible=False)
+					# extra_networks_button = ToolButton(value=extra_networks_symbol, elem_id=f"unprompted_edit_space_extra_networks_button")
+					with gr.Accordion("Extra Networks", open=False):
+						extra_networks_tab = gr.Tabs(elem_id="unprompted_edit_space_extra_tabs")
+						extra_networks_tab.__enter__()
+
+						with gr.Blocks(elem_id="unprompted_edit_space_extra_networks", visible=False) as extra_networks:
+							from modules import ui_extra_networks
+							extra_networks_ui_unprompted_edit_space = ui_extra_networks.create_ui(extra_networks, [extra_networks_tab], 'unprompted_edit_space')
+							extra_networks_ui_unprompted_gallery = gr.Textbox(visible=False)
+
 			ui_extra_networks.setup_ui(extra_networks_ui_unprompted_edit_space, extra_networks_ui_unprompted_gallery)
+
+			extra_networks_tab.__exit__()
+
 			refresh_button_unprompted.click(fn=refresh_file_list, inputs=[], outputs=[
 			    templates,
 			])

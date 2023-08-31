@@ -3,7 +3,24 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.15.1 - 8 August 2023</summary>
+<details open><summary>9.15.2 - 31 August 2023</summary>
+
+### Changed
+- `[img2img]`: Updated for compatibility with WebUI v1.6.0
+- `[zoom_enhance]`: Lowered the default `cfg_min` and `cfg_max` values for the new DPM++ 3M samplers to 2.0 and 5.0
+- `[zoom_enhance]`: Improved support for `discard` mask mode
+- Unprompted Template Editor: Updated for compatibility with WebUI v1.6.0
+- Tested compatibility with WebUI v1.6.0 and updated compatibility blurb as such
+
+### Fixed
+- `[zoom_enhance]`: Fixed alignment issue related to `countour_padding`
+- Wizard Templates: Fixed an issue related to HTML escape sequences with spaces
+- Bodysnatcher 1.3.3: Now uses mask mode `discard` with `[zoom_enhance]` to ensure compatibility with `[txt2mask]`
+- Bodysnatcher 1.3.3: Temporarily switched `[zoom_enhance]` to `_alt` mode as a workaround for ControlNet compatibility issue
+
+</details>
+
+<details><summary>9.15.1 - 8 August 2023</summary>
 
 ### Added
 - Github form templates for bug reports and feature requests

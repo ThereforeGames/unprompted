@@ -8,7 +8,7 @@ import gradio as gr
 
 import modules.scripts as scripts
 from modules.processing import process_images, fix_seed, Processed
-from modules.shared import opts, cmd_opts, state, Options
+from modules.shared import opts, cmd_opts, state
 from modules.ui_components import ToolButton
 from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
@@ -112,10 +112,10 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 					# Skip special fields
 					if (arg_name == "prompt"): continue
 
-					this_val = str(Unprompted.autocast(gr_obj.value))
+					this_val = html.escape(str(Unprompted.autocast(gr_obj.value)))
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
-					result += f" {arg_name}={html.escape(this_val)}"
+					result += f" {arg_name}={this_val}"
 		except:
 			pass
 		return (result)
@@ -289,8 +289,6 @@ class Scripts(scripts.Script):
 		with gr.Group():
 			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
 				is_enabled = gr.Checkbox(label="Enabled", value=gradio_enabled_checkbox_workaround)
-				# self.infotext_fields.append((is_enabled,"Unprompted Enabled"))
-				# self.paste_field_names.append("Unprompted Enabled")
 
 				match_main_seed = gr.Checkbox(label="Synchronize with main seed", value=True)
 				setattr(match_main_seed, "do_not_save_to_config", True)
@@ -736,7 +734,7 @@ class Scripts(scripts.Script):
 				if batch_count_index > 0:
 					try:
 						Unprompted.log.debug("Attempting to deactivate extra networks...")
-						extra_networks.deactivate(p, p.extra_network_data)
+						if "extra_network_data" in p: extra_networks.deactivate(p, p.extra_network_data)
 					except Exception as e:
 						self.log.exception("Exception while deactiating extra networks")
 

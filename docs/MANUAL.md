@@ -26,6 +26,11 @@ The WebUI setting "Lora/Networks: use old method [...]" is not compatible with U
 
 </details>
 
+<details><summary>A1111 [img2img] seed error</summary>
+
+The `[img2img]` shortcode returns an error related to missing positional arguments in WebUI v1.6.0. In spite of this, the shortcode appears to work correctly, but it may not respect changes to your seed values.
+</details>
+
 ## 🎓 Proficiency
 
 <details><summary>Atomic vs Block Shortcodes</summary>

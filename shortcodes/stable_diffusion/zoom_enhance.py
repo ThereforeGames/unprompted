@@ -94,7 +94,7 @@ class Shortcode():
 		upscale_method = self.resample_methods[upscale_method]
 
 		# Ensure standard img2img mode
-		if (hasattr(self.Unprompted.main_p, "image_mask")):
+		if hasattr(self.Unprompted.main_p, "image_mask") and manual_mask_mode != "discard":
 			image_mask_orig = self.Unprompted.main_p.image_mask
 		else:
 			image_mask_orig = None
@@ -120,10 +120,10 @@ class Shortcode():
 		# for [txt2mask]
 		self.Unprompted.shortcode_user_vars["mode"] = 0
 
-		if "image_mask" in self.Unprompted.shortcode_user_vars:
+		if "image_mask" in self.Unprompted.shortcode_user_vars and manual_mask_mode != "discard":
 			current_mask = self.Unprompted.shortcode_user_vars["image_mask"]
-			self.Unprompted.shortcode_user_vars["image_mask"] = None
 		else:
+			self.Unprompted.shortcode_user_vars["image_mask"] = None
 			current_mask = None
 
 		if "denoising_strength" in kwargs:
@@ -135,13 +135,19 @@ class Shortcode():
 
 		# vars for dynamic settings
 		denoising_max = float(self.Unprompted.parse_advanced(kwargs["denoising_max"], context)) if "denoising_max" in kwargs else 0.3
-		cfg_min = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_min"], context)) if "cfg_scale_min" in kwargs else 7.0
-		cfg_max = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_max"], context)) if "cfg_scale_max" in kwargs else 14.0
+		if "sampler_name" in self.Unprompted.shortcode_user_vars and "DPM++ 3M" in self.Unprompted.shortcode_user_vars["sampler_name"]:
+			default_cfg_min = 2.0
+			default_cfg_max = 5.0
+		else:
+			default_cfg_min = 7.0
+			default_cfg_max = 15.0
+
+		cfg_min = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_min"], context)) if "cfg_scale_min" in kwargs else default_cfg_min
+		cfg_max = float(self.Unprompted.parse_advanced(kwargs["cfg_scale_max"], context)) if "cfg_scale_max" in kwargs else default_cfg_max
 		target_size_max = float(self.Unprompted.parse_advanced(kwargs["mask_size_max"], context)) if "mask_size_max" in kwargs else 0.5
-		target_size_max_orig = target_size_max
 		cfg_max = max(cfg_min, cfg_max)
 
-		padding_original = int(float(self.Unprompted.parse_advanced(kwargs["contour_padding"], context))) if "contour_padding" in kwargs else 0
+		contour_padding = int(float(self.Unprompted.parse_advanced(kwargs["contour_padding"], context))) if "contour_padding" in kwargs else 0
 		min_area = int(float(self.Unprompted.parse_advanced(kwargs["min_area"], context))) if "min_area" in kwargs else 50
 		target_mask = self.Unprompted.parse_alt_tags(kwargs["mask"], context) if "mask" in kwargs else "face"
 
@@ -307,7 +313,7 @@ class Shortcode():
 					w = size
 					h = size
 					# Padding may be constrained by the mask region position
-					padding = min(padding_original, x, y)
+					padding = min(contour_padding, x, y)
 
 					if "denoising_strength" not in kwargs or "cfg_scale" not in kwargs:
 						# sig = 0 # sigmoid(-6 + target_size * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
@@ -330,6 +336,8 @@ class Shortcode():
 					x1 = max(0, x - padding)
 					x2 = min(image.shape[1], x + w + padding)
 					if (x2 - x1 < size): x1 -= size - (x2 - x1)
+
+					self.log.debug(f"Updated contour coordinates: padding={padding}, x1={x1}, x2={x2}, y1={y1}, y2={y2}")
 
 					sub_img = Image.fromarray(image[y1:y2, x1:x2])
 					if starting_image:
@@ -456,6 +464,9 @@ class Shortcode():
 					try:
 						# Downscale fixed image back to original size
 						fixed_image = fixed_image.resize((w + padding * 2, h + padding * 2), resample=downscale_method)
+
+						if contour_padding:
+							padding -= contour_padding
 
 						# Slap our new image back onto the original
 						if test == 1: image_pil = image_pil.paste(fixed_image, (x1 - padding, y1 - padding), sub_mask)

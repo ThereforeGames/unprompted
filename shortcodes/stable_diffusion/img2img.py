@@ -66,24 +66,16 @@ class Shortcode():
 				    init_img,  # p.init_img_inpaint
 				    init_mask,  # p.init_mask_inpaint
 				    self.Unprompted.shortcode_user_vars["steps"],
-				    sampler_index,
+				    self.Unprompted.shortcode_user_vars["sampler_name"],
 				    self.Unprompted.shortcode_user_vars["mask_blur"] if "mask_blur" in self.Unprompted.shortcode_user_vars else 0,  # p.mask_blur
 				    0.0,  #p.mask_alpha
 				    0,  # p.inpainting_fill
-				    self.Unprompted.shortcode_user_vars["restore_faces"],
-				    self.Unprompted.shortcode_user_vars["tiling"],
 				    self.Unprompted.shortcode_user_vars["n_iter"] if "n_iter" in self.Unprompted.shortcode_user_vars else 1,  #p.n_iter - batch count
 				    self.Unprompted.shortcode_user_vars["batch_size"] if "batch_size" in self.Unprompted.shortcode_user_vars else 1,  #p.batch_size
 				    self.Unprompted.shortcode_user_vars["cfg_scale"],
 				    self.Unprompted.shortcode_user_vars["image_cfg_scale"] if "image_cfg_scale" in self.Unprompted.shortcode_user_vars else None,
 				    self.Unprompted.shortcode_user_vars["denoising_strength"] if self.Unprompted.shortcode_user_vars["denoising_strength"] is not None else 1.0,
-				    self.Unprompted.shortcode_user_vars["seed"],
-				    self.Unprompted.shortcode_user_vars["subseed"],
-				    self.Unprompted.shortcode_user_vars["subseed_strength"],
-				    self.Unprompted.shortcode_user_vars["seed_resize_from_h"],
-				    self.Unprompted.shortcode_user_vars["seed_resize_from_w"],
-				    0,  # seed_enable_extras
-				    0,  # selected_scale_tab
+				    0,  #selected_scale_tab
 				    self.Unprompted.shortcode_user_vars["height"],
 				    self.Unprompted.shortcode_user_vars["width"],
 				    1.0,  #scale_by
