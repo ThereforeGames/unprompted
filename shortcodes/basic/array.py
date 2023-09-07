@@ -16,6 +16,8 @@ class Shortcode():
 				if not parg in self.Unprompted.shortcode_user_vars: self.Unprompted.shortcode_user_vars[parg] = []
 				continue
 			# Print remaining pargs
+			# self.log.debug(f"What is pargs[0]? {pargs[0]}")
+			# self.log.debug(f"What is the second array index? {int(self.Unprompted.parse_advanced(parg, context))}")
 			result_list.append(str(self.Unprompted.shortcode_user_vars[pargs[0]][int(self.Unprompted.parse_advanced(parg, context))]))
 
 		# Set new array values

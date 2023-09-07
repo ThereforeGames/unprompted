@@ -197,6 +197,8 @@ class Parser:
 			if token.type == "TEXT":
 				stack[-1].children.append(Text(token.text))
 			elif token.keyword in self.keywords:
+				# Hardcoded bypass for multiline comments
+				if len(expecting) > 0 and "##" in self.keywords and expecting[-1] == self.keywords["##"][1]: continue
 				handler, endword, preprocessor = self.keywords[token.keyword]
 				if endword:
 					node = BlockShortcode(token, handler, preprocessor)

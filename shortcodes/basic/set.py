@@ -39,6 +39,17 @@ class Shortcode():
 
 			self.log.debug(f"Setting {pargs[0]} to {self.Unprompted.shortcode_user_vars[pargs[0]]}")
 
+		if "_external" in kwargs:
+			import json
+			filepath = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(kwargs["_external"]),root=self.Unprompted.base_dir,must_exist=False)
+
+			# We load the file twice so that we can prepare the full data to send with json.dump
+			json_obj = self.Unprompted.create_load_json(filepath)
+			json_obj[pargs[0]] = self.Unprompted.shortcode_user_vars[pargs[0]]
+
+			with open(filepath, "w", encoding="utf8") as f:
+				json.dump(json_obj, f, ensure_ascii=False)
+
 		if ("_out" in pargs): return (self.Unprompted.shortcode_user_vars[pargs[0]])
 		else: return ("")
 

@@ -17,7 +17,7 @@ class Shortcode():
 			json_obj = json.loads(content)
 		# Otherwise we're loading a file
 		else:
-			filepath = self.Unprompted.parse_filepath(content + ".json", context)
+			filepath = self.Unprompted.str_with_ext(self.Unprompted.parse_filepath(content, context))
 			self.log.debug(f"Loading the following config file: {filepath}")
 			json_obj = json.load(open(f"{filepath}", "r", encoding="utf8"))
 

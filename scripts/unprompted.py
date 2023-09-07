@@ -33,6 +33,7 @@ WizardModes = IntEnum("WizardModes", ["TEMPLATES", "SHORTCODES"], start=0)
 Unprompted.wizard_groups = [[{}, {}] for _ in range(len(WizardModes))]  # Two subdictionaries for txt2img and img2img
 # shortcodes_dropdown = None
 Unprompted.main_p = None
+Unprompted.is_enabled = True
 Unprompted.original_prompt = None
 Unprompted.original_negative_prompt = ""
 
@@ -312,7 +313,7 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser = shortcodes.Parser(start=Unprompted.Config.syntax.tag_start, end=Unprompted.Config.syntax.tag_end, esc=Unprompted.Config.syntax.tag_escape, ignore_unknown=True, inherit_globals=False)
 
 						def handler(keyword, pargs, kwargs, context, content):
-							if "_new" in pargs:
+							if "_new" in pargs and ("_ui" not in kwargs or kwargs["_ui"] != "none"):
 								import lib_unprompted.casefy as casefy
 
 								friendly_name = kwargs["_label"] if "_label" in kwargs else casefy.titlecase(pargs[0])
@@ -534,7 +535,7 @@ class Scripts(scripts.Script):
 		return [is_enabled, unprompted_seed, match_main_seed]
 
 	def process(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args):
-		if not is_enabled:
+		if not is_enabled or not Unprompted.is_enabled:
 			return p
 
 		# test compatibility with controlnet
@@ -591,6 +592,8 @@ class Scripts(scripts.Script):
 					if (autoinclude_obj.value):
 						if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, "", Unprompted.original_prompt)
 						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, "", Unprompted.original_prompt)
+						p.all_prompts[0] = Unprompted.original_prompt  # test
+						p.unprompted_original_prompt = Unprompted.original_prompt
 
 		Unprompted.original_negative_prompt = p.all_negative_prompts[0]
 		if not hasattr(p, "unprompted_original_negative_prompt"): p.unprompted_original_negative_prompt = Unprompted.original_negative_prompt
@@ -717,7 +720,7 @@ class Scripts(scripts.Script):
 				Unprompted.shortcode_user_vars["batch_real_index"] += 1
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
-		if (is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):
+		if (is_enabled and Unprompted.is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):
 			from modules.processing import extra_networks
 
 			batch_count_index = Unprompted.shortcode_user_vars["batch_count_index"]
@@ -734,9 +737,9 @@ class Scripts(scripts.Script):
 				if batch_count_index > 0:
 					try:
 						Unprompted.log.debug("Attempting to deactivate extra networks...")
-						if "extra_network_data" in p: extra_networks.deactivate(p, p.extra_network_data)
+						if hasattr(p, "hasattr"): extra_networks.deactivate(p, p.extra_network_data)
 					except Exception as e:
-						self.log.exception("Exception while deactiating extra networks")
+						Unprompted.log.exception("Exception while deactiating extra networks")
 
 					for key in list(Unprompted.shortcode_user_vars):  # create a copy obj to avoid error during iteration
 						if key not in Unprompted.shortcode_objects["remember"].globals:
@@ -821,7 +824,9 @@ class Scripts(scripts.Script):
 
 	# After routines
 	def postprocess(self, p, processed, is_enabled=True, unprompted_seed=-1, match_main_seed=True):
-		if not self.allow_postprocess or not is_enabled:
+		if not is_enabled or not Unprompted.is_enabled: return False
+
+		if not self.allow_postprocess:
 			Unprompted.log.debug("Bypassing After routine to avoid infinite loop.")
 			self.allow_postprocess = True
 			return False  # Prevents endless loop with some shortcodes

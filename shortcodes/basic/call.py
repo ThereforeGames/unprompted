@@ -41,31 +41,36 @@ class Shortcode():
 			else:
 				self.log.debug(f"{name} is assumed to be a filepath")
 
-				# Relative path
-				if (name[0] == "."):
-					path = os.path.dirname(context) + "/" + name + self.Unprompted.Config.txt_format
-				# Absolute path
-				else:
-					path = self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + name + self.Unprompted.Config.txt_format
+				file = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(name, self.Unprompted.Config.txt_format), context=context, must_exist=False)
 
-				files = glob.glob(path)
-				if (len(files) == 0):
-					self.log.error(f"No files found at this location: {path}")
+				if not os.path.exists(file):
+					if "_suppress_errors" not in pargs: self.log.error(f"File does not exist: {file}")
 					contents = ""
 				else:
-					file = random.choice(files)
+					next_context = file # os.path.dirname(file)
+					with open(file, "r", encoding=this_encoding) as f:
+						contents = f.read()
+					f.close()
 
-					self.log.debug(f"Loading file: {file}")
+				# Old filepath handling, replaced with standard parse_filepath() method
+				# Relative path
+				#if (name[0] == "."):
+				#	path = self.Unprompted.str_with_ext(os.path.dirname(context) + "/" + name, self.Unprompted.Config.txt_format)
+				# Absolute path
+				#elif "_absolute" in pargs:
+				#	path = self.Unprompted.str_with_ext(name.replace("%BASE_DIR%", self.Unprompted.base_dir), self.Unprompted.Config.txt_format)
+				# Template path
+				#else:
+				#	path = self.Unprompted.str_with_ext(self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + name, self.Unprompted.Config.txt_format)
 
-					if not os.path.exists(file):
-						self.log.error(f"File does not exist: {file}")
-						contents = ""
-					else:
-						next_context = path
+				# files = glob.glob(path)
+				# if (len(files) == 0):
+				# 	if "_suppress_errors" not in pargs: self.log.error(f"No files found at this location: {path}")
+				# 	contents = ""
+				# else:
+				# 	file = random.choice(files)
 
-						with open(file, "r", encoding=this_encoding) as f:
-							contents = f.read()
-						f.close()
+				# 	self.log.debug(f"Loading file: {file}")
 
 		# Return logic
 		if not contents:

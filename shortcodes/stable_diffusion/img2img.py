@@ -12,6 +12,7 @@ class Shortcode():
 
 		# temporary bypass alwayson scripts to ensure vanilla img2img task
 		temp_alwayson = None
+		self.Unprompted.is_enabled = False
 		try:
 			temp_alwayson = self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.copy()
 			self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts.clear()
@@ -106,6 +107,7 @@ class Shortcode():
 		# Re-enable alwayson scripts
 		if temp_alwayson:
 			self.Unprompted.shortcode_user_vars["scripts"].alwayson_scripts = temp_alwayson
+		self.Unprompted.is_enabled = True
 
 		try:
 			if len(img2img_images) < 1:

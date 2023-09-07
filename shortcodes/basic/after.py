@@ -27,7 +27,7 @@ class Shortcode():
 		if self.after_content:
 
 			# Disable or unload other extensions that cause trouble with [after] processing
-			if not self.allow_unsafe_scripts:
+			if not self.allow_unsafe_scripts and self.Unprompted.main_p.scripts:
 				self.log.debug("Unloading incompatible scripts...")
 				i = 0
 				success_string = "Sucessfully unloaded"
@@ -65,6 +65,8 @@ class Shortcode():
 			for att in dir(p):
 				if not att.startswith("__"):
 					self.Unprompted.shortcode_user_vars[att] = getattr(p, att)
+
+			# self.Unprompted.shortcode_objects["bypass"].run_atomic({"after"}, {}, "")
 
 			for idx, content in enumerate(self.after_content):
 				self.Unprompted.shortcode_user_vars["after_index"] = idx

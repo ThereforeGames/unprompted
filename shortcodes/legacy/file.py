@@ -20,10 +20,10 @@ class Shortcode():
 
 		# Relative path
 		if (file_string[0] == "."):
-			path = os.path.dirname(context) + "/" + file_string + self.Unprompted.Config.txt_format
+			path = self.Unprompted.str_with_ext(os.path.dirname(context) + "/" + file_string, self.Unprompted.Config.txt_format)
 		# Absolute path
 		else:
-			path = self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string + self.Unprompted.Config.txt_format
+			path = self.Unprompted.str_with_ext(self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string, self.Unprompted.Config.txt_format)
 
 		files = glob.glob(path)
 		if (len(files) == 0):

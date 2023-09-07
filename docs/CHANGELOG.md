@@ -3,7 +3,30 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.15.2 - 31 August 2023</summary>
+<details open><summary>9.16.0 - 7 September 2023</summary>
+
+### Added
+- `[get]` and `[set]`: Now support `_external` kwarg to read/write a specific variable into an external file
+- `[get]` and `[sets]`: Now support `_all_external` kwarg to read/write all variables into an external file
+- `[set]`: You can now set `_ui="none"` in conjunction with `_new` to avoid adding this block to the Wizard UI
+- `[call]`: Replaced filepath handling with the updated `Unprompted.parse_filepath()` method, which now supports absolute paths
+- `[call]`: Now supports `_suppress_errors` to avoid writing errors to console
+- Helper function `str_with_ext()` that formats a filepath string to include an extension if it's missing one
+- Helper function `create_load_json()` that creates the requested json file before trying to load it, if necessary
+
+### Changed
+- `[##]`: Now correctly nullifies any shortcodes in the content, including those with malformed syntax
+
+### Fixed
+- `[img2img]`: Fixed an issue with this shortcode and the After routine in WebUI v1.6.0
+- Fixed an issue with batch_count > 1 in the latest WebUI
+- Fixed an issue related to Wizard auto-includes and blank prompts
+- Fixed a couple issues related to deactivating extra networks in batch processing
+- Speculative fix for an issue with nested if/else logic
+
+</details>
+
+<details><summary>9.15.2 - 31 August 2023</summary>
 
 ### Changed
 - `[img2img]`: Updated for compatibility with WebUI v1.6.0

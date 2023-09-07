@@ -13,7 +13,7 @@ class Shortcode():
 		for key, value in kwargs.items():
 			if (key == "_from"):
 				from_value = self.Unprompted.parse_advanced(value,context)
-				to_value = self.Unprompted.parse_advanced(kwargs["_to"],context)
+				to_value = self.Unprompted.parse_advanced(kwargs["_to"] if "_to" in kwargs else "",context)
 			elif (key[0] != "_"):
 				from_value = self.Unprompted.parse_advanced(key,context) # key
 				to_value = self.Unprompted.parse_advanced(value,context)

@@ -536,6 +536,7 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 - `radio`: A list of radio buttons that are determined by the `_choices` argument, constructed as a delimited list.
 - `dropdown`: A dropdown menu that is populated by the `_choices` argument, constructed as a delimited list.
 - `slider`: Limits selection to a range of numbers. You must also specify `_minimum`, `_maximum` and `_step` (step size, normally 1) for this element to work properly.
+- `none`: Do not create this block as a UI element even if it has the `_new` parg.
 
 The `[set]` block supports `_label` which is the friendly text to use above the UI element. If not set, the label will default to the variable name you're calling with `[set]` in titlecase format (e.g. "my_variable" becomes "My Variable.")
 
@@ -576,7 +577,9 @@ Use this to write comments in your templates. Comments are ultimately discarded 
 
 <details><summary>[##]</summary>
 
-Same as `[#]` but for multiline comments.
+Similar to `[#]` but for multiline comments.
+
+This shortcode is unique in that the parser will ignore any malformed syntax inside the content. For example, if you have a `[##]` that contains a broken or unclosed shortcode within, Unprompted will not throw an error about it.
 
 ```
 [##]
@@ -648,7 +651,7 @@ If you want to **set** values at specific indexes, supply the indexes as keyword
 [array my_array 2="something" 4=500 3="something else"]
 ```
 
-You can also use variable names as keyword arguments and `[array]` will attempt to parse them for an integer value.
+You can also use variable names as kwarg values and `[array]` will attempt to parse them for an integer value.
 
 Supports the optional `_delimiter` argument that defines the separator string when retrieving multiple values from the array. Defaults to your `Config.syntax.delimiter` setting.
 
@@ -753,7 +756,7 @@ Functions take precedence over filepaths. You can declare a function with `[func
 
 As for filepaths, `unprompted/templates` is the base directory for this shortcode, e.g. `[call example/main]` will target `unprompted/templates/example/main.txt`.
 
-Do not enter a file extension, `.txt` is assumed.
+If you do not enter a file extension, `.txt` is assumed.
 
 Supports relative paths by starting the `path` with `./`, e.g. `[call ./main]` will target the folder that the previously-called `[call]` resides in.
 
@@ -770,6 +773,8 @@ This shortcode is compatible with `[else]`. Here are the situations that will ca
 - The filepath doesn't exist.
 
 - Either the function or file return the term `_false`. (By the way, if this term is returned, it will not be printed.)
+
+Supports the `_suppress_errors` parg to prevent writing errors to the console.
 
 
 ```
@@ -864,7 +869,7 @@ Supports inline JSON as well as external JSON files.
 
 Supports relative and absolute filepaths.
 
-Do not enter a file extension, `.json` is assumed.
+If you do not enter a file extension, `.json` is assumed.
 
 ```
 [config]{"debug":True,"shortcodes":{"choose_delimiter":"*"}}[/config]
@@ -1038,6 +1043,10 @@ Supports returning multiple variables, e.g. `[get var_a var_b]` will return the 
 
 You can change the default separator with `_sep`.
 
+Supports the `_external` kwarg to retrieve variable(s) from an external .json file. If the file does not exist, it will be created for you. Please be aware that using `_external` will take precedence over the variable(s) currently stored in your `shortcode_user_vars` dictionary. Also, the external variable will be written to `shortcode_user_vars`.
+
+Supports the `_all_external` kwarg to retrieve all variables from an external .json file. Every key-value pair in the file will be stored to your `shortcode_user_vars` dictionary.
+
 ```
 My name is [get name]
 ```
@@ -1052,7 +1061,7 @@ This shortcode requires the "transformers" package which is included with the We
 
 You can leave the content blank for a completely randomized prompt.
 
-Supports the `model` kwarg which can accept a pretrained model identifier from the HuggingSpace hub. Defaults to `Gustavosta/MagicPrompt-Stable-Diffusion`. The first time you use a new model, it will be downloaded to the `unprompted/models/gpt` folder.
+Supports the `model` kwarg which can accept a pretrained model identifier from the HuggingFace hub. Defaults to `Gustavosta/MagicPrompt-Stable-Diffusion`. The first time you use a new model, it will be downloaded to the `unprompted/models/gpt` folder.
 
 Please see the Wizard UI for a list of suggested models.
 
@@ -1347,6 +1356,8 @@ Supports the optional `_choices` argument, which is a delimited string of accept
 Supports all Stable Diffusion variables that are exposed via Automatic's Script system, e.g. `[set cfg_scale]5[/set]` will force the CFG Scale to be 5 for the run.
 
 Supports the `_remember` parg that will invoke the `[remember]` shortcode with your variable. See `[remember]` for more information.
+
+Supports the `_external` kwarg to write the variable to an external .json file. If the file does not exist, it will be created for you.
 
 ```
 [set my_var]This is the value of my_var[/set]
@@ -1948,7 +1959,7 @@ Processes the content of `path` (including any shortcodes therein) and returns t
 
 `unprompted/templates` is the base directory for this shortcode, e.g. `[file example/main]` will target `unprompted/templates/example/main.txt`.
 
-Do not enter a file extension, `.txt` is assumed.
+If you do not enter a file extension, `.txt` is assumed.
 
 Supports relative paths by starting the `path` with `./`, e.g. `[file ./main]` will target the folder that the previously-called `[file]` resides in.
 

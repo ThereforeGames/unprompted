@@ -96,7 +96,7 @@ class Unprompted:
 		self.log.debug(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "9.15.2"
+		self.VERSION = "9.16.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -206,21 +206,33 @@ class Unprompted:
 		if cleanup_extra_spaces: string = " ".join(string.split())  # Cleanup extra spaces
 		return (string)
 
-	def parse_filepath(self, string, context="", root=None):
+	def parse_filepath(self, string, context="", root=None, must_exist=True):
 		import random
+
+		# Replace placeholders
+		string = string.replace("%BASEDIR%", self.base_dir)
+
 		# Relative path
 		if (string[0] == "."):
 			string = os.path.dirname(context) + "/" + string
+			self.log.debug(f"Relative path transformed: {string}")
 		# Absolute path
+		elif (os.path.isabs(string)):
+			self.log.debug(f"Absolute path transformed: {string}")
+		# Unprompted path
 		else:
 			if root is None: root = self.base_dir + "/" + self.Config.template_directory
 			string = root + "/" + string
+			self.log.debug(f"Unprompted path transformed: {string}")
 
 		files = glob.glob(string)
 		filecount = len(files)
 		if (filecount == 0):
-			self.log.error(f"No files found at this location: {string}")
-			return ("")
+			if must_exist:
+				self.log.error(f"No files found at this location: {string}")
+				return ("")
+			else:
+				return (string)
 		elif filecount > 1:
 			string = random.choice(files)
 
@@ -380,7 +392,7 @@ class Unprompted:
 
 				if att_split[2] == "image":
 					import imageio
-					this_val = imageio.imread(self.shortcode_user_vars[att])
+					this_val = imageio.imread(self.str_replace_macros(self.shortcode_user_vars[att]))
 				else:
 					this_val = self.shortcode_user_vars[att]
 				setattr(all_units[int(att_split[1])], "_".join(att_split[2:]), this_val)
@@ -478,4 +490,25 @@ class Unprompted:
 	def prevent_else(self, else_id=None):
 		if not else_id: else_id = self.conditional_depth
 		self.shortcode_objects["else"].do_else[else_id] = False
-		self.conditional_depth += 1
+		# self.conditional_depth += 1
+
+	def str_with_ext(self, path, default_ext=".json"):
+		if os.path.exists(path) or default_ext in path:
+			return path
+		return path+default_ext
+
+	def create_load_json(self, file_path, default_data={}):
+		try:
+			# If the file already exists, load its content
+			with open(file_path, "r", encoding="utf8") as file:
+				data = json.load(file)
+		# If the file doesn't exist, create it with default data
+		except FileNotFoundError:
+			with open(file_path, "w", encoding="utf8") as file:
+				json.dump(default_data, file, indent=4)
+			data = default_data
+
+		return data
+
+	def str_replace_macros(self, string):
+		return string.replace("%BASE_DIR%", self.base_dir)
