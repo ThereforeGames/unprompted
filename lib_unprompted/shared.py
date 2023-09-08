@@ -96,7 +96,7 @@ class Unprompted:
 		self.log.debug(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "9.16.0"
+		self.VERSION = "9.16.1"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -495,7 +495,7 @@ class Unprompted:
 	def str_with_ext(self, path, default_ext=".json"):
 		if os.path.exists(path) or default_ext in path:
 			return path
-		return path+default_ext
+		return path + default_ext
 
 	def create_load_json(self, file_path, default_data={}):
 		try:

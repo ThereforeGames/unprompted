@@ -402,8 +402,6 @@ class Shortcode():
 						if is_img2img and "_alt" not in pargs:  #  or (not is_img2img and "_alt" in pargs)
 							self.log.debug("Processing mode: Native")
 
-							# self.Unprompted.main_p.disable_extra_networks = True
-
 							# self.Unprompted.main_p.init(self.Unprompted.main_p.all_seeds, self.Unprompted.main_p.all_prompts, self.Unprompted.main_p.all_subseeds)
 							fixed_image = process_images_inner_(self.Unprompted.main_p)
 							fixed_image = fixed_image.images[0]

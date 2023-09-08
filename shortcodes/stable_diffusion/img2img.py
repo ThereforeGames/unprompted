@@ -92,10 +92,7 @@ class Shortcode():
 				    None,  # img2img_batch_png_info_props,
 				    "",  # img2img_batch_png_info_dir
 				    temp_gr_request,
-				    0,  # this is the *args tuple, 0 prevents additional scripts from running here
-				    0,  # Prevents endless loop
-				    0,
-				    -1)
+				    *self.Unprompted.main_p.script_args)
 
 				# Get the image stored in the first index
 				img2img_images.append(img2img_result[0][0])

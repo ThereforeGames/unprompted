@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>9.16.1 - 7 September 2023</summary>
+
+### Fixed
+- `[img2img]`: Fixed missing parameters for default WebUI scripts `seed` and `refiner`
+
+Currently investigating buggy interaction between `[zoom_enhance]` and ControlNet.
+
+</details>
+
 <details open><summary>9.16.0 - 7 September 2023</summary>
 
 ### Added
