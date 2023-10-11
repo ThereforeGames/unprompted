@@ -55,7 +55,9 @@ class Shortcode():
 			else:
 				parsed = self.Unprompted.parse_advanced(parg)
 				if idx == 0: kwargs["types"] = parsed
-				elif idx == 1: kwargs["_file"] = parsed
+				elif idx == 1:
+					kwargs["_file"] = parsed
+					kwargs["query"] = parsed
 				elif idx == 2 or idx == 3:
 					if helpers.is_float(parsed):
 						kwargs["_weight"] = parsed

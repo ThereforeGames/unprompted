@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>10.0.1 - 11 October 2023</summary>
+
+### Fixed
+- `[civitai]`: Fixed an issue related to the shorthand syntax and the `query` kwarg
+
+</details>
+
 <details open><summary>10.0.0 - 11 October 2023</summary>
 
 ### About

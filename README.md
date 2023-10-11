@@ -6,11 +6,11 @@
 
 ## Introduction
 
-**Unprompted is a powerful templating language written in Python.**
+**Unprompted is a powerful templating language and Swiss Army knife for the Stable Diffusion WebUI.**
 
 Unlike most templating languages, Unprompted was designed for **maximum readibility with natural language.** It is built around `[shortcodes]` and inspired by the likes of BBCode.
 
-You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as a **superextension** for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
+You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as an extension for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
 
 Additionally, it gives you access to **exclusive Stable Diffusion features** such as txt2mask, txt2img2img, zoom_enhance, and more.
 
