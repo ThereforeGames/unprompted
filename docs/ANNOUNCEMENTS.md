@@ -1,8 +1,63 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
-<details><summary>Next post in progress...</summary>
-Check back shortly, thanks! 😎
+<details><summary>Cool Autumn Update — 11 October 2023</summary>
+
+Hi folks,
+
+I'm pleased to announce the release of Unprompted v10.0.0. This is a major update that brings a number of new features and improvements, including:
+
+## Facelift
+
+![facelift_demo]([base_dir]/images/posts/facelift_demo.png)
+
+This template utilizes the new shortcodes `[faceswap]` and `[restore_faces]` to provide an all-in-one solution for faceswapping.
+
+It aims to provide a few benefits over other popular solutions such as Roop:
+
+- Faster inference time due to caching features. Facelift is a couple seconds faster than Roop on my machine (Geforce 3090.) Caching can be disabled for low-memory devices.
+- I include a copy of the `insightface` package to circumvent known challenges of installing said package via pip.
+- While `insightface` is still the best available option for faceswapping, Facelift supports additional additional techniques `ghost` and `face_fusion`. You can chain them together for potentially better results.
+- Similarity-based handling of multiple faces. Facelift will automatically select the best face to swap with, and can be configured to bypass itself if the similarity doesn't meet a `minimum_threshold`.
+- You can run Facelift on an arbitrary image instead of the SD ouput.
+
+And don't forget:
+
+## GPEN Support
+
+The A1111 WebUI natively supports CodeFormer and GFPGAN for face restoration, but not GPEN. Unprompted implements it in v10. You can use it with `[restore_faces]` or through the Facelift template. GPEN is a great option for face restoration, and I've found that it often produces better results than the other two.
+
+## Civitai Downloader
+
+You can now download Civitai files directly from your prompt:
+
+```
+Photo of a dog [civitai lora "epiCRealismHelper" 0.5]
+```
+
+This will automatically request "epicRealismHelper" from the Civitai API, download the first result, and format your prompt accordingly (e.g `Photo of a dog <lora:epiCRealismHelper:0.5>`).
+
+If it can't find said file from the search term alone, you can specify an optional `_id` parameter as shown:
+
+```
+[civitai lora "epiCRealismHelper" 0.5 _id=110334]
+```
+
+This makes it easier than ever to share your prompts with others. And it won't ping the API if you already have the file downloaded.
+
+## New premium template: Beautiful Soul
+
+![beautiful_soul]([base_dir]/images/posts/beautiful_soul.png)
+
+Beautiful Soul is a highly expressive character generator for Unprompted. It features thousands of wildcards and some pretty snazzy integration with ControlNet. Check it out if you're interested, it's a great way to produce some unique characters and support Unprompted while doing so: https://payhip.com/b/L1uNF
+
+---
+
+As always, you can check out the full changelog here: https://github.com/ThereforeGames/unprompted/blob/main/docs/CHANGELOG.md
+
+If you run into any issues with the new version, please open an issue on Github and I'll be happy to help. The faceswapping stuff has a lot of dependencies, so it's possible that something might break on your machine. I've tested it on Windows, but not Linux or Mac.
+
+Have an awesome day!
 </details>
 
 <details><summary>Zoom Enhance Enhanced — 1 August 2023</summary>
