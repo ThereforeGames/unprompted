@@ -86,14 +86,12 @@ For more information on constructing advanced expressions, check the documentati
 
 <details><summary>Escaping Characters</summary>
 
-Use the backtick to print a shortcode as a literal part of your prompt. This may be useful if you wish to take advantage of the prompt editing features of the A1111 WebUI (which are denoted with square brackets and could thus conflict with Unprompted shortcodes.)
+Use the backtick to print a character as a literal part of your prompt. This may be useful if you wish to take advantage of the prompt editing features of the A1111 WebUI (which are denoted with square brackets and could thus conflict with Unprompted shortcodes.)
 
-Note: you only need to put a single backtick at the start of the shortcode to escape the entire sequence. Inner shortcodes will be processed as normal.
-
-Also note: if a shortcode is undefined, Unprompted will print it as a literal as if you had escaped it.
+Note: if a shortcode is undefined, Unprompted will print it as a literal as if you had escaped it.
 
 ```
-Photo of a `[cat|dog]
+Photo of a `[cat|dog`]
 ```
 
 </details>
@@ -263,12 +261,6 @@ This determines whether expressions will be processed by simpleeval. Disable for
 <details><summary>template_directory (str)</summary>
 
 This is the base directory for your text files.
-
-</details>
-
-<details><summary>txt_format (str)</summary>
-
-This is the file extension that Unprompted will assume you're looking for with `[file]`.
 
 </details>
 
@@ -542,9 +534,11 @@ The `[set]` block supports `_ui` which determines the type of UI element to rend
 
 The `[set]` block supports `_label` which is the friendly text to use above the UI element. If not set, the label will default to the variable name you're calling with `[set]` in titlecase format (e.g. "my_variable" becomes "My Variable.")
 
+The `[set]` block supports `_show_label` which lets you toggle visibility of the label in the UI. Defaults to True.
+
 The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
 
-Supports the `[wizard accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
+Supports the `[wizard]` shortcode which will group the inner `[set]` blocks into a group UI element, the type of which is defined by the first parg: `accordion`, `row`, or `column`.
 
 </details>
 
@@ -604,6 +598,13 @@ Supports the optional `after_index` argument which lets you control the order of
 You can `[get after_index]` inside of the `[after]` block, which can be useful when working with arrays and for loops.
 
 Supports the optional `allow_unsafe_scripts` parg which will disable the shortcode's normal behavior of bypassing extensions with known compatibility issues.
+
+Supports the `dupe_index_mode` kwarg which determines how the `[after]` block will handle duplicate indexes:
+
+- `concat` (default): The `[after]` block will be appended to the existing `[after]` block at the specified index.
+- `skip`: The `[after]` block will be ignored.
+- `append`: The `[after]` block will be added to the next available index.
+- `replace`: The existing `[after]` block at the specified index will be overwritten.
 
 ```
 Photo of a cat
@@ -1049,6 +1050,10 @@ Supports the `_external` kwarg to retrieve variable(s) from an external .json fi
 
 Supports the `_all_external` kwarg to retrieve all variables from an external .json file. Every key-value pair in the file will be stored to your `shortcode_user_vars` dictionary.
 
+Supports the `_escape` parg to remove square brackets from the returned value. This is useful for when you want to use the result of `[get]` as a shortcode argument.
+
+Supports the `_parse` parg to parse any shortcodes inside the returned value. This is useful when used in conjunction with `[set _defer]`.
+
 ```
 My name is [get name]
 ```
@@ -1219,7 +1224,19 @@ Result: 2
 
 <details><summary>[override variable]</summary>
 
-Forces `variable` to equal the given value when attempting to `[set]` it.
+Forces`variable` to equal the value of the content when attempting to set it.
+
+In the example below, `my_variable` will equal "panda" after running the `[set]` shortcode.
+
+```
+[override my_variable]panda[/override][set my_variable]fox[/set]
+```
+
+</details>
+
+<details><summary>[overrides variable_a variable_b]</summary>
+
+Forces `variable_a` and `variable_b` to equal the given values when attempting to `[set]` it.
 
 Supports multiple variables.
 
@@ -1360,6 +1377,8 @@ Supports all Stable Diffusion variables that are exposed via Automatic's Script 
 Supports the `_remember` parg that will invoke the `[remember]` shortcode with your variable. See `[remember]` for more information.
 
 Supports the `_external` kwarg to write the variable to an external .json file. If the file does not exist, it will be created for you.
+
+Supports the `_defer` parg to delay the processing of the content until you call the variable with `[get _parse]`.
 
 ```
 [set my_var]This is the value of my_var[/set]
@@ -1515,7 +1534,7 @@ Downloads a file using the [Civitai API](https://github.com/civitai/civitai/wiki
 
 All of your kwargs are sent as URL parameters to the API (with the exception of system kwargs beginning with `_`) so please review the documentation linked above for a complete list of valid parameters. For example, `[civitai query="something" user="someuser"]` will pass `query` and `user` to the API.
 
-Supports shorthand syntax with pargs, where the first parg is your `query` (model name search terms), the second parg is `types` (e.g. LORA or TextualInversion), and the third parg (optional) is the `_file`. For example: `[civitai EasyNegative LORA]`.
+Supports shorthand syntax with pargs, where the first parg is `types` (e.g. LORA or TextualInversion), the second parg is `query` (model name search terms), the third parg is `_weight` (optional, defaults to 1.0), and the fourth parg (also optional) is the `_file`. For example: `[civitai lora EasyNegative 0.5]`.
 
 The `query` value is used as the filename to look for on your filesystem. You can typically search Civitai for a direct model filename (e.g. `query="kkw-new-neg-v1.4"` will return the 'New Negative' model). However, if this isn't working for whatever reason, you can override the filesystem search with the `_file` kwarg: `[civitai query="New Negative" _file="kkw-new-neg-v1.4"]` - but consider this a last resort!
 
@@ -1523,8 +1542,9 @@ This shortcode will auto-correct the case-sensitivity of `types` to the API's ex
 
 - If types is set to `lora`, it will search for both `LORA` and `LoCon` models
 - Converts `SD` to `Checkpoint`
-- Converts `Embedding` to `TextualInversion`
-- Converts `Pose` to `Poses`
+- Converts `Embedding` and `TI` to `TextualInversion`
+- Converts `Pose` and `OpenPose` to `Poses`
+- Converts `CN` to `Controlnet`
 
 Supports the `_debug` parg to print diagnostic information to the console.
 
@@ -1534,8 +1554,10 @@ Supports the `_timeout` kwarg to cap the wait time on the API request in seconds
 
 Supports the `_id` kwarg to query the API with a specific modelId, eliminating the need for other parameters.
 
+If a file has multiple versions, you can specify the `_mvid` kwarg instead of `_id` to select a specific version.
+
 ```
-[civitai "HD Helper" lora "hd_helper_v1"]
+[civitai lora "HD Helper" 0.5 "hd_helper_v1"]
 ```
 
 </details>
@@ -1552,11 +1574,11 @@ Supports the `pipeline` kwarg which is the faceswap method to use. Options inclu
 
 The `insightface` pipeline is currently the most developed option as it supports several unique features:
 
-- It can process multiple face images.
+- It can process multiple face images (e.g. `[faceswap "C:/pictures/face1.png|C:/pictures/face2.png"]` using `Config.syntax.delimiter` as a separator.)
 - It performs facial similarity analysis to swap the new face onto the best candidate in a picture containing more than one person.
-- It supports the `minimum_similarity` kwarg to bypass the faceswap if no one in the target picture resembles the new face. This kwarg takes a float value, although I haven't determined the upper and lower boundaries yet. A greater value means more similar and the range appears to be something like -10 to 300.
+- It supports the `minimum_similarity` kwarg to bypass the faceswap if no one in the target picture bears resemblance to the new face. This kwarg takes a float value, although I haven't determined the upper and lower boundaries yet. A greater value means "more similar" and the range appears to be something like -10 to 300.
 
-Supports the `unload` kwarg which allows you to free some or all of the faceswap components after inference. Useful for low memory devices, but will increase inference time. You can pass the following as a delimited string with Config.syntax.delimiter: model, face, all.
+Supports the `unload` kwarg which allows you to free some or all of the faceswap components after inference. Useful for low memory devices, but will increase inference time. You can pass the following as a delimited string with `Config.syntax.delimiter`: `model`, `face`, `all`.
 
 It is recommended to follow this shortcode with `[restore_faces]` in order to improve the resolution of the swapped result. Or, use the included Facelift template as an all-in-one solution.
 
@@ -1917,8 +1939,6 @@ Supports the optional `stamp_blur` parg which is the pixel radius of the stamp's
 Upscales a selected portion of an image via `[img2img]` and `[txt2mask]`, then pastes it seamlessly back onto the original.
 
 Greatly improves low-resolution details like faces and hands. It is significantly faster than Hires Fix and more flexible than the "Restore Faces" option.
-
-It must be used within an `[after]` block.
 
 Supports the `_alt` parg which engages alternate processing. May help those who are having trouble with the shortcode, but is perhaps not fully compatible with ControlNet.
 
