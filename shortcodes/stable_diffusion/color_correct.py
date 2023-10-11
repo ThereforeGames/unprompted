@@ -31,15 +31,17 @@ class Shortcode():
 		blend_lum = True if "blend_lum" in pargs else False
 		debug = True if "debug" in pargs else False
 
-		try:
-			image_to_fix = self.Unprompted.after_processed.images[0].copy()
-		except:
-			self.log.error("This must be used inside of an [after] block")
-			return ("")
-		starting_image = self.Unprompted.main_p.init_images[0]
+		image_to_fix = self.Unprompted.current_image()
+		batch_real_index = self.Unprompted.shortcode_user_vars["batch_real_index"] if "batch_real_index" in self.Unprompted.shortcode_user_vars else 0
+		if "starting_image" in kwargs: starting_image = Image.open(self.Unprompted.parse_advanced(kwargs["starting_image"]))
+		else:
+			if hasattr(self.Unprompted.main_p,"init_images"):
+				starting_image = self.Unprompted.main_p.init_images[batch_real_index]
+			# for txt2img
+			else: starting_image = self.Unprompted.current_image()
 
 		orig_image = image_to_fix.copy()
-		if self.Unprompted.shortcode_user_vars["image_mask"]:
+		if "image_mask" in self.Unprompted.shortcode_user_vars and self.Unprompted.shortcode_user_vars["image_mask"]:
 			mask = self.Unprompted.shortcode_user_vars["image_mask"]
 			mask = mask.convert("L")
 		else:
@@ -59,7 +61,6 @@ class Shortcode():
 			starting_image.putalpha(source_mask)
 			starting_image = autocrop_image(starting_image)
 
-			import cv2
 			import numpy
 			from sklearn.cluster import KMeans
 			np_img = numpy.array(starting_image)
@@ -88,13 +89,16 @@ class Shortcode():
 		if blend_lum:
 			fixed_image = blendLayers(fixed_image, orig_image, BlendType.LUMINOSITY)
 
+		
+		if debug: fixed_image.save("color_correct_fixed_image.png")
+
 		if strength < 1.0:
 			fixed_image.putalpha(int(255 * strength))
 		else:
-			self.Unprompted.after_processed.images[0] = fixed_image
+			self.Unprompted.current_image(fixed_image)
 
 		orig_image.paste(fixed_image, (0, 0), fixed_image)
-		orig_image.resize((self.Unprompted.after_processed.images[0].size[0], self.Unprompted.after_processed.images[0].size[1]))
-		self.Unprompted.after_processed.images[0].paste(orig_image, (0, 0), mask)
+		orig_image.resize((self.Unprompted.after_processed.images[batch_real_index].size[0], self.Unprompted.after_processed.images[batch_real_index].size[1]))
+		self.Unprompted.after_processed.images[batch_real_index].paste(orig_image, (0, 0), mask)
 
 		# self.Unprompted.after_processed.images[0] = fixed_image

@@ -32,6 +32,11 @@
 		"improve_alignment":true,
 		"deprecated_warnings":true
 	},
+	"formats":
+	{
+		"txt":".txt",
+		"default_encoding":"utf8"
+	},
 	"syntax":
 	{
 		"sanitize_before":{"\n":"\\n","\t":""},
@@ -66,6 +71,7 @@
 		"wizard_enabled":true,
 		"wizard_open":false,
 		"wizard_default_shortcode":"txt2mask",
-		"dry_run_open":false
+		"dry_run_open":false,
+		"resources_open":true
 	}
 }

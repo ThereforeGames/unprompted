@@ -10,6 +10,7 @@ class Shortcode():
 		self.description = "Updates your settings with the content for the duration of a run."
 
 	def run_block(self, pargs, kwargs, context, content):
+		import lib_unprompted.helpers as helpers
 		content = self.Unprompted.parse_alt_tags(content, context)
 
 		# Detect inline JSON string
@@ -17,9 +18,9 @@ class Shortcode():
 			json_obj = json.loads(content)
 		# Otherwise we're loading a file
 		else:
-			filepath = self.Unprompted.str_with_ext(self.Unprompted.parse_filepath(content, context))
+			filepath = helpers.str_with_ext(self.Unprompted.parse_filepath(content, context))
 			self.log.debug(f"Loading the following config file: {filepath}")
-			json_obj = json.load(open(f"{filepath}", "r", encoding="utf8"))
+			json_obj = json.load(open(f"{filepath}", "r", encoding=self.Unprompted.Config.formats.default_encoding))
 
 		# Write new settings
 		# self.Unprompted.cfg_dict.update(json_obj)

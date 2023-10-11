@@ -171,7 +171,7 @@ class Parser:
 	def __init__(self, start='[%', end='%]', esc='\\', inherit_globals=True, ignore_unknown=False):
 		self.start = start
 		self.end = end
-		self.esc_start = esc + start
+		self.esc_start = esc # + start
 		self.keywords = global_keywords.copy() if inherit_globals else {}
 		self.endwords = global_endwords.copy() if inherit_globals else set()
 		self.ignore_unknown = ignore_unknown
@@ -248,7 +248,7 @@ class Parser:
 			msg += f"'{token.keyword}' tag opened in line {token.line_number}."
 			raise ShortcodeSyntaxError(msg)
 
-		return stack.pop().render(context)
+		return stack.pop().render(context).replace(self.esc_start,"")
 
 
 # ------- #
@@ -301,8 +301,9 @@ class Lexer:
 		return self.tokens
 
 	def read_escaped_tag_delimiter(self):
-		self.index += len(self.esc_start)
-		self.tokens.append(Token("TEXT", self.start, self.esc_start, self.line_number))
+		next_char = self.text[self.index+1]
+		self.index += 2
+		self.tokens.append(Token("TEXT", self.esc_start+next_char, self.esc_start+next_char, self.line_number))
 
 	def read_tag(self):
 		self.index += len(self.start)
@@ -316,7 +317,7 @@ class Lexer:
 				self.index += len(self.end)
 				return
 			self.advance()
-		msg = f"Unclosed shortcode tag. The tag was opened in line {start_line_number}."
+		msg = f"Unclosed shortcode tag. The tag was opened in line {start_line_number}. Partial text processed: {self.text[start_index:self.index]}"
 		raise ShortcodeSyntaxError(msg)
 
 	def read_text(self):

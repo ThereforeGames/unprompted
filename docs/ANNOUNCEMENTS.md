@@ -1,6 +1,10 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Next post in progress...</summary>
+Check back shortly, thanks! 😎
+</details>
+
 <details><summary>Zoom Enhance Enhanced — 1 August 2023</summary>
 
 Hi folks,

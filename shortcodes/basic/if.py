@@ -3,8 +3,9 @@ import operator
 
 class Shortcode():
 	def __init__(self, Unprompted):
+		import lib_unprompted.helpers as helpers
 		self.Unprompted = Unprompted
-		self.ops = {"==": self.Unprompted.is_equal, "!=": self.Unprompted.is_not_equal, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
+		self.ops = {"==": helpers.is_equal, "!=": helpers.is_not_equal, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
 		self.description = "Checks whether a variable is equal to a given value."
 
 	def preprocess_block(self, pargs, kwargs, context):
@@ -28,7 +29,7 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars[key] = float(self.Unprompted.shortcode_user_vars[key])
 				this_value = float(this_value)
 
-			if (self.ops[_is](self.Unprompted.shortcode_user_vars[key], this_value)):
+			if (key in self.Unprompted.shortcode_user_vars and self.ops[_is](self.Unprompted.shortcode_user_vars[key], this_value)):
 				if _any:
 					is_true = True
 					break
@@ -39,7 +40,7 @@ class Shortcode():
 		# Support truthy checks
 		for key in pargs:
 			if self.Unprompted.is_system_arg(key): continue
-			if (self.Unprompted.parse_advanced(key, context) == 1):
+			if (self.Unprompted.parse_advanced(key, context)):  #  == 1
 				if _any:
 					is_true = True
 					break

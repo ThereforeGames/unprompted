@@ -8,13 +8,14 @@ class Shortcode():
 	def preprocess_block(self,pargs,kwargs,context): return True	
 
 	def run_block(self, pargs, kwargs, context, content):
+		import lib_unprompted.helpers as helpers
 		final_string = ""
 		_sep = kwargs["_sep"] if "_sep" in kwargs else ""
 
 		_times = self.Unprompted.parse_advanced(pargs[0],context)
 
 		# Support floats
-		_times = self.Unprompted.autocast(_times)
+		_times = helpers.autocast(_times)
 		if isinstance(_times,float):
 			probability = (_times % 1)
 			_times = int(_times)

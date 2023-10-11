@@ -11,6 +11,7 @@ class Shortcode():
 		return True
 
 	def run_block(self, pargs, kwargs, context, content):
+		import lib_unprompted.helpers as helpers
 		# import copy
 		temp_syntax_after = copy.copy(self.Unprompted.Config.syntax.sanitize_after)
 		if "_sanitize" in kwargs:
@@ -39,7 +40,7 @@ class Shortcode():
 
 				for idx, part in enumerate(parts):
 					if checking_weight:
-						this_weight = self.Unprompted.autocast(part)
+						this_weight = helpers.autocast(part)
 
 						if (isinstance(this_weight, str)):
 							this_weight = 1

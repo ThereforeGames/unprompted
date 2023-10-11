@@ -4,18 +4,19 @@ class Shortcode():
 		self.description = "The atomic version of [set] that lets you set multiple variables at once."
 
 	def run_atomic(self, pargs, kwargs, context):
+		import lib_unprompted.helpers as helpers
 		system_kwargs = {}
 
 		if "_all_external" in kwargs:
 			import json
 
-			filepath = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(kwargs["_all_external"]),root=self.Unprompted.base_dir,must_exist=False)
-			json_obj = self.Unprompted.create_load_json(filepath)
+			filepath = self.Unprompted.parse_filepath(helpers.str_with_ext(kwargs["_all_external"]),root=self.Unprompted.base_dir,must_exist=False)
+			json_obj = helpers.create_load_json(filepath, encoding=self.Unprompted.Config.formats.default_encoding)
 
 			# Merge changes with shortcode_user_vars
 			json_obj.update(self.Unprompted.shortcode_user_vars)
 
-			with open(filepath, "w", encoding="utf8") as f:
+			with open(filepath, "w", encoding=self.Unprompted.Config.formats.default_encoding) as f:
 				json.dump(json_obj, f, ensure_ascii=False)
 
 		# Populate a dict of system args to pass off to [set]

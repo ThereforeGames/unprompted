@@ -1,0 +1,1 @@
+[restore_faces unload="{get unload}" method=gfpgan image="{get body}"][faceswap "{get faces}" unload="{get unload_all}" ][restore_faces unload="{get unload}"]

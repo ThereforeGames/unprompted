@@ -9,6 +9,8 @@ class Shortcode():
 		self.description = "Processes the function or filepath content of the first parg."
 
 	def run_atomic(self, pargs, kwargs, context):
+		import lib_unprompted.helpers as helpers
+
 		contents = "ok"
 		else_id = kwargs["_else_id"] if "_else_id" in kwargs else str(self.Unprompted.conditional_depth)
 
@@ -39,38 +41,18 @@ class Shortcode():
 					contents = self.Unprompted.shortcode_objects["function"].functions[name]
 					next_context = name
 			else:
-				self.log.debug(f"{name} is assumed to be a filepath")
+				# self.log.debug(f"{name} is assumed to be a filepath")
 
-				file = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(name, self.Unprompted.Config.txt_format), context=context, must_exist=False)
+				file = self.Unprompted.parse_filepath(helpers.str_with_ext(name, self.Unprompted.Config.txt_format), context=context, must_exist=False)
 
 				if not os.path.exists(file):
 					if "_suppress_errors" not in pargs: self.log.error(f"File does not exist: {file}")
 					contents = ""
 				else:
-					next_context = file # os.path.dirname(file)
+					next_context = file  # os.path.dirname(file)
 					with open(file, "r", encoding=this_encoding) as f:
 						contents = f.read()
 					f.close()
-
-				# Old filepath handling, replaced with standard parse_filepath() method
-				# Relative path
-				#if (name[0] == "."):
-				#	path = self.Unprompted.str_with_ext(os.path.dirname(context) + "/" + name, self.Unprompted.Config.txt_format)
-				# Absolute path
-				#elif "_absolute" in pargs:
-				#	path = self.Unprompted.str_with_ext(name.replace("%BASE_DIR%", self.Unprompted.base_dir), self.Unprompted.Config.txt_format)
-				# Template path
-				#else:
-				#	path = self.Unprompted.str_with_ext(self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + name, self.Unprompted.Config.txt_format)
-
-				# files = glob.glob(path)
-				# if (len(files) == 0):
-				# 	if "_suppress_errors" not in pargs: self.log.error(f"No files found at this location: {path}")
-				# 	contents = ""
-				# else:
-				# 	file = random.choice(files)
-
-				# 	self.log.debug(f"Loading file: {file}")
 
 		# Return logic
 		if not contents:
@@ -79,7 +61,7 @@ class Shortcode():
 			# Use [set] with keyword arguments
 			for key, value in kwargs.items():
 				if (self.Unprompted.is_system_arg(key)): continue
-				self.Unprompted.shortcode_objects["set"].run_block([key], {}, context, value)
+				self.Unprompted.shortcode_objects["set"].run_block([key], {}, context, self.Unprompted.parse_alt_tags(value))
 
 			contents = self.Unprompted.process_string(contents, next_context)
 

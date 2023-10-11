@@ -3,16 +3,72 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>9.16.1 - 7 September 2023</summary>
+<details open><summary>10.0.0 - 11 October 2023</summary>
+
+### About
+**Important:** This is a major update with changes to batch processing that may affect pre-existing templates. Please read the changelog carefully.
+
+### Added
+- New premium template Beautiful Soul: A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. Available at half price until November 11th!
+- New template Facelift v0.0.1: An all-in-one solution for performing faceswaps by combining different models and postprocessing techniques
+- New shortcode `[faceswap]`: Replaces the face with that of an arbitrary image using various pipelines, including InsightFace (same tech as Roop extension)
+- New shortcode `[restore_faces]`: Improves the quality of faces using various models, including a custom GPEN implementation exclusive to Unprompted
+- New shortcode `[civitai]`: Downloads a file using the Civitai API (unless it's already on your system) and automatically adds it to your prompt with correct formatting
+- New shortcode `[overrides]`: Allows you to force the value of specific variable(s) using inline kwargs (`[override]` is now a block shortcode instead)
+- New config setting `Config.formats.default_encoding` for various file operations (defaults to `uft8`)
+- New config setting `Config.debug_requirements`: Set to true in `config_user.json` to potentially fix issues with missing dependencies
+- New class method `Unprompted.parse_arg()`: Formats a parg or kwarg by the key, casting to a given datatype as specified (this will gradually replace other methods of processing shortcode args)
+- New class method `Unprompted.current_image()`: Gets or sets the current image with support for txt2img, img2img, batch processing, and the `[after]` routine
+- New class method `Unprompted.escape_tags()`: Escapes the bracket characters in a string
+- `[get]`: Now supports `_escape` to remove square brackets, useful when used inside of an expression
+- `[get]`: Now supports `_parse` to run the requested variable through the shortcode parser before returning
+- `[set]`: Now supports `_defer` which bypasses shortcode parsing of the content, allowing you to instead parse the variable with `[get _parse]`.
+- `[set]`: Now supports `_show_label` to control whether the label is visible in the Gradio Wizard UI (defaults to True)
+- Inference presets for txt2img: `dpm_3m_v1`, `euler_a_v1`, `restart_v1`, and `variety_hour_v1`
+- Various enhancements for `download_file()` helper method
+- The Wizard now supports Gradio File, Image, Row, and Column blocks
+- The Wizard now supports multiselect dropdown values for both shortcode and template UIs
+- Print "main routine completed" message to the console
+
+### Changed
+- `[after]`: Now has dedicated batch support, which eliminates the need to implement batch support on a per-shortcode basis
+- `[after]`: Replaced `allow_dupe_index` with `dupe_index_mode` that can be set to `skip`, `concat`, `append`, or `replace`
+- `[call]`: Now evaluates secondary tags in kwarg values
+- `[override]`: Converted to a block shortcode that forces the value of the first parg to become the result of the content
+- `[color_correct]`: Updated batch support
+- `[if]`: Updated truthy check such that string variables will evaluate to true, e.g. `[sets var="something"][if var]this is true![/if]`
+- `[wizard accordion]`: renamed to `[wizard]` that reads a block type from the first parg, either `accordion`, `row`, or `column`
+- Bodysnatcher v1.3.4: Replaced `[file]` blocks with `[call]`
+- Regional Prompter Buddy v0.0.3: The `split_negatives` option will add extra terms to further differentiate the two subjects
+- Migrated helper functions to a standalone `lib_unprompted.helpers` module in accordance with Python standard practices
+- Updated img2img inference presets: `general_v2` and `full_denoise_v2`, moved them from `inference` folder to `img2img`
+- `Unprompted.Config.txt_format` renamed to `Unprompted.Config.formats.txt`
+- Minor improvements to the extension UI layout
+- Improved parser error message about unclosed tag
 
 ### Fixed
-- `[img2img]`: Fixed missing parameters for default WebUI scripts `seed` and `refiner`
+- `[img2img_autosize]`: Fixed a crash that would occur when using the Wizard to auto-include this shortcode
+- `[if]`: Will return false if the provided key doesn't exist as a user variable
+- `[set]`: Fixed compatibility issue with `_remember` and Wizard UI elements
+- Fixed the "Generate Shortcode" button for Wizard Templates appearing outside of its tab
+- Improved flexibility of the backtick escape character such that it should work with any subsequent character
+- Resolved error related to the `simple` and `verbose` modes of the Capture tab
 
-Currently investigating buggy interaction between `[zoom_enhance]` and ControlNet.
+### Removed
+- Legacy function `shortcode_string_log()`
+- `[zoom_enhance]` no longer implements its own batch support, instead now relies on that of the `[after]` block
 
 </details>
 
-<details open><summary>9.16.0 - 7 September 2023</summary>
+<br>
+<details><summary>👴🏼 Older Versions</summary>
+<details><summary>9.16.1 - 7 September 2023</summary>
+
+### Fixed
+- `[img2img]`: Fixed missing parameters for default WebUI scripts `seed` and `refiner`
+</details>
+
+<details><summary>9.16.0 - 7 September 2023</summary>
 
 ### Added
 - `[get]` and `[set]`: Now support `_external` kwarg to read/write a specific variable into an external file
@@ -525,8 +581,6 @@ This update resolves a number of issues related to `batch_index` evaluation, whi
 
 </details>
 
-<br>
-<details><summary>👴🏼 Older Versions</summary>
 <details><summary>8.3.1 - 22 April 2023</summary>
 
 ### About
@@ -621,7 +675,7 @@ Over the last couple days, I have been experimenting with changes to the adaptiv
 - The `[zoom_enhance]` shortcode seeks to improve support with `Only Masked` mode by scaling up some settings to account for your original image resolution
 - The `[zoom_enhance]` shortcode supports `bypass_adaptive_hires` to disable the above behavior
 - The `[zoom_enhance]` shortcode now supports `hires_size_max` which limits the adaptive resolution to avoid OOM errors (defaults to 1024)
-- Wizard Templates now support `[wizard_ui_accordion]` to group a collection of settings into a collapsible menu
+- Wizard Templates now support `[wizard accordion]` to group a collection of settings into a collapsible menu
 - Wizard Template UI elements now support `_info` for showing descriptive text
 - New `Known Issues` section in the manual
 - The `[txt2mask]` shortcode now supports the Segment Anything Model with GroundingRINO (set `method="sam"`), although you need to install the latter manually--it doesn't work with pip at the time of writing--and I'm not particularly impressed by its results compared to clipseg (after installing manually: you'll need to move GroundingRINO into your `venv` folder and replace any `import groundingrino` calls with relative imports e.g. `import ...utils.something`)

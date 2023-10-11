@@ -18,17 +18,13 @@ The following extension(s) are known to cause issues with Unprompted:
 
 - **adetailer**: reportedly utilizes its own prompt field(s) that do not receive Unprompted strings correctly
 - **Regional Prompter**: This extension throws an error while processing images in the `[after]` block, however the error does not seem to interfere with the final result and is likely safe to disregard.
+- **ControlNet**: To my knowledge, it is not possible to unhook ControlNet in the [after] routine. Please check [this issue](https://github.com/Mikubill/sd-webui-controlnet/issues/2082) for more details.
 </details>
 
 <details><summary>A1111 "Lora/Networks: Use Old Method"</summary>
 
 The WebUI setting "Lora/Networks: use old method [...]" is not compatible with Unprompted and will cause a crash during image generation.
 
-</details>
-
-<details><summary>A1111 [img2img] seed error</summary>
-
-The `[img2img]` shortcode returns an error related to missing positional arguments in WebUI v1.6.0. In spite of this, the shortcode appears to work correctly, but it may not respect changes to your seed values.
 </details>
 
 ## 🎓 Proficiency
@@ -139,6 +135,10 @@ Shortcodes that implement batch processing--such as `[zoom_enhance]`--will test 
 
 Example: you set `batch_test` to `<= 3` and you run a batch process with 5 images. The fifth image will be skipped by shortcodes such as `[zoom_enhance]`. (`batch_index` is zero-indexed, so 3 corresponds to the fourth image.)
 
+### default_image
+
+In the event that a shortcode such as `[zoom_enhance]` is unable to determine which image it should process, it will fallback to this filepath variable instead of throwing an error.
+
 ### sd_model
 
 You can set this variable to the name of a Stable Diffusion checkpoint, and Unprompted will load that checkpoint at the start of inference. This variable is powered by the WebUI's `get_closet_checkpoint_match()` function, which means that your model name does not have to be 100% accurate - but you should strive to use a string that's as accurate as possible.
@@ -211,6 +211,8 @@ For example, we can enable units #0 and #3 and set the weight of unit #3 to 0.5 
 ```
 
 You may also use the shorthand `cn_` in place of `controlnet_`.
+
+Due to the WebUI's extension architecture, all images in a batch are processed by Unprompted before ControlNet, meaning it is not possible to update `cn_` in the middle of a batch run.
 
 </details>
 
@@ -542,7 +544,7 @@ The `[set]` block supports `_label` which is the friendly text to use above the 
 
 The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
 
-Supports the `[wizard_ui_accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
+Supports the `[wizard accordion]` shortcode which will group the inner `[set]` blocks into a collapsible UI element.
 
 </details>
 
@@ -1033,7 +1035,7 @@ A picture of 5 houses.
 
 Returns the value of `variable`.
 
-Supports secondary shortcode tags with the optional `_var` argument, e.g. `[get _var="{file example}"]`.
+Supports variable parsing with the optional `_var` argument, e.g. `[get _var="somevar"]`. This is necessary if your variable created with `[set _defer]`. You can also pass an arbitrary expression into the `_var` flag, not necessarily just a variable name.
 
 You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`.
 
@@ -1253,7 +1255,7 @@ You can specify the lower and upper boundaries of the range with `_min` and `_ma
 If you pass `_float` into this shortcode, it will support decimal numbers instead of integers.
 
 ```
-[set restore_faces][random 1][/set]
+[set restore_pic][random 1][/set]
 ```
 
 </details>
@@ -1506,6 +1508,79 @@ Supports pattern matching with `*` to delete many variables at once. This may be
 <details><summary>Stable Diffusion Shortcodes</summary>
 
 This section describes all of the included shortcodes which are specifically designed for use with the A1111 WebUI.
+
+<details><summary>[civitai]</summary>
+
+Downloads a file using the [Civitai API](https://github.com/civitai/civitai/wiki/REST-API-Reference#get-apiv1models), adding the result to your prompt with the correct syntax. If the specified file is already on your filesystem, this shortcode will not send a request to Civitai.
+
+All of your kwargs are sent as URL parameters to the API (with the exception of system kwargs beginning with `_`) so please review the documentation linked above for a complete list of valid parameters. For example, `[civitai query="something" user="someuser"]` will pass `query` and `user` to the API.
+
+Supports shorthand syntax with pargs, where the first parg is your `query` (model name search terms), the second parg is `types` (e.g. LORA or TextualInversion), and the third parg (optional) is the `_file`. For example: `[civitai EasyNegative LORA]`.
+
+The `query` value is used as the filename to look for on your filesystem. You can typically search Civitai for a direct model filename (e.g. `query="kkw-new-neg-v1.4"` will return the 'New Negative' model). However, if this isn't working for whatever reason, you can override the filesystem search with the `_file` kwarg: `[civitai query="New Negative" _file="kkw-new-neg-v1.4"]` - but consider this a last resort!
+
+This shortcode will auto-correct the case-sensitivity of `types` to the API's expected format. The API is a bit inconsistent in this regard (e.g. lora = `LORA`, controlnet = `Controlnet`, aestheticgradient = `AestheticGradient`...) but Unprompted will handle it for you. Here are the other edge cases that Unprompted will catch:
+
+- If types is set to `lora`, it will search for both `LORA` and `LoCon` models
+- Converts `SD` to `Checkpoint`
+- Converts `Embedding` to `TextualInversion`
+- Converts `Pose` to `Poses`
+
+Supports the `_debug` parg to print diagnostic information to the console.
+
+Supports the `_api` kwarg which is the URL of the API to communicate with. Defaults to `https://civitai.com/api/v1/models`.
+
+Supports the `_timeout` kwarg to cap the wait time on the API request in seconds. Defaults to 60.
+
+Supports the `_id` kwarg to query the API with a specific modelId, eliminating the need for other parameters.
+
+```
+[civitai "HD Helper" lora "hd_helper_v1"]
+```
+
+</details>
+
+<details><summary>[faceswap]</summary>
+
+Swaps the face in target image using an arbitrary image.
+
+The first parg is a filepath to the face image you wish to swap in.
+
+Supports the optional `body` kwarg which is an image path to perform the swap on. Defaults to the Stable Diffusion output image. Note that this value will essentially override your SD output, so when using this you should minimize your inference steps (i.e. lower it to 1) for faster execution.
+
+Supports the `pipeline` kwarg which is the faceswap method to use. Options include `insightface`, `ghost`, and `face_fusion`. Defaults to insightface, which results in the best quality. You can chain multiple pipelines together with `Config.syntax.delimiter`.
+
+The `insightface` pipeline is currently the most developed option as it supports several unique features:
+
+- It can process multiple face images.
+- It performs facial similarity analysis to swap the new face onto the best candidate in a picture containing more than one person.
+- It supports the `minimum_similarity` kwarg to bypass the faceswap if no one in the target picture resembles the new face. This kwarg takes a float value, although I haven't determined the upper and lower boundaries yet. A greater value means more similar and the range appears to be something like -10 to 300.
+
+Supports the `unload` kwarg which allows you to free some or all of the faceswap components after inference. Useful for low memory devices, but will increase inference time. You can pass the following as a delimited string with Config.syntax.delimiter: model, face, all.
+
+It is recommended to follow this shortcode with `[restore_faces]` in order to improve the resolution of the swapped result. Or, use the included Facelift template as an all-in-one solution.
+
+Additional pipelines may be supported in the future. Attempts were made to implement support for SimSwap, however this proved challenging due to multiple dependency conflicts.
+
+</details>
+
+<details><summary>[restore_faces]</summary>
+
+Improves the quality of faces in target image using various models.
+
+Supports `methods` kwarg which takes one or more restoration method names. Defaults to `GPEN`, which is a custom implementation exclusive to Unprompted. It also supports `GFPGAN` and `CodeFormer`. Specify multiple methods with the `Config.syntax.delimiter`.
+
+Supports `visibility` kwarg which is an alpha value between 0 and 1 with which to blend the result back into the original face. Defaults to 1.
+
+Supports the `unload` parg which disables the caching features of this shortcode. Caching improves inference speed at the cost of VRAM.
+
+There are several additional parameters that apply only to GPEN:
+
+Supports `resolution_preset` kwarg that determines which GPEN model to use: 512, 1024, or 2048. Defaults to `512`. Please be aware that higher resolutions may lead to an oversharpened look, which is possible to counteract to an extent by lowering `visibility`.
+
+Supports `downscale_method` which is the interpolation method to use when resizing the restored face for pasting back onto the original image. Options include Nearest Neighbor, Bilinear, Area, Cubic and Lanczos. Defaults to `Area`.
+</details>
+
 
 <details><summary>[file2mask]</summary>
 

@@ -4,24 +4,29 @@ class Shortcode():
 		self.description = "Returns the value of a variable."
 
 	def run_atomic(self, pargs, kwargs, context):
+		import lib_unprompted.helpers as helpers
 		_default = str(self.Unprompted.parse_advanced(kwargs["_default"], context)) if "_default" in kwargs else ""
 		_sep = str(self.Unprompted.parse_advanced(kwargs["_sep"], context)) if "_sep" in kwargs else " "
+		_escape = self.Unprompted.parse_arg("_escape",False)
 
 		return_string = ""
 
 		if "_all_external" in kwargs:
-			filepath = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(kwargs["_all_external"]),root=self.Unprompted.base_dir,must_exist=False)
+			filepath = self.Unprompted.parse_filepath(helpers.str_with_ext(kwargs["_all_external"]),root=self.Unprompted.base_dir,must_exist=False)
 
-			json_obj = self.Unprompted.create_load_json(filepath)
+			json_obj = helpers.create_load_json(filepath,encoding=self.Unprompted.Config.formats.default_encoding)
 
 			for key, value in json_obj.items():
 				self.Unprompted.shortcode_user_vars[key] = value
 
 		for idx, parg in enumerate(pargs):
 			self.Unprompted.is_var_deprecated(parg)
+			if self.Unprompted.is_system_arg(parg): continue
 
+			# self.log.debug(f"Getting {parg}...")
+			
 			if idx == 0:
-				if "_var" in kwargs: parg = self.Unprompted.parse_alt_tags(kwargs["_var"], context)
+				if "_var" in kwargs: parg = self.Unprompted.parse_advanced(kwargs["_var"], context)
 			else: return_string += _sep
 
 			if ("_before" in kwargs):
@@ -30,21 +35,27 @@ class Shortcode():
 				return_string = f"{return_string}{kwargs['_after']}"
 
 			if "_external" in kwargs:
-				filepath = self.Unprompted.parse_filepath(self.Unprompted.str_with_ext(kwargs["_external"]),root=self.Unprompted.base_dir,must_exist=False)
-				json_obj = self.Unprompted.create_load_json(filepath)
+				filepath = self.Unprompted.parse_filepath(helpers.str_with_ext(kwargs["_external"]),root=self.Unprompted.base_dir,must_exist=False)
+				json_obj = helpers.create_load_json(filepath, encoding=self.Unprompted.Config.formats.default_encoding)
 				if parg in json_obj:
 					self.Unprompted.shortcode_user_vars[parg] = json_obj[parg]
 					return_string += str(json_obj[parg])
 				else:
 					return_string += _default
 			elif (parg in self.Unprompted.shortcode_user_vars):
-				this_var = self.Unprompted.shortcode_user_vars[parg]
+				if "_parse" in pargs:
+					# self.log.debug(f"Parg {parg} value to parse: {self.Unprompted.shortcode_user_vars[parg]}")
+					this_var = self.Unprompted.process_string(self.Unprompted.shortcode_user_vars[parg],context)
+					# self.log.debug(f"Parse result: {this_var}")
+				else: this_var = self.Unprompted.shortcode_user_vars[parg]
+
 				if (isinstance(this_var, list)): return_string += _sep.join(str(x) for x in this_var)
 				else: return_string += str(this_var)
 			else:
 				return_string += _default
 
-		return (return_string)
+		if _escape: return_string = self.Unprompted.escape_tags(return_string)
+		return return_string
 
 	def ui(self, gr):
 		gr.Textbox(label="Variable to get 🡢 str", max_lines=1, placeholder="my_var")

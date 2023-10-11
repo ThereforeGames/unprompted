@@ -12,6 +12,7 @@ from modules.shared import opts, cmd_opts, state
 from modules.ui_components import ToolButton
 from modules import sd_models
 import lib_unprompted.shortcodes as shortcodes
+import lib_unprompted.helpers as helpers
 from pathlib import Path
 from enum import IntEnum, auto
 import sys, os, html
@@ -68,7 +69,7 @@ def wizard_select_item(option, is_img2img, mode=WizardModes.SHORTCODES):
 
 
 def block_is_container(block_name):
-	if (block_name == "form" or block_name == "accordion"): return True
+	if (block_name == "form" or block_name == "accordion" or block_name == "row"): return True
 	else: return False
 
 
@@ -111,9 +112,12 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue  # Skip empty fields
 					arg_name = gr_obj.label.split(" ")[-1]  # Get everything after the last space
 					# Skip special fields
+					if block_name == "file":
+						this_val = f"{Unprompted.Config.syntax.delimiter}".join([str(e.name) for e in gr_obj.value])
+					else: this_val = gr_obj.value
 					if (arg_name == "prompt"): continue
 
-					this_val = html.escape(str(Unprompted.autocast(gr_obj.value)))
+					this_val = html.escape(str(helpers.autocast(this_val)))
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
 					result += f" {arg_name}={this_val}"
@@ -154,22 +158,28 @@ def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
 				else:
 					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue  # Skip empty fields
 
+					# Enable support for multiselect dropdowns
+					if type(gr_obj.value) == list:
+						this_val = f"{Unprompted.Config.syntax.delimiter}".join([str(e) for e in gr_obj.value])
+					else:
+						this_val = gr_obj.value
+
 					arg_name = gr_obj.label.split(" ")[-1]  # Get everything after the last space
 
 					# Rules
 					if (arg_name == "prompt"): continue
 					elif (arg_name == "str"):
-						result += " \"" + str(gr_obj.value) + "\""
+						result += " \"" + str(this_val) + "\""
 					elif (arg_name == "int"):
-						result += " " + str(int(gr_obj.value))
+						result += " " + str(int(this_val))
 					elif (arg_name == "verbatim"):
-						result += " " + str(gr_obj.value)
+						result += " " + str(this_val)
 					elif (block_name == "checkbox"):
-						if gr_obj.value: result += " " + arg_name
-					elif (block_name == "number" or block_name == "slider"): result += f" {arg_name}={Unprompted.autocast(gr_obj.value)}"
+						if this_val: result += " " + arg_name
+					elif (block_name == "number" or block_name == "slider"): result += f" {arg_name}={helpers.autocast(gr_obj.value)}"
 					elif (block_name == "textbox"):
-						if len(gr_obj.value) > 0: result += f" {arg_name}=\"{gr_obj.value}\""
-					else: result += f" {arg_name}=\"{html.escape(gr_obj.value)}\""
+						if len(this_val) > 0: result += f" {arg_name}=\"{this_val}\""
+					else: result += f" {arg_name}=\"{html.escape(this_val)}\""
 
 		except:
 			pass
@@ -228,7 +238,7 @@ def wizard_generate_capture(include_inference, include_prompt, include_neg_promp
 								if isinstance(att_val, bool): att_val = int(att_val == True)  # convert bool to 0 or 1
 								if att_val == 0 and include_inference != "verbose": continue
 								elif (att_val == float("inf") or att_val == float("-inf")) and include_inference != "verbose": continue
-								result += f"{prefix}{html.escape(att_val)}"
+								result += f"{prefix}{html.escape(str(att_val))}"
 
 			if include_inference != "none" or include_model: result += f"{Unprompted.Config.syntax.tag_end}"
 			if include_prompt != "none": result += prompt
@@ -289,19 +299,20 @@ class Scripts(scripts.Script):
 	def ui(self, is_img2img):
 		with gr.Group():
 			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
-				is_enabled = gr.Checkbox(label="Enabled", value=gradio_enabled_checkbox_workaround)
+				with gr.Row(equal_height=True):
+					is_enabled = gr.Checkbox(label="Enabled", value=gradio_enabled_checkbox_workaround)
 
-				match_main_seed = gr.Checkbox(label="Synchronize with main seed", value=True)
-				setattr(match_main_seed, "do_not_save_to_config", True)
+					match_main_seed = gr.Checkbox(label="Synchronize with main seed", value=True)
+					setattr(match_main_seed, "do_not_save_to_config", True)
 
 				unprompted_seed = gr.Number(label="Unprompted Seed", value=-1)
 				setattr(unprompted_seed, "do_not_save_to_config", True)
 
-				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/demoncrawl_avatar_generator_v0.0.2/main{Unprompted.Config.txt_format}")): is_open = False
+				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/beautiful_soul_v0.0.1/main{Unprompted.Config.formats.txt}")): is_open = False
 				else: is_open = True
 
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug", elem_id="promo", value=f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_demoncrawl_avatar_generator.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;">NEW! The <strong>DemonCrawl Avatar Generator</strong> is out now.</h1><p style="margin:1em 0;">Create pixel art portraits in the style of the popular roguelite, DemonCrawl. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Learn More ➜</button></a>')
+					plug = gr.HTML(label="plug", elem_id="promo", value=f'<a href="https://payhip.com/b/L1uNF" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_beautiful_soul.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;"><strong>Beautiful Soul</strong>: Bring your characters to life.</h1><p style="margin:1em 0;">A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. <strong>Available at half price until November 11th!</strong></p><a href="https://payhip.com/b/L1uNF" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -319,6 +330,8 @@ class Scripts(scripts.Script):
 								friendly_name = kwargs["_label"] if "_label" in kwargs else casefy.titlecase(pargs[0])
 								block_name = kwargs["_ui"] if "_ui" in kwargs else "textbox"
 								_info = kwargs["_info"] if "_info" in kwargs else ""
+								_multiselect = bool(int(kwargs["_multiselect"])) if "_multiselect" in kwargs else False
+								_show_label = bool(int(kwargs["_show_label"])) if "_show_label" in kwargs else True
 
 								this_label = f"{friendly_name} {Unprompted.Config.syntax.wizard_delimiter} {pargs[0]}"
 
@@ -326,19 +339,24 @@ class Scripts(scripts.Script):
 								if (block_name == "textbox"):
 									if "_placeholder" in kwargs: this_placeholder = kwargs["_placeholder"]
 									else: this_placeholder = str(content)
-									obj = gr.Textbox(label=this_label, max_lines=1, placeholder=this_placeholder, info=_info)
+									obj = gr.Textbox(label=this_label, max_lines=1, placeholder=this_placeholder, info=_info, show_label=_show_label)
 								elif (block_name == "checkbox"):
-									obj = gr.Checkbox(label=this_label, value=bool(int(content)), info=_info)
+									obj = gr.Checkbox(label=this_label, value=bool(int(content)), info=_info, show_label=_show_label)
 								elif (block_name == "number"):
-									obj = gr.Number(label=this_label, value=int(content), interactive=True, info=_info, minimum=kwargs["_minimum"] if "_minimum" in kwargs else None, maximum=kwargs["_maximum"] if "_maximum" in kwargs else None)
-
+									obj = gr.Number(label=this_label, value=int(content), interactive=True, info=_info, minimum=kwargs["_minimum"] if "_minimum" in kwargs else None, maximum=kwargs["_maximum"] if "_maximum" in kwargs else None, show_label=_show_label)
 								elif (block_name == "dropdown"):
 									_choices = Unprompted.parse_advanced(kwargs["_choices"], "wizard").split(Unprompted.Config.syntax.delimiter)
-									obj = gr.Dropdown(label=this_label, value=content, choices=_choices, info=_info)
+									obj = gr.Dropdown(label=this_label, value=content, choices=_choices, info=_info, multiselect=_multiselect, show_label=_show_label)
 								elif (block_name == "radio"):
-									obj = gr.Radio(label=this_label, choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter), interactive=True, value=content)
+									obj = gr.Radio(label=this_label, choices=kwargs["_choices"].split(Unprompted.Config.syntax.delimiter), interactive=True, value=content, show_label=_show_label)
 								elif (block_name == "slider"):
-									obj = gr.Slider(label=this_label, value=int(content), minimum=kwargs["_minimum"] if "_minimum" in kwargs else 1, maximum=kwargs["_maximum"] if "_maximum" in kwargs else 10, step=kwargs["_step"] if "_step" in kwargs else 1, info=_info)
+									obj = gr.Slider(label=this_label, value=int(content), minimum=kwargs["_minimum"] if "_minimum" in kwargs else 1, maximum=kwargs["_maximum"] if "_maximum" in kwargs else 10, step=kwargs["_step"] if "_step" in kwargs else 1, info=_info, show_label=_show_label)
+								elif (block_name == "image"):
+									if len(content) < 1: content = None
+									obj = gr.Image(label=this_label, value=content, type="filepath", interactive=True, info=_info, show_label=_show_label)
+								elif (block_name == "file"):
+									if len(content) < 1: content = None
+									obj = gr.File(label=this_label, value=content, interactive=True, info=_info, show_label=_show_label, file_count=kwargs["_file_count"] if "_file_count" in kwargs else "single", file_types=[kwargs["_file_types"]] if "_file_types" in kwargs else None)
 
 								setattr(obj, "do_not_save_to_config", True)
 							return ("")
@@ -364,14 +382,21 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "base_dir")
 
 						def handler(keyword, pargs, kwargs, context, content):
-							with gr.Accordion(kwargs["_label"] if "_label" in kwargs else "More", open=True if "_open" in pargs else False):
+							if pargs[0] == "accordion":
+								block = gr.Accordion(kwargs["_label"] if "_label" in kwargs else "More", open=True if "_open" in pargs else False)
+							elif pargs[0] == "row":
+								block = gr.Row(equal_height=pargs["_equal_height"] if "_equal_height" in pargs else False)
+							elif pargs[1] == "column":
+								block = gr.Column(scale=int(pargs["_scale"]) if "_scale" in pargs else 1)								
+
+							with block:
 								Unprompted.parse_alt_tags(content, None, wizard_shortcode_parser)
 							return ("")
 
 						def preprocess(keyword, pargs, kwargs, context):
 							return True
 
-						wizard_shortcode_parser.register(handler, "wizard_ui_accordion", f"{Unprompted.Config.syntax.tag_close}wizard_ui_accordion", preprocess)
+						wizard_shortcode_parser.register(handler, "wizard", f"{Unprompted.Config.syntax.tag_close}wizard", preprocess)
 
 						with gr.Tabs():
 							self.filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
@@ -397,7 +422,7 @@ class Scripts(scripts.Script):
 
 								with region:
 									for filename in txt_files:
-										with open(filename, encoding="utf8") as file:
+										with open(filename, encoding=Unprompted.Config.formats.default_encoding) as file:
 											if is_img2img and first_load: wizard_add_template()
 											else:
 												first_line = file.readline()
@@ -464,7 +489,9 @@ class Scripts(scripts.Script):
 								self.templates_region[int(is_img2img)] = gr.Blocks()
 								wizard_populate_templates(self.templates_region[int(is_img2img)], True)
 
-							self.templates_dropdown[int(is_img2img)].choices = Unprompted.wizard_template_names
+								self.templates_dropdown[int(is_img2img)].choices = Unprompted.wizard_template_names
+
+								wizard_template_btn = gr.Button(value="🧠 Generate Shortcode")
 
 							with gr.Tab("Shortcodes"):
 								shortcode_list = list(Unprompted.shortcode_objects.keys())
@@ -489,10 +516,9 @@ class Scripts(scripts.Script):
 								wizard_capture_btn = gr.Button(value="Generate code for my last image")
 
 							wizard_result = gr.HTML(label="wizard_result", value="", elem_id="unprompted_result")
+							wizard_template_btn.click(fn=wizard_generate_template, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
 							wizard_shortcode_btn.click(fn=wizard_generate_shortcode, inputs=[self.shortcodes_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
 							wizard_capture_btn.click(fn=wizard_generate_capture, inputs=[wizard_capture_include_inference, wizard_capture_include_prompt, wizard_capture_include_neg_prompt, wizard_capture_include_model, wizard_capture_add_template_block], outputs=wizard_result)
-							wizard_template_btn = gr.Button(value="Generate Shortcode")
-							wizard_template_btn.click(fn=wizard_generate_template, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
 
 					else:
 						gr.HTML(label="wizard_debug", value="You have disabled the Wizard in your config.")
@@ -503,34 +529,35 @@ class Scripts(scripts.Script):
 					dry_run_result = gr.HTML(label="dry_run_result", value="", elem_id="unprompted_result")
 					dry_run.click(fn=do_dry_run, inputs=dry_run_prompt, outputs=dry_run_result)
 
-				with gr.Tab("💡 About"):
-					about = gr.Markdown(value=get_markdown("docs/ABOUT.md").replace("$VERSION", Unprompted.VERSION))
+				with gr.Accordion("🛠️ Resources", open=Unprompted.Config.ui.resources_open):
+					with gr.Tab("💡 About"):
+						about = gr.Markdown(value=get_markdown("docs/ABOUT.md").replace("$VERSION", Unprompted.VERSION))
 
-					def open_folder(path):
-						import platform
-						import subprocess as sp
-						path = os.path.normpath(path)
-						if platform.system() == "Windows":
-							os.startfile(path)
-						elif platform.system() == "Darwin":
-							sp.Popen(["open", path])
-						else:
-							sp.Popen(["xdg-open", path])
+						def open_folder(path):
+							import platform
+							import subprocess as sp
+							path = os.path.normpath(path)
+							if platform.system() == "Windows":
+								os.startfile(path)
+							elif platform.system() == "Darwin":
+								sp.Popen(["open", path])
+							else:
+								sp.Popen(["xdg-open", path])
 
-					open_templates = gr.Button(value="📂 Open templates folder")
-					open_templates.click(fn=lambda: open_folder(f"{base_dir}/{Unprompted.Config.template_directory}"), inputs=[], outputs=[])
+					with gr.Tab("📣 Announcements"):
+						announcements = gr.Markdown(value=get_markdown("docs/ANNOUNCEMENTS.md"))
 
-				with gr.Tab("📣 Announcements"):
-					announcements = gr.Markdown(value=get_markdown("docs/ANNOUNCEMENTS.md"))
+					with gr.Tab("⏱ Changelog"):
+						changelog = gr.Markdown(value=get_markdown("docs/CHANGELOG.md"))
 
-				with gr.Tab("⏱ Changelog"):
-					changelog = gr.Markdown(value=get_markdown("docs/CHANGELOG.md"))
+					with gr.Tab("📘 Manual"):
+						manual = gr.Markdown(value=get_markdown("docs/MANUAL.md"))
 
-				with gr.Tab("📘 Manual"):
-					manual = gr.Markdown(value=get_markdown("docs/MANUAL.md"))
+					with gr.Tab("🎓 Guides"):
+						guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
-				with gr.Tab("🎓 Guides"):
-					guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
+				open_templates = gr.Button(value="📂 Open templates folder")
+				open_templates.click(fn=lambda: open_folder(f"{base_dir}/{Unprompted.Config.template_directory}"), inputs=[], outputs=[])
 
 		return [is_enabled, unprompted_seed, match_main_seed]
 
@@ -625,7 +652,7 @@ class Scripts(scripts.Script):
 				pass
 
 		if p.seed is not None and p.seed != -1.0:
-			if (Unprompted.is_int(p.seed)): p.seed = int(p.seed)
+			if (helpers.is_int(p.seed)): p.seed = int(p.seed)
 			p.all_seeds[0] = p.seed
 		else:
 			p.seed = -1

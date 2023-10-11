@@ -5,6 +5,7 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		import random
+		import lib_unprompted.helpers as helpers
 		result_list = []
 		delimiter = kwargs["_delimiter"] if "_delimiter" in kwargs else self.Unprompted.Config.syntax.delimiter
 
@@ -23,7 +24,7 @@ class Shortcode():
 		# Set new array values
 		for kwarg, val in kwargs.items():
 			if (self.Unprompted.is_system_arg(kwarg)): continue
-			if (self.Unprompted.is_int(kwarg)):
+			if (helpers.is_int(kwarg)):
 				this_kwarg = int(kwarg)
 			else:
 				try:

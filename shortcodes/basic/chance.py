@@ -17,7 +17,6 @@ class Shortcode():
 		to_return = ""
 		if (int(float(_number)) >= random.randint(1, int(_sides))):
 			self.Unprompted.prevent_else(else_id)
-
 			if "_raw" in pargs: to_return = self.Unprompted.process_string(content, context)
 			else: to_return = self.Unprompted.process_string(self.Unprompted.sanitize_pre(content, self.Unprompted.Config.syntax.sanitize_block, True), context, False)
 		else:

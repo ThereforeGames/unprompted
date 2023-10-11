@@ -26,8 +26,8 @@ class Shortcode():
 					self.Unprompted.shortcode_user_vars["width"] *= multiplier
 					self.Unprompted.shortcode_user_vars["height"] *= multiplier
 
-				self.Unprompted.shortcode_user_vars["width"] = round(self.Unprompted.shortcode_user_vars["width"] / sd_unit) * sd_unit
-				self.Unprompted.shortcode_user_vars["height"] = round(self.Unprompted.shortcode_user_vars["height"] / sd_unit) * sd_unit
+				self.Unprompted.shortcode_user_vars["width"] = int(round(self.Unprompted.shortcode_user_vars["width"] / sd_unit) * sd_unit)
+				self.Unprompted.shortcode_user_vars["height"] = int(round(self.Unprompted.shortcode_user_vars["height"] / sd_unit) * sd_unit)
 
 				self.log.debug(f"Output image size: {self.Unprompted.shortcode_user_vars['width']}x{self.Unprompted.shortcode_user_vars['height']}")
 		else:

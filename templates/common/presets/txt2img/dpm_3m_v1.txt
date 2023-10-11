@@ -1,0 +1,1 @@
+[sets cfg_scale=3.0 sampler_name="DPM++ 3M SDE" steps=20]

@@ -4,3 +4,9 @@ sentence-transformers # [img2pez]
 segment_anything # [txt2mask]
 ultralytics # [txt2mask] FastSAM
 color-matcher # [zoom_enhance]
+modelscope # [faceswap] face_fusion
+tensorflow # [faceswap]
+onnx # [faceswap]
+onnxruntime # [faceswap]
+mxnet -f https://dist.mxnet.io/python/cpu # [faceswap]
+albumentations # [faceswap] insightface

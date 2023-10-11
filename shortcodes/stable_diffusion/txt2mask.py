@@ -24,6 +24,7 @@ class Shortcode():
 		from matplotlib import pyplot as plt
 		import cv2
 		import numpy
+		import lib_unprompted.helpers as helpers
 		# import gc
 		from modules.images import flatten
 		from modules.shared import opts
@@ -243,8 +244,8 @@ class Shortcode():
 				if not os.path.exists(sam_file):
 					self.log.info("Downloading FastSAM model weights...")
 					# TODO: The YOLOv8x model is too big to download directly from Gdrive, find another host that supports it. Not particularly urgent as the difference in quality between the two models seems negligible...
-					if fastsam_model_type == "YOLOv8x": self.Unprompted.download_file(sam_file, "https://drive.google.com/uc?export=download&id=1m1sjY4ihXBU1fZXdQ-Xdj-mDltW-2Rqv")
-					else: self.Unprompted.download_file(sam_file, f"https://drive.google.com/uc?export=download&id=10XmSj6mmpmRb8NhXbtiuO9cTTBwR_9SV")
+					if fastsam_model_type == "YOLOv8x": helpers.download_file(sam_file, "https://drive.google.com/uc?export=download&id=1m1sjY4ihXBU1fZXdQ-Xdj-mDltW-2Rqv")
+					else: helpers.download_file(sam_file, f"https://drive.google.com/uc?export=download&id=10XmSj6mmpmRb8NhXbtiuO9cTTBwR_9SV")
 
 				if self.cached_model == -1 or self.cached_model_method != method:
 					model = YOLO(sam_file)
@@ -386,7 +387,7 @@ class Shortcode():
 							# Download model weights if we don't have them yet
 							if not os.path.exists(sam_file):
 								self.log.info("Downloading SAM model weights...")
-								self.Unprompted.download_file(sam_file, f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
+								helpers.download_file(sam_file, f"https://dl.fbaipublicfiles.com/segment_anything/{sam_filename}")
 
 							model_type = "vit_h"
 							sam = sam_model_registry[model_type](checkpoint=sam_file)
@@ -451,8 +452,8 @@ class Shortcode():
 				# Download model weights if we don't have them yet
 				if not os.path.exists(d64_file):
 					self.log.info("Downloading clipseg model weights...")
-					self.Unprompted.download_file(d64_file, f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
-					self.Unprompted.download_file(d16_file, "https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
+					helpers.download_file(d64_file, f"https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files={d64_filename}")
+					helpers.download_file(d16_file, "https://owncloud.gwdg.de/index.php/s/ioHbRzFx6th32hn/download?path=%2F&files=rd16-uni.pth")
 
 				# load model
 				if self.cached_model == -1 or self.cached_model_method != method:

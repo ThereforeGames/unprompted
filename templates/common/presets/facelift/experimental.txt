@@ -1,0 +1,1 @@
+[restore_faces method=codeformer image="{get body}"][faceswap "{get face}" unload="{get unload_all}" pipeline="ghost" ][call common/presets/txt2img/restart_v1][zoom_enhance replacement="face, best quality, hdr"][faceswap "{get face}" unload="{get unload_all}"][restore_faces unload="{get unload}"]

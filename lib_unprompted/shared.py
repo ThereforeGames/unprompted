@@ -9,6 +9,7 @@ import inspect
 import sys
 import time
 import logging
+from . import helpers
 
 
 def parse_config(base_dir="."):
@@ -55,6 +56,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, None, preprocess)
 					def handler(keyword, pargs, kwargs, context):
+						self.prep_for_shortcode(keyword,pargs,kwargs,context)
 						return (self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 
 				# Normal atomic
@@ -62,6 +64,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name)
 					def handler(keyword, pargs, kwargs, context):
+						self.prep_for_shortcode(keyword,pargs,kwargs,context)
 						return (self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 			else:
 				# Allow shortcode to run before inner content
@@ -72,6 +75,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}", preprocess)
 					def handler(keyword, pargs, kwargs, context, content):
+						self.prep_for_shortcode(keyword,pargs,kwargs,context,content)
 						return (self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 
 				# Normal block
@@ -79,6 +83,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}")
 					def handler(keyword, pargs, kwargs, context, content):
+						self.prep_for_shortcode(keyword,pargs,kwargs,context,content)
 						return (self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 
 			# Setup extra routines
@@ -93,17 +98,19 @@ class Unprompted:
 			self.log.debug(f"Loaded shortcode: {shortcode_name}")
 
 		self.shortcode_parser = shortcodes.Parser(start=self.Config.syntax.tag_start, end=self.Config.syntax.tag_end, esc=self.Config.syntax.tag_escape, ignore_unknown=True)
-		self.log.debug(f"Finished loading in {time.time()-start_time} seconds.")
+		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "9.16.1"
+		self.VERSION = "10.0.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
 		self.shortcode_user_vars = {}
+		self.routine = "none"
 		self.cleanup_routines = []
 		self.after_routines = []
 		self.base_dir = base_dir
+		self.current_context = None
 
 		self.cfg_dict, self.Config = parse_config(base_dir)
 
@@ -162,16 +169,17 @@ class Unprompted:
 		self.log.info(f"Loading Unprompted v{self.VERSION} by Therefore Games")
 		self.load_shortcodes()
 
-	def shortcode_string_log(self):
-		return ("[" + os.path.basename(inspect.stack()[1].filename) + "]")
-
 	def start(self, string):
 		self.log.debug("Main routine started...")
+		self.routine = "main"
 		self.conditional_depth = 0
-		return self.process_string(string)
+		result = self.process_string(string)
+		self.log.debug("Main routine completed.")
+		return result
 
 	def cleanup(self):
 		self.log.debug("Cleanup routine started...")
+		self.routine = "cleanup"
 		self.conditional_depth = 0
 		for i in self.cleanup_routines:
 			self.shortcode_objects[i].cleanup()
@@ -179,6 +187,7 @@ class Unprompted:
 
 	def after(self, p=None, processed=None):
 		self.log.debug("After routine started...")
+		self.routine = "after"
 		for i in self.after_routines:
 			val = self.shortcode_objects[i].after(p, processed)
 			if val: processed = val
@@ -186,6 +195,7 @@ class Unprompted:
 		return processed
 
 	def process_string(self, string, context=None, cleanup_extra_spaces=True):
+		if context: self.current_context = context
 		# First, sanitize contents
 		string = self.shortcode_parser.parse(self.sanitize_pre(string, self.Config.syntax.sanitize_before), context)
 		return (self.sanitize_post(string, cleanup_extra_spaces))
@@ -200,30 +210,30 @@ class Unprompted:
 		# Final sanitization routine
 		sanitization_items = self.Config.syntax.sanitize_after.__dict__.items()
 		for k, v in sanitization_items:
-			string = self.strip_str(string, k)
+			string = helpers.strip_str(string, k)
 		for k, v in sanitization_items:
 			string = string.replace(k, v)
 		if cleanup_extra_spaces: string = " ".join(string.split())  # Cleanup extra spaces
 		return (string)
 
-	def parse_filepath(self, string, context="", root=None, must_exist=True):
+	def parse_filepath(self, string_orig, context="", root=None, must_exist=True):
 		import random
 
 		# Replace placeholders
-		string = string.replace("%BASEDIR%", self.base_dir)
+		string = string_orig.replace("%BASE_DIR%", self.base_dir)
 
 		# Relative path
 		if (string[0] == "."):
 			string = os.path.dirname(context) + "/" + string
-			self.log.debug(f"Relative path transformed: {string}")
+			self.log.debug(f"Transformed relative path from \"{string_orig}\" to \"{string}\"")
 		# Absolute path
 		elif (os.path.isabs(string)):
-			self.log.debug(f"Absolute path transformed: {string}")
-		# Unprompted path
+			self.log.debug(f"Transformed absolute path from \"{string_orig}\" to \"{string}\"")
+		# Internal (Unprompted) path
 		else:
 			if root is None: root = self.base_dir + "/" + self.Config.template_directory
 			string = root + "/" + string
-			self.log.debug(f"Unprompted path transformed: {string}")
+			self.log.debug(f"Transformed internal path from \"{string_orig}\" to \"{string}\"")
 
 		files = glob.glob(string)
 		filecount = len(files)
@@ -238,6 +248,55 @@ class Unprompted:
 
 		return (string)
 
+	def prep_for_shortcode(self, keyword, pargs, kwargs, context, content=""):
+		"""Stores information about a shortcode into the Unprompted object for ease of access."""
+		self.keyword = keyword
+		self.pargs = pargs
+		self.kwargs = kwargs
+		self.context = context
+		self.content = content
+	
+	def parse_arg(self, key, default=False, datatype=None, context=None, pargs=None, kwargs=None, arithmetic=True, delimiter=None):
+		"""Processes the argument, casting it to the correct datatype."""
+		# Load defaults from the Unprompted object
+		# Note: You can manually set these to False
+		if context == None: context = self.context
+		if pargs == None: pargs = self.pargs
+		if kwargs == None: kwargs = self.kwargs
+		if delimiter == None: delimiter = self.Config.syntax.delimiter
+
+		# If a datatype is not specified, we refer to the type of the default value
+		if not datatype:
+			datatype = type(default)
+
+		if pargs and key in pargs:
+			return True
+		elif kwargs and key in kwargs:
+			if arithmetic: default = self.parse_advanced(str(kwargs[key]),context)
+			else: default = self.parse_alt_tags(str(kwargs[key]),context)
+			if delimiter:
+				try:
+					# We will cast the value to a string so that we can split it, but
+					# each index of the list will be cast back later
+					str_val = str(default)
+					if delimiter in str_val:
+						default = str_val.split(delimiter)
+				except:
+					self.log.warning(f"Unable to split the kwarg {key} by the delimiter {delimiter}")
+					pass
+
+		try:
+			if type(default) == list:
+				for idx,val in enumerate(default):
+					default[idx] = datatype(val)
+			else: default = datatype(default)
+		except ValueError:
+			self.log.warning(f"Could not cast {default} to {datatype}.")
+			pass
+
+		return default
+
+	
 	def parse_advanced(self, string, context=None):
 		"""First runs the string through parse_alt_tags, the result of which then goes through simpleeval"""
 		if string is None: return ""
@@ -245,7 +304,7 @@ class Unprompted:
 		string = self.parse_alt_tags(string, context)
 		if self.Config.advanced_expressions:
 			try:
-				return (self.autocast(simple_eval(string, names=self.shortcode_user_vars)))
+				return (helpers.autocast(simple_eval(string, names=self.shortcode_user_vars)))
 			except:
 				return (string)
 		else:
@@ -287,65 +346,9 @@ class Unprompted:
 
 		return (parser.parse(string, context))
 
-	def strip_str(self, string, chop):
-		while True:
-			if chop and string.endswith(chop):
-				string = string[:-len(chop)]
-			else:
-				break
-		while True:
-			if chop and string.startswith(chop):
-				string = string[len(chop):]
-			else:
-				break
-		return string
-
 	def is_system_arg(self, string):
 		if (string[0] == "_"): return (True)
 		return (False)
-
-	def is_equal(self, var_a, var_b):
-		"""Checks if two variables equal each other, taking care to account for datatypes."""
-		if (self.is_float(var_a)): var_a = float(var_a)
-		if (self.is_float(var_b)): var_b = float(var_b)
-		if (str(var_a) == str(var_b)): return True
-		else: return False
-
-	def is_not_equal(self, var_a, var_b):
-		return not self.is_equal(var_a, var_b)
-
-	def is_float(self, value):
-		try:
-			float(value)
-			return True
-		except:
-			return False
-
-	def is_int(self, value):
-		try:
-			int(value)
-			return True
-		except:
-			return False
-
-	def autocast(self, var):
-		"""Converts a variable between string, int, and float depending on how it's formatted"""
-		original_var = var
-		if original_var == "inf" or original_var == "-inf": return (original_var)
-		elif (self.is_float(var)):
-			var = float(var)
-			if int(var) == var and "." not in str(original_var): var = int(var)
-		elif (self.is_int(var)): var = int(var)
-		return (var)
-
-	def download_file(self, filename, url):
-		import requests
-		with open(filename, 'wb') as fout:
-			response = requests.get(url, stream=True)
-			response.raise_for_status()
-			# Write response data to file
-			for block in response.iter_content(4096):
-				fout.write(block)
 
 	def color_match(self, img_ref, img_src, method="hm-mkl-hm", iterations=1):
 		from color_matcher import ColorMatcher
@@ -370,7 +373,7 @@ class Unprompted:
 		jsons = paths.split(self.Config.syntax.delimiter)
 		for this_json in jsons:
 			filepath = self.parse_filepath(this_json, context, root=self.base_dir)
-			json_obj = json.load(open(f"{filepath}", "r", encoding="utf8"))
+			json_obj = json.load(open(f"{filepath}", "r", encoding=self.Config.formats.default_encoding))
 			# Delimiter support
 			for key, val in json_obj.copy().items():
 				keys = key.split(self.Config.syntax.delimiter)
@@ -386,7 +389,7 @@ class Unprompted:
 			if len(att_split) >= 3 and any(chr.isdigit() for chr in att):  # Make sure we have at least 2 underscores and at least one number
 				self.log.debug(f"Setting ControlNet value: {att}")
 				cn_path = self.extension_path(self.Config.stable_diffusion.controlnet_name)
-				cnet = self.import_file(f"{self.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
+				cnet = helpers.import_file(f"{self.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
 
 				all_units = cnet.get_all_units_in_processing(this_p)
 
@@ -461,16 +464,6 @@ class Unprompted:
 					return None
 		return None
 
-	def import_file(self, full_name, path):
-		"""Allows importing of modules from full filepath, not sure why Python requires a helper function for this in 2023"""
-		from importlib import util
-
-		spec = util.spec_from_file_location(full_name, path)
-		mod = util.module_from_spec(spec)
-
-		spec.loader.exec_module(mod)
-		return mod
-
 	def is_var_deprecated(self, var_name):
 		deprecated_vars = {}
 		deprecated_vars["batch_index"] = "batch_count_index"
@@ -481,34 +474,44 @@ class Unprompted:
 
 		return False
 
-	# Helper function to set array indexes that are outside the array's current length
-	def list_set(self, this_list, index, value, null_value=False):
-		while (len(this_list) <= index):
-			this_list.append(null_value)
-		this_list[index] = value
-
 	def prevent_else(self, else_id=None):
 		if not else_id: else_id = self.conditional_depth
 		self.shortcode_objects["else"].do_else[else_id] = False
 		# self.conditional_depth += 1
 
-	def str_with_ext(self, path, default_ext=".json"):
-		if os.path.exists(path) or default_ext in path:
-			return path
-		return path + default_ext
-
-	def create_load_json(self, file_path, default_data={}):
-		try:
-			# If the file already exists, load its content
-			with open(file_path, "r", encoding="utf8") as file:
-				data = json.load(file)
-		# If the file doesn't exist, create it with default data
-		except FileNotFoundError:
-			with open(file_path, "w", encoding="utf8") as file:
-				json.dump(default_data, file, indent=4)
-			data = default_data
-
-		return data
-
 	def str_replace_macros(self, string):
 		return string.replace("%BASE_DIR%", self.base_dir)
+
+	def current_image(self, new_image=None, update_init_images=True):
+		"""Gets or sets an image for shortcode processing depending on the context."""
+		idx = self.shortcode_user_vars["batch_real_index"] if "batch_real_index" in self.shortcode_user_vars else 0
+		try:
+			if self.routine == "after":
+				if new_image:
+					self.after_processed.images[idx] = new_image
+				else: return self.after_processed.images[idx]
+			elif "init_images" in self.shortcode_user_vars and self.shortcode_user_vars["init_images"]:
+				if new_image:
+					self.shortcode_user_vars["init_images"][idx] = new_image
+				else: return self.shortcode_user_vars["init_images"][idx]
+			elif "default_image" in self.shortcode_user_vars:
+				if new_image:
+					self.shortcode_user_vars["default_image"] = new_image
+				else: return self.shortcode_user_vars["default_image"]
+		except Exception as e:
+			self.log.exception("Could not find the current image.")
+			return None
+
+		if new_image:
+			if update_init_images:
+				if self.routine == "after":
+					self.shortcode_user_vars["init_images"][idx] = self.after_processed.images[idx]
+			return True
+		return None
+
+	def escape_tags(self, string, new_start = None, new_end = None):
+		if not new_start: new_start = self.Config.syntax.tag_escape+self.Config.syntax.tag_start_alt
+		if not new_end: new_end = self.Config.syntax.tag_escape+self.Config.syntax.tag_end_alt
+		# self.log.warning(f"string is {string}")
+		# self.log.warning(f"string after replacing is {string.replace(self.Config.syntax.tag_start,new_start).replace(self.Config.syntax.tag_end,new_end)}")
+		return string.replace(self.Config.syntax.tag_start,new_start).replace(self.Config.syntax.tag_end,new_end)

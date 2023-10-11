@@ -1,6 +1,7 @@
 import os
 
 this_path = os.path.dirname(os.path.realpath(__file__))
+debug = False
 
 if os.path.isfile(f"{this_path}/config_user.json"):
 	import json
@@ -9,7 +10,8 @@ if os.path.isfile(f"{this_path}/config_user.json"):
 		print("Unprompted - Skipping install.py check per skip_requirements flag")
 		quit()
 	else:
-		print("Unprompted - You can skip the intall check to improve startup times by setting skip_requirements to true in config_user.json")
+		print("Unprompted - You can skip the intall check to improve startup times by setting `skip_requirements` to true in config_user.json")
+	debug = "debug_requirements" in cfg_dict and cfg_dict["debug_requirements"]
 
 import launch, shutil, pkg_resources
 
@@ -48,6 +50,12 @@ with open(requirements) as file:
 					launch.run_pip(f"install {package}", f"requirements for Unprompted - {reason}: updating {package_name} version from {installed_version} to {package_version}")
 			elif not launch.is_installed(package):
 				launch.run_pip(f"install {package}", f"requirements for Unprompted - {reason}: {package}")
+			elif debug:
+				import imp
+				debug_result = imp.find_module(package)
+				if not debug_result[1]:
+					print(f"Debug could not find package {package}... attempting to install.")
+					launch.run_pip(f"install --force-reinstall {package}", f"requirements for Unprompted - {reason}: {package}")
 		except Exception as e:
 			print(e)
 			print(f"(ERROR) Failed to install {package} dependency for Unprompted - {reason} functions may not work")

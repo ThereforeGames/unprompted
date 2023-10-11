@@ -9,6 +9,7 @@ class Shortcode():
 		self.description = "Processes the file content of 'path.'"
 
 	def run_atomic(self, pargs, kwargs, context):
+		import lib_unprompted.helpers as helpers
 
 		if self.Unprompted.Config.logging.deprecated_warnings: self.log.warning(f"As of v9.14.0, [file] is a legacy shortcode and will eventually be removed in favor of [call] - the main difference is that [call] also works with functions.")
 
@@ -20,10 +21,10 @@ class Shortcode():
 
 		# Relative path
 		if (file_string[0] == "."):
-			path = self.Unprompted.str_with_ext(os.path.dirname(context) + "/" + file_string, self.Unprompted.Config.txt_format)
+			path = helpers.str_with_ext(os.path.dirname(context) + "/" + file_string, self.Unprompted.Config.formats.txt)
 		# Absolute path
 		else:
-			path = self.Unprompted.str_with_ext(self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string, self.Unprompted.Config.txt_format)
+			path = helpers.str_with_ext(self.Unprompted.base_dir + "/" + self.Unprompted.Config.template_directory + "/" + file_string, self.Unprompted.Config.formats.txt)
 
 		files = glob.glob(path)
 		if (len(files) == 0):
