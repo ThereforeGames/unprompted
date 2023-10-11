@@ -49,7 +49,9 @@ This makes it easier than ever to share your prompts with others. And it won't p
 
 ![beautiful_soul]([base_dir]/images/posts/beautiful_soul.png)
 
-Beautiful Soul is a highly expressive character generator for Unprompted. It features thousands of wildcards and some pretty snazzy integration with ControlNet. Check it out if you're interested, it's a great way to produce some unique characters and support Unprompted while doing so: https://payhip.com/b/L1uNF
+Beautiful Soul is a highly expressive character generator for Unprompted. It features thousands of wildcards and integration with ControlNet. Check it out if you're interested, it's a great way to produce very unique characters and support Unprompted while doing so: https://payhip.com/b/L1uNF
+
+It is currently available at an introductory price.
 
 ---
 

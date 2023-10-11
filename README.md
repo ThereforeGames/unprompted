@@ -79,6 +79,16 @@ Once you have verified that Unprompted is installed and running correctly, you h
 
 While Unprompted is completely free to use, we do offer **Premium Template add-ons** that demonstrate some of the software's more advanced functionality.
 
+<img align="left" src="https://i.ibb.co/NYh7ZGS/promo-box-beautiful-soul.png" width=150>
+
+### [Beautiful Soul Template](https://payhip.com/b/L1uNF)
+A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. <strong>Available at half price until November 11th!</strong>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 <img align="left" src="https://i.postimg.cc/nhchddM9/Demon-Crawl-Avatar-Generator-Box.png" width=150>
 
 ### [DemonCrawl Avatar Generator](https://payhip.com/b/qLUX9)
