@@ -71,7 +71,7 @@ class Shortcode():
 			else:
 				self.Unprompted.prevent_else(else_id)
 
-		self.Unprompted.conditional_depth = 0
+		# self.Unprompted.conditional_depth = max(0, self.Unprompted.conditional_depth -1)
 		return contents
 
 	def ui(self, gr):

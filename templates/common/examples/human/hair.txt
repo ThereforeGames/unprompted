@@ -3,5 +3,5 @@ blonde
 brunette
 ginger
 bald
-[file ./colors]-haired
+[call ./colors]-haired
 [/choose]

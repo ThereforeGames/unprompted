@@ -56,7 +56,6 @@ class Shortcode():
 		else:
 			self.Unprompted.shortcode_objects["else"].do_else[else_id] = True
 
-		self.Unprompted.conditional_depth = 0
 		return (to_return)
 
 	def ui(self, gr):

@@ -1,11 +1,11 @@
-[template name="Facelift v0.0.1"]
+[template name="Facelift v0.0.2"]
 An all-in-one solution for performing faceswaps by combining different models and postprocessing techniques.
 [/template]
 [wizard row]
 	[set faces _new _ui="file" _label="New face image(s)" _file_count="multiple" _file_types="image"][/set]
 	[set body _new _ui="image" _label="Body image to perform swap on (defaults to SD output)" _remember][/set]
 [/wizard]
-[set preset _new _ui="dropdown" _choices="{filelist '%BASE_DIR%/templates/common/presets/facelift/*.*' _basename _hide_ext}"]fast[/set]
+[set preset _new _ui="dropdown" _choices="{filelist '%BASE_DIR%/templates/common/presets/facelift/*.*' _basename _hide_ext}"]best_quality[/set]
 [set unload _new _ui="checkbox" _label="Unload resources after inference" _info="Frees up VRAM but slows down inference time."]0[/set]
 [if unload][set unload_all]all[/set][/if][else][set unload_all][/set][/else]
 [# Reduce inference steps to 2 if we're using an external image. (setting it to 1 can cause errors)]

@@ -47,7 +47,7 @@ class Shortcode():
 			if (key[0] == "_"): continue  # Skips system arguments
 			self.Unprompted.shortcode_objects["set"].run_block([key], {}, context, value)
 
-		self.Unprompted.conditional_depth = 0
+		# self.Unprompted.conditional_depth = max(0, self.Unprompted.conditional_depth -1)
 		return (self.Unprompted.process_string(file_contents, path))
 
 	def ui(self, gr):

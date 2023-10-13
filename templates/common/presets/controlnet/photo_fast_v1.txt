@@ -1,3 +1,0 @@
-[sets
- cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_module=softedge_hed cn_0_model=controlnet11Models_softedge cn_0_weight=0.25
- ]

@@ -116,7 +116,7 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 
 ## Acknowledgements
 
-A big "thank you" to the authors of the following libraries that Unprompted depends on:
+We would like to thank the authors of the following libraries, which are used by Unprompted:
 
 - [Python Shortcodes](https://www.dmulholl.com/dev/shortcodes.html) by Darren Mulholland
 - [Simple Eval](https://github.com/danthedeckie/simpleeval) by @danthedeckie
@@ -126,6 +126,10 @@ A big "thank you" to the authors of the following libraries that Unprompted depe
 - [NLTK](https://github.com/nltk/nltk) by Bird, S., Klein, E., & Loper, E., O'Reilly Media, Inc.
 - [pattern](https://github.com/clips/pattern) by Tom De Smedt and Walter Daelemans
 - [Moby Thesaurus II](http://onlinebooks.library.upenn.edu/webbin/gutbook/lookup?num=3202) by Grady Ward
+- [Insightface](https://github.com/deepinsight/insightface) by Jia Guo, Jiankang Deng, Xiang An, Jack Yu, Baris Gecer
+- [Ghost](https://github.com/ai-forever/ghost) by A. Groshev, A. Maltseva, D. Chesakov, A. Kuznetsov and D. Dimitrov
+- [FaceFusion](https://github.com/facefusion/facefusion) by Henry Ruhs
+- [GPEN](https://github.com/yangxy/GPEN) by Tao Yang, Peiran Ren, Xuansong Xie, and Lei Zhang
 
 ---
 

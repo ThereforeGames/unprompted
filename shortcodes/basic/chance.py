@@ -22,7 +22,7 @@ class Shortcode():
 		else:
 			self.Unprompted.shortcode_objects["else"].do_else[else_id] = True
 
-		self.Unprompted.conditional_depth = 0
+		# self.Unprompted.conditional_depth = max(0, self.Unprompted.conditional_depth -1)
 		return to_return
 
 	def ui(self, gr):

@@ -28,7 +28,7 @@ class Shortcode():
 		model_dir = f"{self.Unprompted.base_dir}/{self.Unprompted.Config.subdirectories.models}"
 
 		unload_parts = self.Unprompted.parse_arg("unload","")
-		minimum_similarity = float(self.Unprompted.parse_arg("minimum_similarity",0.0))
+		minimum_similarity = float(self.Unprompted.parse_arg("minimum_similarity",-1000.0))
 
 		_body = self.Unprompted.parse_alt_tags(kwargs["body"],context) if "body" in kwargs else False
 		if _body:

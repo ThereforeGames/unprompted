@@ -1,8 +1,8 @@
-[template name="Bodysnatcher v1.3.4"]
+[template name="Bodysnatcher v1.3.5"]
 ![Preview]([base_dir]/bodysnatcher.png)
 <details open><summary>⚠️ Important info, please read carefully</summary>
 
-This template works best with multiple ControlNet units and/or an inpainting model.
+This template works best with inpainting models and ControlNet.
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically. Restart the WebUI after making this change.
 
@@ -10,33 +10,28 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 
 <details><summary>Recommended inference settings</summary>
 
-Use the img2img inpainting tab.
+Here are some guidelines for achieveing the best results with this template:
 
-Choose a model with strong knowledge of human anatomy, such as Deliberate or RealisticVision.
+- Use either the `subtle` or `general` inference preset. The former provides the best image quality while the latter provides improved subject likeness.
+- Use either `magic_mirror` or `fidelity` ControlNet body preset.
+- Use an inpainting model with strong knowledge of human anatomy, such as EpicPhotoGasm or AbsoluteReality.
+- Use the WebUI's Refiner to switch to a non-inpainting model at ~0.8 steps. This will add extra detail to your final image.
+- If you have a strong computer, set your inpaint area to `Only masked` mode and increase the resolution by as much as your GPU and checkpoint can handle. On my 3090, I get great results with 768x768.
+- You can paint out areas of the image you *don't* want to process and they will be subtracted from the final mask. This is useful for images containing multiple subjects.
+- Enable the Facelift template to improve the quality of faces.
 
-Lowering your **Noise multiplier for img2img** in the WebUI settings (Stable Diffusion tab) may improve your results.
-
-- **Mask blur and mask padding:** 10
-- **Only masked padding:** 0
-- **Sampler:** Euler A @ 25 steps
-- **CFG Scale:** 7
-- **Denoising strength:** 0.75 *(In some cases, you can go all the way up to 1.)*
-- **Prompt:** Empty. *(Anything added to the prompt box influences the body swap but not the face upscale step.)*
-- **Restore Faces:** Off. *(Turning it on generally decreases likeness, but may be helpful for undercooked/overcooked models.)*
-
-**Tip:** For images with multiple subjects, roughly mask out the subject(s) you *don't* want to process and they will be subtracted from the final mask.
 </details>
 
-<details><summary>"Secret Sauce" ControlNet Units</summary>
+<details><summary>ControlNet Preset Cheatsheet</summary>
 
-**Protip:** You can simply choose a Body ControlNet Preset like "photo_general_v1" if you'd rather not set up a bunch of CN units manually.
+Each of the included ControlNet presets was designed with a specific purpose in mind. 
 
-You can load units in any order. That said, I am listing them in order of importance for those who don't have enough memory to enable so many units at once.
+- `fidelity` (4 units): Strives to produce the most accurate swap results without making any concessions. As such, it is also the most resource-intensive and slow.
+- `magic_mirror` (3 units): Strikes a good balance between accuracy and speed. If we auto-enabled the CN features, this would be the default preset.
+- `quickshot` (1 unit): Produces a decent swap with only a single unit, although it's not as accurate as the other presets.
+- `face_doctor` (2 unit): Preset designed for face closeups only.
 
-- **hed / controlnet11Models_softedge:** In my opinion, this is the best unit for capturing general linework and composition of realistic images. However, it has a fairly strong effect on body type so you may need to lower the weight (all the way down to ~0.25 in some cases.) A more forgiving alternative is **fake_scribble / controlnet11Models_scribble**, but that one produces anatomical errors from time to time.
-- **color / coadapter-color-sd15v1:** Very helpful for maintaining the clothing and general lighting of the original subject. Do note however that the stock **t2iadapter_color_sd14v1** model is not a suitable alternative.
-- **mediapipe_face / control_mediapipe_face_sd15_v2**: Maintains the facial expression of the subject.
-- **openpose / controlnet11Models_openpose**: Can help keep the swap coherent with certain postures or angles.
+Alternatively, you can set the preset to `none` and configure your ControlNet units manually.
 
 </details>
 <br><br>
@@ -44,7 +39,7 @@ Always bodysnatch responsibly.<br>
 [/template]
 
 [wizard accordion _label="⚙️ Basic Settings" _open]
-	[set prefix _new _label="Prefix" _info="For example, the visual medium"]photo of[/set]
+	[set prefix _new _label="Prefix" _info="For example, the visual medium"]high detail RAW photo of[/set]
 	[set subject _new _label="New subject"]mona lisa[/set]
 	[set simple_description _new _label="Simple Description" _info="These terms will apply to both the full image and the cropped face, 1-3 words are usually plenty"][/set]
 	[set class _new _label="Class" _info="The search term that determines the inpainting mask"]woman[/set]
@@ -61,12 +56,12 @@ Always bodysnatch responsibly.<br>
 [/wizard]
 
 [wizard accordion _label="🔍 Zoom Enhance Settings"]
+	[set bypass_zoom_enhance _new _label="Bypass zoom_enhance" _ui="checkbox"]1[/set]
 	[set fix_bodypart _new _label="Fix a body part" _info="Note: currently not compatible with Background Mode"]face[/set]
 	[set zoom_enhance_denoising_max _new _label="Max denoising strength"]0.45[/set]
 	[set zoom_enhance_base_cfg _new _ui="slider" _minimum="1" _maximum="30" _label="Minimum CFG for upscaling step"]10[/set]
 	[set zoom_enhance_inherit_negative _new _ui="checkbox" _label="Inherit the negative prompt during upscaling step"]1[/set]
 	[set show_original _new _label="Show unenhanced image in output window" _ui="checkbox"]0[/set]
-	[set bypass_zoom_enhance _new _label="Bypass zoom_enhance" _ui="checkbox"]0[/set]
 [/wizard]
 
 [wizard accordion _label="🎨 Color Correction Settings"]
@@ -75,7 +70,7 @@ Always bodysnatch responsibly.<br>
 	[set color_correct_strength _new _label="Color correct strength" _ui="slider" _minimum=1 _maximum=5 _info="Experimental, recommend leaving it at 1"]1[/set]
 [/wizard]
 
-[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/img2img/*.*' _basename _hide_ext}"]general_v2[/set]
+[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/img2img/*.*' _basename _hide_ext}"]subtle_v1[/set]
 [set body_controlnet_preset _new _info="Loads multiple ControlNet units, please make sure you have 'Allow other scripts to control this extension' enabled (note: the 'dev' preset is for internal testing)" _label="Body ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
 [set face_controlnet_preset _new _info="Loads a ControlNet unit for the face upscale step (not recommended)" _label="Face ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
 
@@ -83,10 +78,11 @@ Always bodysnatch responsibly.<br>
 
 [sets neg_mask=""]
 [if "(keep_hands==1 and background_mode==0) or (keep_hands==0 and background_mode==1)"]
-	[set neg_mask]fingers[/set]
+	[sets neg_mask=fingers]
 [/if]
 [if "(keep_feet==1 and background_mode==0) or (keep_feet==0 and background_mode==1)"]
-	[set neg_mask _append]|feet[/set]
+	[if neg_mask][set neg_mask _append]|[/set][/if]
+	[set neg_mask _append]feet[/set]
 [/if]
 
 [if "inference_preset != 'none'"]
@@ -97,9 +93,11 @@ Always bodysnatch responsibly.<br>
 	[call "common/presets/controlnet/{get body_controlnet_preset}"]
 [/if]
 
-[img2img_autosize]
+[if inpaint_full_res=0]
+	[img2img_autosize]
+[/if]
 [if batch_index=0]
-	[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" padding=10 mask_blur=20][get class][/txt2mask]
+	[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=5 padding=10 mask_blur=20][get class][/txt2mask]
 	[if background_mode=1]
 		[invert_mask]
 	[/if]

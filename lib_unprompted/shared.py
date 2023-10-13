@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.0.1"
+		self.VERSION = "10.0.2"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -172,7 +172,7 @@ class Unprompted:
 	def start(self, string):
 		self.log.debug("Main routine started...")
 		self.routine = "main"
-		self.conditional_depth = 0
+		self.conditional_depth = -1
 		result = self.process_string(string)
 		self.log.debug("Main routine completed.")
 		return result
@@ -195,9 +195,11 @@ class Unprompted:
 		return processed
 
 	def process_string(self, string, context=None, cleanup_extra_spaces=True):
+		self.conditional_depth += 1
 		if context: self.current_context = context
 		# First, sanitize contents
 		string = self.shortcode_parser.parse(self.sanitize_pre(string, self.Config.syntax.sanitize_before), context)
+		self.conditional_depth = max(0, self.conditional_depth -1)
 		return (self.sanitize_post(string, cleanup_extra_spaces))
 
 	def sanitize_pre(self, string, rules_obj, only_remove_last=False):
@@ -476,8 +478,7 @@ class Unprompted:
 
 	def prevent_else(self, else_id=None):
 		if not else_id: else_id = self.conditional_depth
-		self.shortcode_objects["else"].do_else[else_id] = False
-		# self.conditional_depth += 1
+		self.shortcode_objects["else"].do_else[str(else_id)] = False
 
 	def str_replace_macros(self, string):
 		return string.replace("%BASE_DIR%", self.base_dir)

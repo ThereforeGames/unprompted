@@ -3,14 +3,46 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.0.1 - 11 October 2023</summary>
+<details open><summary>10.0.2 - 13 October 2023</summary>
+
+### Added
+- `[else]`: Now supports `debug` parg to print diagnostic information
+- New img2img preset: `subtle_v1`
+- Updated ControlNet preset `photo_general` and renamed to `magic_mirror_v2`
+- Updated ControlNet preset `photo_fast` and renamed to `quickshot_v2`
+
+### Changed
+- `[faceswap]`: Lowered the default value of `minimum_similarity` from 0 to -1000
+- Renamed ControlNet preset `photo_inpainting_v1` to `fidelity_v1`
+- Renamed ControlNet preset `photo_face` to `face_doctor_v1`
+- Facelift v0.0.2: Now defaults to the `best_quality` preset
+- Bodysnatcher v1.3.5: Updated the default `prefix` from "photo of" to "high detail RAW photo of"
+- Bodysnatcher v1.3.5: No longer runs `[img2img_autosize]` when you are on `Mask Only` mode
+- Bodysnatcher v1.3.5: Now applies 5px of negative mask padding when using the `Keep original hands` option, which can significantly improve blending of new image
+- Bodysnatcher v1.3.5: The Zoom Enhance features are now disabled by default, as Facelift is a better fit with Bodysnatcher
+- Bodysnatcher v1.3.5: Updated the default `inference_preset` to `subtle_v1`
+- Bodysnatcher v1.3.5: Updated documentation
+- Updated credits in `README.md`
+
+### Fixed
+- `[else]`: Fixed a potential issue related to nested conditional logic
+- `[faceswap]`: Speculative workaround for an issue related to insightface and a missing Cython dependency
+- Replaced a few instances of `[file]` with `[call]` in the stock templates
+- Bodysnatcher v1.3.5: Fixed an error that would occur when `Keep hands` was disabled but `Keep feet` was enabled
+
+### Removed
+- `requirements.txt` from ghost package to resolve Github security warnings
+
+</details>
+
+<details><summary>10.0.1 - 11 October 2023</summary>
 
 ### Fixed
 - `[civitai]`: Fixed an issue related to the shorthand syntax and the `query` kwarg
 
 </details>
 
-<details open><summary>10.0.0 - 11 October 2023</summary>
+<details><summary>10.0.0 - 11 October 2023</summary>
 
 ### About
 **Important:** This is a major update with changes to batch processing that may affect pre-existing templates. Please read the changelog carefully.

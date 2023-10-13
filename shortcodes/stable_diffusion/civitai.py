@@ -76,6 +76,7 @@ class Shortcode():
 		filename = kwargs["_file"] if "_file" in kwargs else kwargs["query"]
 		weight = self.Unprompted.parse_arg("_weight",1.0)
 		activate = self.Unprompted.parse_arg("_activate",True)
+		words = self.Unprompted.parse_arg("_words",False)
 		subpath = self.Unprompted.parse_arg("_subpath","")
 		if subpath: subpath += "/"
 
@@ -145,8 +146,10 @@ class Shortcode():
 					if not mvid:
 						model_versions = json_obj["modelVersions"][0]
 						file_info = model_versions["files"][0]
+						if words and "trainedWords" in model_versions: words = " ".join(model_versions["trainedWords"])
 					else:
 						file_info = json_obj["files"][0]
+						if words and "trainedWords" in json_obj: words = " ".join(json_obj["trainedWords"])
 
 					try:
 						file_path = f"{net_directories[0]}/{subpath}{file_info['name']}"
@@ -162,12 +165,17 @@ class Shortcode():
 			else:
 				self.log.error(f"Request to Civitai API yielded bad response: {r.status_code}")
 				return ""
+		# We already have the file, check for activation text in json
+		# else:
+			
 
 		# Return assembled prompt string
+		return_string = ""
+		if words: return_string += words + " "
 		if activate:
 			if net_type in ["lora","locon"]:
-				return f"<lora:{filename}:{weight}>"
+				return_string += f"<lora:{filename}:{weight}>"
 			elif kwargs["types"] == "TextualInversion":
-				return f"({filename}:{weight})"
+				return_string += f"({filename}:{weight})"
 
-		return ""
+		return return_string

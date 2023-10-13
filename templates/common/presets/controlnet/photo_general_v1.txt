@@ -1,5 +1,0 @@
-[sets 
- cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_module=softedge_hed cn_0_model=controlnet11Models_softedge cn_0_weight=0.25
- cn_1_enabled=1 cn_1_pixel_perfect=1 cn_1_module=mediapipe_face cn_1_model=control_v2p_sd15_mediapipe_face cn_1_weight=1.0
- cn_2_enabled=1 cn_2_pixel_perfect=1 cn_2_enabled=1 cn_2_module=openpose_full cn_2_model=controlnet11Models_openpose
- ]
