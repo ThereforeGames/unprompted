@@ -57,6 +57,10 @@ def is_int(value):
 	except:
 		return False
 
+def ensure(var,datatype):
+	"""Ensures that a variable is a given datatype"""
+	if isinstance(var, datatype): return var
+	else: return datatype(var)
 
 def autocast(var):
 	"""Converts a variable between string, int, and float depending on how it's formatted"""

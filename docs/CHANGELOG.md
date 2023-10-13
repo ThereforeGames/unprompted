@@ -3,7 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.0.2 - 13 October 2023</summary>
+<details open><summary>10.1.0 - 13 October 2023</summary>
+
+### Added
+- New shortcode `[upscale]`: Enhances a given image using one the WebUI's upscaler methods
+- New shortcode `[interrogate]`: Generates a caption for the given image using various techniques
+- `[civitai]`: Now supports `_words` parg to include the activation text in your prompt, also writing it to the companion JSON file 
+- Facelift v0.1.0: Upgraded preset `best_quality_v2` which now applies `[upscale]` as a final step
+- New helper method `ensure()`: Converts a variable to a datatype if it isn't already that datatype
+- Bodysnatcher v1.4.0: Optionally interrogate the starting image
+- ControlNet model variables may now refer to the name presets in `Config.stable_diffusion.controlnet.sd1_models`; you can adjust these to match your own filenames
+- The CN config has a place for SDXL models too, although I haven't added any entries there yet
+- Updated img2img preset `full_denoise_v3`: Reduced the CFG scale and disabled mask blur
+
+### Changed
+- The setting `Config.stable_diffusion.controlnet_name` has been renamed to `Config.stable_diffusion.controlnet.extension`
+
+### Fixed
+- The template editor will correctly parse files with emojis now
+
+</details>
+
+<details><summary>10.0.2 - 13 October 2023</summary>
 
 ### Added
 - `[else]`: Now supports `debug` parg to print diagnostic information
@@ -17,7 +38,7 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 - Renamed ControlNet preset `photo_face` to `face_doctor_v1`
 - Facelift v0.0.2: Now defaults to the `best_quality` preset
 - Bodysnatcher v1.3.5: Updated the default `prefix` from "photo of" to "high detail RAW photo of"
-- Bodysnatcher v1.3.5: No longer runs `[img2img_autosize]` when you are on `Mask Only` mode
+- Bodysnatcher v1.3.5: No longer runs `[img2img_autosize]` when you are on `Only masked` mode
 - Bodysnatcher v1.3.5: Now applies 5px of negative mask padding when using the `Keep original hands` option, which can significantly improve blending of new image
 - Bodysnatcher v1.3.5: The Zoom Enhance features are now disabled by default, as Facelift is a better fit with Bodysnatcher
 - Bodysnatcher v1.3.5: Updated the default `inference_preset` to `subtle_v1`

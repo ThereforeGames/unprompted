@@ -52,7 +52,7 @@ if Config.stable_diffusion.template_editor:
 		def load_file(file_name):
 			# print(f"loading: {file_name}")
 
-			with open(f"{folder}/{file_name}", "r") as file:
+			with open(f"{folder}/{file_name}", "r", encoding=Config.formats.default_encoding) as file:
 				content = file.read()
 			# print(f"content: {content}")
 			# update main_edit_space woth content
@@ -60,7 +60,7 @@ if Config.stable_diffusion.template_editor:
 
 		def save_file(file_name, content):
 			# print(f"loading: {file_name}")
-			with open(f"{folder}/{file_name}", "w") as file:
+			with open(f"{folder}/{file_name}", "w", encoding=Config.formats.default_encoding) as file:
 				file.write(content)
 
 		with gr.Blocks() as unprompted_editor_ui:

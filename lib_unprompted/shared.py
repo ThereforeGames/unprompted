@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.0.2"
+		self.VERSION = "10.1.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -291,7 +291,8 @@ class Unprompted:
 			if type(default) == list:
 				for idx,val in enumerate(default):
 					default[idx] = datatype(val)
-			else: default = datatype(default)
+			else:
+				default = datatype(default)
 		except ValueError:
 			self.log.warning(f"Could not cast {default} to {datatype}.")
 			pass
@@ -390,8 +391,8 @@ class Unprompted:
 			att_split = att.split("_")  # e.g. controlnet_0_enabled
 			if len(att_split) >= 3 and any(chr.isdigit() for chr in att):  # Make sure we have at least 2 underscores and at least one number
 				self.log.debug(f"Setting ControlNet value: {att}")
-				cn_path = self.extension_path(self.Config.stable_diffusion.controlnet_name)
-				cnet = helpers.import_file(f"{self.Config.stable_diffusion.controlnet_name}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
+				cn_path = self.extension_path(self.Config.stable_diffusion.controlnet.extension)
+				cnet = helpers.import_file(f"{self.Config.stable_diffusion.controlnet.extension}.scripts.external_code", f"{cn_path}/scripts/external_code.py")
 
 				all_units = cnet.get_all_units_in_processing(this_p)
 
@@ -400,6 +401,13 @@ class Unprompted:
 					this_val = imageio.imread(self.str_replace_macros(self.shortcode_user_vars[att]))
 				else:
 					this_val = self.shortcode_user_vars[att]
+					# Apply preset model names
+					if att_split[2] == "model":
+						if self.shortcode_user_vars["sd_base"]== "sd1": cn_dict = self.Config.stable_diffusion.controlnet.sd1_models
+						elif self.shortcode_user_vars["sd_base"] == "sdxl": cn_dict = self.Config.stable_diffusion.controlnet.sdxl_models
+
+						if hasattr(cn_dict,this_val):
+							this_val = getattr(cn_dict, this_val)
 				setattr(all_units[int(att_split[1])], "_".join(att_split[2:]), this_val)
 				cnet.update_cn_script_in_processing(this_p, all_units)
 		except Exception as e:

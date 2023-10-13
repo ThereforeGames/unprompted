@@ -61,9 +61,9 @@ class Shortcode():
 							self.log.debug(f"{success_string} Regional Prompter")
 						elif script_title == "controlnet":
 							# Update the controlnet script args with a list of 0 units
-							cn_path = self.Unprompted.extension_path(self.Unprompted.Config.stable_diffusion.controlnet_name)
+							cn_path = self.Unprompted.extension_path(self.Unprompted.Config.stable_diffusion.controlnet.extension)
 							if cn_path:
-								cn_module = helpers.import_file(f"{self.Unprompted.Config.stable_diffusion.controlnet_name}.internal_controlnet.external_code", f"{cn_path}/internal_controlnet/external_code.py")
+								cn_module = helpers.import_file(f"{self.Unprompted.Config.stable_diffusion.controlnet.extension}.internal_controlnet.external_code", f"{cn_path}/internal_controlnet/external_code.py")
 								cn_module.update_cn_script_in_processing(self.Unprompted.main_p, [])
 								self.log.debug(f"{success_string} ControlNet")
 							else:

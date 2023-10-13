@@ -62,7 +62,33 @@
 		"batch_size_method":"standard",
 		"show_extra_generation_params":true,
 		"template_editor":true,
-		"controlnet_name":"sd-webui-controlnet"
+		"controlnet":
+		{
+			"extension":"sd-webui-controlnet",
+			"sd1_models":
+			{
+				"canny":"controlnet11Models_canny",
+				"depth":"controlnet11Models_depth",
+				"normalmap":"control_v11p_sd15_normalbae",
+				"openpose":"controlnet11Models_openpose",
+				"mlsd":"",
+				"lineart":"controlnet11Models_animeline",
+				"softedge":"controlnet11Models_softedge",
+				"scribble":"controlnet11Models_scribble",
+				"segmentation":"controlnet11Models_seg",
+				"shuffle":"",
+				"tile":"controlnet11Models_tileE",
+				"inpaint":"controlnet11Models_inpaint",
+				"instructp2p":"control_v11e_sd15_ip2p",
+				"recolor":"",
+				"ip_adapter":"ip-adapter-plus-face_sd15",
+				"t2i_adapter":""
+			},
+			"sdxl_models":
+			{
+				"canny":""
+			}
+		}
 	},
 	"ui":
 	{

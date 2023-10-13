@@ -4,7 +4,7 @@ class Shortcode():
 		self.description = "Downloads a file using the Civitai API (unless you already have the file in question) and automatically adds it to your prompt."
 		self.extra_nets = None
 
-	def is_network_installed(self, net, paths, exts=[".pt", ".ckpt", ".safetensors"]):
+	def network_path(self, net, paths, exts=[".pt", ".ckpt", ".safetensors"]):
 		"""Based on list_available_networks() from extensions-builtin/Lora/networks.py.
 		It's not clear if there's a better/more standardized means of checking the
 		user's installed extra networks. Please let me know if there is such a thing..."""
@@ -26,13 +26,13 @@ class Shortcode():
 			name = os.path.splitext(os.path.basename(filename))[0]
 			if name == net:
 				self.log.debug(f"Extra network {net} is already installed: {filename}")
-				return True
+				return filename
 		
-		return False
+		return None
 
 	def run_atomic(self, pargs, kwargs, context):
 		import lib_unprompted.helpers as helpers
-		import requests, os
+		import requests, os, json
 		from modules import shared
 
 		net_directories = []
@@ -73,7 +73,7 @@ class Shortcode():
 		# Defaults
 		if "limit" not in kwargs: kwargs["limit"] = 1
 		timeout = kwargs["_timeout"] if "_timeout" in kwargs else 60
-		filename = kwargs["_file"] if "_file" in kwargs else kwargs["query"]
+		filename = kwargs["_file"] if "_file" in kwargs else self.Unpromtped.parse_arg("query","")
 		weight = self.Unprompted.parse_arg("_weight",1.0)
 		activate = self.Unprompted.parse_arg("_activate",True)
 		words = self.Unprompted.parse_arg("_words",False)
@@ -109,12 +109,13 @@ class Shortcode():
 		elif net_type in ["controlnet","cn"]:
 			from modules.paths_internal import extensions_dir
 			kwargs["types"] = "Controlnet"
-			net_directories = [extensions_dir+self.Unprompted.Config.stable_diffusion.controlnet_name+"/models"]
+			net_directories = [extensions_dir+self.Unprompted.Config.stable_diffusion.controlnet.extension+"/models"]
 		elif net_type in ["poses","pose","openpose"]:
 			kwargs["types"] = "Poses"
 			net_directories = [self.Unprompted.base_dir+"/user/poses"]
 
-		if not self.is_network_installed(filename,net_directories):
+		net_path = self.network_path(filename,net_directories)
+		if not net_path:
 			# Remove system arguments from kwargs dict because we don't need to waste anyone's bandwidth
 			for k in list(kwargs.keys()):
 				if k.startswith("_"):
@@ -159,6 +160,13 @@ class Shortcode():
 					except:
 						self.log.exception("An error occurred while downloading the Civitai file.")
 
+					if words:
+						# Replace the extension in file_path with .json:
+						json_path = os.path.splitext(file_path)[0]+".json"
+						# Create and open json_path for writing:
+						with open(json_path, "w") as json_file:
+							json.dump({"activation text":words}, json_file)
+
 				except Exception as e:
 					self.log.exception("Exception caught while decoding JSON")
 					return ""
@@ -166,7 +174,17 @@ class Shortcode():
 				self.log.error(f"Request to Civitai API yielded bad response: {r.status_code}")
 				return ""
 		# We already have the file, check for activation text in json
-		# else:
+		elif words:
+			json_path = os.path.splitext(net_path)[0]+".json"
+			if os.path.exists(json_path):
+				with open(json_path, "r") as json_file:
+					json_obj = json.load(json_file)
+					if "activation text" in json_obj:
+						words = json_obj["activation text"]
+					else:
+						self.log.debug(f"Activation text not found in {json_path}.")
+			else:
+				self.log.debug(f"No JSON found at {json_path}.")
 			
 
 		# Return assembled prompt string
@@ -179,3 +197,6 @@ class Shortcode():
 				return_string += f"({filename}:{weight})"
 
 		return return_string
+	
+	def ui(self, gr):
+		return
