@@ -18,6 +18,9 @@ class Shortcode():
 
 			for key, value in json_obj.items():
 				self.Unprompted.shortcode_user_vars[key] = value
+		
+		if "_var" in kwargs:
+			return_string += str(self.Unprompted.parse_advanced(kwargs["_var"], context))
 
 		for idx, parg in enumerate(pargs):
 			self.Unprompted.is_var_deprecated(parg)
@@ -25,9 +28,7 @@ class Shortcode():
 
 			# self.log.debug(f"Getting {parg}...")
 			
-			if idx == 0:
-				if "_var" in kwargs: parg = self.Unprompted.parse_advanced(kwargs["_var"], context)
-			else: return_string += _sep
+			if idx != 0 or return_string: return_string += _sep
 
 			if ("_before" in kwargs):
 				return_string = f"{kwargs['_before']}{return_string}"

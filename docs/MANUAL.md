@@ -1038,7 +1038,7 @@ A picture of 5 houses.
 
 Returns the value of `variable`.
 
-Supports variable parsing with the optional `_var` argument, e.g. `[get _var="somevar"]`. This is necessary if your variable created with `[set _defer]`. You can also pass an arbitrary expression into the `_var` flag, not necessarily just a variable name.
+Supports variable parsing with the optional `_var` argument, e.g. `[get _var="somevar"]`.
 
 You can add `_before` and `_after` content to your variable. This is particularly useful for enclosing the variable in escaped brackets, e.g. `[get my_var _before=[ _after=]]` will print `[value of my_var]`.
 

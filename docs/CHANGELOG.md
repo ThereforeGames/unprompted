@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.1.1 - 14 October 2023</summary>
+<details open><summary>10.1.2 - 14 October 2023</summary>
+
+### Fixed
+- `[get]`: Fixed the `_var` kwarg
+
+</details>
+
+<details><summary>10.1.1 - 14 October 2023</summary>
 
 ### Fixed
 - Resolved an issue with the negative prompt not updating correctly in some batch processing scenarios as well as for Style presets
