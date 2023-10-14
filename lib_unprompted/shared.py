@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.1.0"
+		self.VERSION = "10.1.1"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
