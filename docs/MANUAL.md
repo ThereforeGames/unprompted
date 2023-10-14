@@ -947,6 +947,8 @@ Returns content if a previous conditional shortcode (e.g. `[if]` or `[chance]`) 
 
 Supports the `id` kwarg. You can assign `_else_id` as a kwarg of the conditional block to associate it with a particular `[else]` block. Match the `id` to the `_else_id`. This means the two blocks don't have to appear next to each other.
 
+Supports the `debug` parg which will print some diagnostic information to the console.
+
 ```
 [if my_var=0]Print something[/if][else]It turns out my_var did not equal 0.[/else]
 ```
@@ -1556,6 +1558,8 @@ Supports the `_id` kwarg to query the API with a specific modelId, eliminating t
 
 If a file has multiple versions, you can specify the `_mvid` kwarg instead of `_id` to select a specific version.
 
+Supports the `_words` parg which will retrieve the trigger words from Civitai and include them in the prompt. This will also write the words into a companion JSON file as `activation text` for future use.
+
 ```
 [civitai lora "HD Helper" 0.5 "hd_helper_v1"]
 ```
@@ -1827,6 +1831,24 @@ Supports the optional `per_instance` positional argument which will render and a
 
 </details>
 
+<details><summary>[interrogate]</summary>
+
+Generates a caption for the given image using one of several techniques.
+
+Supports the `image` kwarg which is the path to the image you wish to interrogate. Defaults to the Stable Diffusion input/output image.
+
+Supports the `method` kwarg which is the interrogation technique to use. Defaults to `CLIP`, which relies on the WebUI's stock methods for completing the task. Other options include `BLIP-2` and `CLIPxGPT`, both of which will download a large checkpoint upon first use.
+
+Supports the `model` kwarg which is the model to use for the interrogation. For BLIP-2, this can be a Hugging Face string, e.g. `Salesforce/blip2-opt-2.7b`.
+
+Supports the `context` kwarg which is a starting prompt to supply to the model. At the moment, this is only compatible BLIP-2. This can help shape its response.
+
+Supports the `question` kwarg which is the question to ask the model. At the moment, this is only compatible with BLIP-2. This overrides `context`.
+
+Supports the `max_tokens` kwarg which is the maximum number of tokens the model can produce for its response. At the moment, this is only compatible with BLIP-2. Defaults to 50.
+
+</details>
+
 <details><summary>[remember]</summary>
 
 Allows you to keep one or more variables in memory for the duration of a batch run (i.e. runs where `batch_count` > 1). This overrides Unprompted's default behavior of completely resetting the `shortcode_user_vars` object after each image.
@@ -1931,6 +1953,22 @@ Supports the optional `stamp_blur` parg which is the pixel radius of the stamp's
 ```
 [txt2mask]head and shoulders[/txt2mask]Walter White
 ```
+
+</details>
+
+<details><summary>[upscale]</summary>
+
+Enhances a given image using one or more of the upscaler methods available in the A1111 WebUI.
+
+Supports the `image` kwarg which is the path to the image you wish to enhance. Defaults to the Stable Diffusion output image.
+
+Supports the `models` kwarg which is a delimited list of upscaler model names to use.
+
+Supports the `scale` kwarg which is the scale factor to use. Defaults to 1.
+
+Supports the `visibility` kwarg which is the alpha value to use when blending the result back into the original image. Defaults to 1.
+
+Supports the `keep_res` parg which will maintain the original resolution of the image.
 
 </details>
 

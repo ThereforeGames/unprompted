@@ -56,3 +56,4 @@ class Shortcode():
 		gr.Dropdown(label="Upscaler Model(s) 🡢 models",choices=[upscaler.name for upscaler in shared.sd_upscalers],multiselect=True)
 		gr.Slider(label="Upscale Factor 🡢 scale", value=1, maximum=16, minimum=1, interactive=True, step=1)
 		gr.Slider(label="Upscale Visibility 🡢 visibility", value=1.0, maximum=1.0, minimum=0.0, interactive=True, step=0.01)
+		gr.Checkbox(label="Keep original resolution 🡢 keep_res", value=False, interactive=True)
