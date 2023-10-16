@@ -4,13 +4,13 @@
 
 <p align="center"><strong>Links:</strong> 📣 <a href="./docs/ANNOUNCEMENTS.md">Announcements</a> | 📘 <a href="./docs/MANUAL.md">Manual</a> | ⏱ <a href="./docs/CHANGELOG.md">Changelog</a> | 🎓 <a href="./docs/GUIDE.md">Starter Guide</a></p>
 
-## Introduction
+## 👋 Introduction
 
 Unprompted is a **powerful templating language** and **Swiss Army knife** for the [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui).
 
 Built around `[shortcodes]`, Unprompted is uniquely designed for **maximum readibility with natural language.** This makes it **easy to learn and use**, even for those with no prior programming experience.
 
-## Features
+## 📦 Features
 
 - [x] Free
 - [x] Includes **70+ shortcodes** out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[choose]` blocks for flexible wildcards, and everything else the prompting enthusiast could possibly want
@@ -24,7 +24,7 @@ Built around `[shortcodes]`, Unprompted is uniquely designed for **maximum readi
 - [x] Comprehensive documentation that is always up-to-date
 - [x] Made by an organic human lifeform
 
-## Installation
+## 🔧 Installation
 
 We provide two methods of installation:
 
@@ -48,7 +48,7 @@ We provide two methods of installation:
 
 With either method, **please be sure to restart your WebUI after installing.** This allows Unprompted to download its Python dependencies.
 
-## Usage
+## 📚 Usage
 
 First, let's verify that your installation was successful by trying out an included template. Add this to your prompt:
 
@@ -62,7 +62,7 @@ The `[call]` shortcode will look in `unprompted/templates` for the specified tex
 
 ![image](https://github.com/ThereforeGames/unprompted/assets/95403634/2549646a-8003-4fc0-9bac-2b1011c93f7c)
 
-## Next Steps
+## 🚀 Next Steps
 
 Now that you have verified Unprompted is installed and running correctly, you have a couple options:
 
@@ -71,7 +71,7 @@ Now that you have verified Unprompted is installed and running correctly, you ha
 
 ---
 
-## Premium Templates
+## 🛒 Premium Templates
 
 While Unprompted is **completely free to use**, we do offer **Premium Template packs** that demonstrate some of the software's more advanced functionality.
 
@@ -110,7 +110,7 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 
 ---
 
-## Acknowledgements
+## 🙏 Acknowledgements
 
 We would like to thank the authors of the following libraries, which are used by Unprompted:
 
@@ -129,7 +129,7 @@ We would like to thank the authors of the following libraries, which are used by
 
 ---
 
-### 🔧 Found a problem? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
+### 🐛 Found a bug? [Open an Issue.](https://github.com/ThereforeGames/unprompted/issues)
 
 ### 💬 For discussion and template sharing, use [the Discussion Board.](https://github.com/ThereforeGames/unprompted/discussions)
 
