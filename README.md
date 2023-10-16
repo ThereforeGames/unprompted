@@ -6,27 +6,23 @@
 
 ## Introduction
 
-**Unprompted is a powerful templating language and Swiss Army knife for the Stable Diffusion WebUI.**
+Unprompted is a **powerful templating language** and **Swiss Army knife** for the [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui).
 
-Unlike most templating languages, Unprompted was designed for **maximum readibility with natural language.** It is built around `[shortcodes]` and inspired by the likes of BBCode.
-
-You can use Unprompted as a standalone library (e.g. `unprompted_dry.py`) or as an extension for [AUTOMATIC1111's Stable Diffusion Web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui). The extension allows you to create expressive, re-usable prompt templates that are both versatile and easy on the eyes.
-
-Additionally, it gives you access to **exclusive Stable Diffusion features** such as txt2mask, txt2img2img, zoom_enhance, and more.
+Built around `[shortcodes]`, Unprompted is uniquely designed for **maximum readibility with natural language.** This makes it **easy to learn and use**, even for those with no prior programming experience.
 
 ## Features
 
-- [x] **Dozens of shortcodes** provided out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[for]` loops and everything else the prompting enthusiast could possibly want
-- [x] Yes, you can use it for wildcards, e.g. `[choose]red|blue|yellow[/choose]` or `[choose][file somefile][/choose]` to pick a line at random
+- [x] Free
+- [x] Includes **70+ shortcodes** out of the box - there are `[if]` conditionals, powerful `[file]` imports, `[choose]` blocks for flexible wildcards, and everything else the prompting enthusiast could possibly want
 - [x] Easily extendable with **custom shortcodes**
-- [x] Simple creation of `.txt` templates that can be organized according to your preferences
-- [x] Supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from a modern language
-- [x] Supports **numerous Stable Diffusion variables** such as `negative_prompt` and `cfg_scale`
-- [x] Supports natural language processing features such as auto-pluralization, finding synonyms, and even verb conjugation
+- [x] Numerous Stable Diffusion features such as `[txt2mask]` and Bodysnatcher that are exclusive to Unprompted
+- [x] Ability to organize your `.txt` templates into **folders and subfolders** according to your own preferences
+- [x] As **a modern language**, Unprompted supports recursion, nested shortcodes, advanced logic operators, custom configs, pretty much all the good stuff one might expect from the 21st century
+- [x] You can programmatically **read and write any Stable Diffusion variable** exposed by the WebUI, such as `negative_prompt` and `cfg_scale`
+- [x] Supports **natural language processing features** such as auto-pluralization, finding synonyms, and even verb conjugation
 - [x] Includes a growing list of examples that demonstrate advanced functionality, such as **customizing the weight of a choice list** and **applying emphasis to a random part of your prompt**
 - [x] Comprehensive documentation that is always up-to-date
-- [x] Free
-- [x] Developed by a human
+- [x] Made by an organic human lifeform
 
 ## Installation
 
@@ -54,30 +50,30 @@ With either method, **please be sure to restart your WebUI after installing.** T
 
 ## Usage
 
-First, try the included demo template by entering the following as your prompt - this will verify that Unprompted was installed correctly:
+First, let's verify that your installation was successful by trying out an included template. Add this to your prompt:
 
-`[file common/examples/human/main]`
+`[call common/examples/human/main]`
 
 This is a simple "person generator" that automatically chooses characteristics like hair color, race, and posture.
 
-The `[file]` shortcode will look in `unprompted/templates` for the specified text file (in this case `unprompted/templates/common/examples/human/main.txt`.) You do not need to enter the file extension.
+The `[call]` shortcode will look in `unprompted/templates` for the specified text file (so in this case `unprompted/templates/common/examples/human/main.txt`.) You do not need to enter the file extension.
 
 **Example output:**
 
-![image](https://user-images.githubusercontent.com/95403634/206287476-eb37cdaa-723d-41f4-bac9-02056e55767a.png)
+![image](https://github.com/ThereforeGames/unprompted/assets/95403634/2549646a-8003-4fc0-9bac-2b1011c93f7c)
 
 ## Next Steps
 
-Once you have verified that Unprompted is installed and running correctly, you have a couple options:
+Now that you have verified Unprompted is installed and running correctly, you have a couple options:
 
-1. You can visit the 🎓 [Starter Guide](./docs/GUIDE.md) for a crash course on creating your own templates
-2. Or dive into the deep end by exploring the comprehensive 📘 [Manual](./docs/MANUAL.md)
+1. Visit the 🎓 [Guides](./docs/GUIDE.md) page and follow our walkthrough on creating your own templates
+2. Explore the comprehensive 📘 [Manual](./docs/MANUAL.md) and figure things out at your own pace
 
 ---
 
 ## Premium Templates
 
-While Unprompted is completely free to use, we do offer **Premium Template add-ons** that demonstrate some of the software's more advanced functionality.
+While Unprompted is **completely free to use**, we do offer **Premium Template packs** that demonstrate some of the software's more advanced functionality.
 
 <img align="left" src="https://i.ibb.co/NYh7ZGS/promo-box-beautiful-soul.png" width=150>
 
@@ -110,7 +106,7 @@ Generate a wide variety of creatures and characters in the style of a fantasy ca
 <br/>
 <br/>
 <br/>
-<sub>**Note:** *For context, I am a solo developer who is not associated with any commercial entities (beyond my own LLC), nor have I received any research grants for this project. Unprompted was funded completely out-of-pocket. Your generosity helps justify the 100s of hours I spent developing this software! ❤️*</sub>
+<sub>**Note:** *For context, I am a solo developer who is not associated with any commercial entities (beyond my own LLC), nor have I received any grants for this project. Unprompted was funded completely out-of-pocket. Your generosity helps justify the 100s of hours I spent developing this software. ❤️*</sub>
 
 ---
 
