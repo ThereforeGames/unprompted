@@ -3,7 +3,21 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.1.2 - 14 October 2023</summary>
+<details open><summary>10.1.3 - 16 October 2023</summary>
+
+### Changed
+- `[interrogate]`: Now caches the image and caption to speed up future calls to the same image
+- Bodysnatcher v1.4.1: Moved the interrogation result to the back of the prompt
+
+### Fixed
+- `[zoom_enhance]`: Fixed an error related to the `bypass_adaptive_hires` parg
+- The Wizard parser no longer escapes quotation marks
+- The Wizard parser will automatically convert brackets into nested alt tags for compatibility with `[call]` arguments
+- The Wizard parser will automatically convert double quotes to single quotes
+
+</details>
+
+<details><summary>10.1.2 - 14 October 2023</summary>
 
 ### Fixed
 - `[get]`: Fixed the `_var` kwarg

@@ -12,16 +12,30 @@ class Shortcode():
 		self.processor = None
 		self.last_method = ""
 		self.last_model_name = ""
+		self.last_caption = ""
+		self.last_image = None
 
 	def run_atomic(self, pargs, kwargs, context):
-		from PIL import Image
+		from PIL import Image, ImageChops
 		import lib_unprompted.helpers as helpers
 		from lib_unprompted.clipxgpt.model.model import Net
 		import torch
 
 		image = self.Unprompted.parse_arg("image",False)
 		if not image: image = self.Unprompted.current_image()
-		if isinstance(image,str): image = Image.open(image)
+		if isinstance(image,str):
+			if image == self.last_image: return self.last_caption
+			image = Image.open(image)
+		
+		image = image.convert("RGB")
+		# Compare images
+		if self.last_image:
+			diff = ImageChops.difference(image, self.last_image)
+			self.last_image = image
+			# Images are the same
+			if not diff.getbbox(): return self.last_caption
+			
+		self.last_image = image
 
 		method = self.Unprompted.parse_arg("method","CLIP")
 		model_name = self.Unprompted.parse_arg("model","")
@@ -106,6 +120,7 @@ class Shortcode():
 		# Cache handling
 		self.last_method = method
 		self.last_model_name = model_name
+		self.last_caption = caption
 		if unload:
 			self.model = None
 			self.processor = None

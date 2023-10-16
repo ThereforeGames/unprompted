@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.1.1"
+		self.VERSION = "10.1.3"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -348,6 +348,38 @@ class Unprompted:
 		string = string.replace(tmp_start, self.Config.syntax.tag_start_alt).replace(tmp_end, self.Config.syntax.tag_end_alt)
 
 		return (parser.parse(string, context))
+	
+	def make_alt_tags(self, string):
+		"""Similar to parse_alt_tags, but in reverse; converts square brackets to nested alt tags."""
+		if string is None or len(string) < 1: return ""
+		
+		# Find maximum nested depth
+		nested = 0
+		while True:
+			start_tag = self.Config.syntax.tag_start_alt * (nested + 1)
+			if start_tag in string:
+				nested += 1
+			else:
+				break
+
+		tmp_start = "%_ts%"
+		tmp_end = "%_te%"
+		for i in range(nested, 0, -1):
+			# Increase nested level by 1
+			start_old = self.Config.syntax.tag_start_alt * i
+			start_new = tmp_start * (i + 1)
+			end_old = self.Config.syntax.tag_end_alt * i
+			end_new = tmp_end * (i + 1)
+
+			string = string.replace(start_old, start_new).replace(end_old, end_new)
+		
+		# Convert primary square bracket tag to alt tag
+		string = string.replace(self.Config.syntax.tag_start, self.Config.syntax.tag_start_alt).replace(self.Config.syntax.tag_end, self.Config.syntax.tag_end_alt)
+
+		# Get rid of the temporary characters
+		string = string.replace(tmp_start, self.Config.syntax.tag_start_alt).replace(tmp_end, self.Config.syntax.tag_end_alt)
+
+		return (string)
 
 	def is_system_arg(self, string):
 		if (string[0] == "_"): return (True)

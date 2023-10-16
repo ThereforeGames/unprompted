@@ -117,7 +117,7 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 					else: this_val = gr_obj.value
 					if (arg_name == "prompt"): continue
 
-					this_val = html.escape(str(helpers.autocast(this_val)))
+					this_val = Unprompted.make_alt_tags(html.escape(str(helpers.autocast(this_val)).replace("\"","\'"),quote = False))
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
 					result += f" {arg_name}={this_val}"
@@ -179,7 +179,7 @@ def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
 					elif (block_name == "number" or block_name == "slider"): result += f" {arg_name}={helpers.autocast(gr_obj.value)}"
 					elif (block_name == "textbox"):
 						if len(this_val) > 0: result += f" {arg_name}=\"{this_val}\""
-					else: result += f" {arg_name}=\"{html.escape(this_val)}\""
+					else: result += f" {arg_name}=\"{html.escape(this_val, quote=False)}\""
 
 		except:
 			pass

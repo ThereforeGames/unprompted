@@ -172,6 +172,7 @@ class Shortcode():
 			self.log.error("Width variable not set - bypassing shortcode")
 			return ""
 
+		target_multiplier = 1
 		if not self.Unprompted.shortcode_var_is_true("bypass_adaptive_hires", pargs, kwargs):
 			total_pixels = image_pil.size[0] * image_pil.size[1]
 

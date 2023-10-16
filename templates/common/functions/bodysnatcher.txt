@@ -1,4 +1,4 @@
-[template name="Bodysnatcher v1.4.0"]
+[template name="Bodysnatcher v1.4.1"]
 ![Preview]([base_dir]/bodysnatcher.png)
 <details open><summary>⚠️ Important info, please read carefully</summary>
 
@@ -77,7 +77,6 @@ Always bodysnatch responsibly.<br>
 
 [set debug _new _label="Debug Mode" _ui="checkbox"]0[/set]
 
-[if interrogate][interrogate][/if]
 [sets neg_mask=""]
 [if "(keep_hands==1 and background_mode==0) or (keep_hands==0 and background_mode==1)"]
 	[sets neg_mask=fingers]
@@ -109,4 +108,4 @@ Always bodysnatch responsibly.<br>
 		[zoom_enhance _alt mask_method="{get mask_method}" color_correct_method="{get color_correct_method}" color_correct_timing="{get color_correct_timing}" color_correct_strength="{get color_correct_strength}" sharpen_amount=0.0 mode="discard" mask="{get class} {get fix_bodypart}" replacement="{get prefix} {get subject} {get fix_bodypart} {get simple_description _before=' '}" cfg_scale_min="{get zoom_enhance_base_cfg}" denoising_max="{get zoom_enhance_denoising_max}" controlnet_preset="{get face_controlnet_preset}" debug="{get debug}" inherit_negative="{get zoom_enhance_inherit_negative}" show_original="{get show_original}" no_sync]
 	[/after]
 [/if]
-[get prefix] [get subject][get simple_description _before=" "]
+[get prefix] [get subject][get simple_description _before=" "][if interrogate]as [interrogate][/if]
