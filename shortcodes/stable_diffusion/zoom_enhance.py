@@ -56,6 +56,8 @@ class Shortcode():
 		upscale_min = float(self.Unprompted.parse_advanced(kwargs["upscale_min"], context)) if "upscale_min" in kwargs else 0.03
 		# (upscale_width + upscale_height) / 1024
 		upscale_min = upscale_min * (512**2)  # Scale the minimum area up depending on the canvas size
+		bypass_adaptive_hires = self.Unprompted.parse_arg("bypass_adaptive_hires",False)
+
 
 		self.log.debug(f"The upscale_min for this image is {upscale_min}")
 
@@ -173,7 +175,7 @@ class Shortcode():
 			return ""
 
 		target_multiplier = 1
-		if not self.Unprompted.shortcode_var_is_true("bypass_adaptive_hires", pargs, kwargs):
+		if not bypass_adaptive_hires:
 			total_pixels = image_pil.size[0] * image_pil.size[1]
 
 			self.log.debug(f"Image size: {image_pil.size[0]}x{image_pil.size[1]} ({total_pixels}px)")
@@ -292,8 +294,7 @@ class Shortcode():
 				# Padding may be constrained by the mask region position
 				padding = min(contour_padding, x, y)
 
-				if "denoising_strength" not in kwargs or "cfg_scale" not in kwargs:
-					# sig = 0 # sigmoid(-6 + target_size * 12) # * -1 # (12 * (target_size / target_size_max) - 6))
+				if not bypass_adaptive_hires:
 					if "denoising_strength" not in kwargs:
 						self.Unprompted.main_p.denoising_strength = (1 - min(1, target_size)) * denoising_max
 						self.log.debug(f"Denoising strength is {self.Unprompted.main_p.denoising_strength}")

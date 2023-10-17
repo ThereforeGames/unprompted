@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.1.3 - 16 October 2023</summary>
+<details open><summary>10.1.4 - 17 October 2023</summary>
+
+### Fixed
+- `[zoom_enhance]`: Additional fixes for the `bypass_adaptive_hires` parg
+
+</details>
+
+<details><summary>10.1.3 - 16 October 2023</summary>
 
 ### Changed
 - `[interrogate]`: Now caches the image and caption to speed up future calls to the same image
