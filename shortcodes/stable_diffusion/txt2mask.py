@@ -632,7 +632,7 @@ class Shortcode():
 			if "mode" not in self.Unprompted.shortcode_user_vars or self.Unprompted.shortcode_user_vars["mode"] >= 4: processed.images.append(self.image_mask)
 			else: processed.images.append(self.Unprompted.shortcode_user_vars["colorized_mask"])
 
-			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(self.Unprompted.shortcode_user_vars["init_images"][0]), pil_to_tensor(self.image_mask.convert("L")) > 0)
+			overlayed_init_img = draw_segmentation_masks(pil_to_tensor(self.Unprompted.shortcode_user_vars["init_images"][0].convert("RGB")), pil_to_tensor(self.image_mask.convert("L")) > 0)
 			processed.images.append(to_pil_image(overlayed_init_img))
 			self.image_mask = None
 			self.show = False

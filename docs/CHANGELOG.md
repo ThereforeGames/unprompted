@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.1.4 - 17 October 2023</summary>
+<details open><summary>10.1.5 - 18 October 2023</summary>
+
+### Fixed
+- Wizard UI: Fixed an issue related to block shortcode content
+- `[txt2mask]`: Fixed a crash that could occur with the `show` parg
+- `[color_correct]`: Fixed missing Wizard UI
+
+</details>
+
+<details><summary>10.1.4 - 17 October 2023</summary>
 
 ### Fixed
 - `[zoom_enhance]`: Additional fixes for the `bypass_adaptive_hires` parg

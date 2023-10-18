@@ -2,8 +2,8 @@ class Shortcode():
 	def __init__(self, Unprompted):
 		self.Unprompted = Unprompted
 		self.description = "Applies color correction to a resulting image."
-		self.wizard_prepend = Unprompted.Config.syntax.tag_start + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start_alt + "color_correct"
-		self.wizard_append = Unprompted.Config.syntax.tag_end_alt + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end
+		self.wizard_prepend = Unprompted.Config.syntax.tag_start + "after" + Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + "color_correct"
+		self.wizard_append = Unprompted.Config.syntax.tag_end + Unprompted.Config.syntax.tag_start + Unprompted.Config.syntax.tag_close + "after" + Unprompted.Config.syntax.tag_end
 
 	def run_atomic(self, pargs, kwargs, context):
 		from PIL import Image
@@ -102,3 +102,8 @@ class Shortcode():
 		self.Unprompted.after_processed.images[batch_real_index].paste(orig_image, (0, 0), mask)
 
 		# self.Unprompted.after_processed.images[0] = fixed_image
+	
+	def ui(self, gr):
+		gr.Dropdown(label="Method 🡢 method", choices=["hm", "mvgd", "mkl", "hm-mvgd-hm", "hm-mkl-hms"], value="mkl", interactive=True)
+		gr.Checkbox(label="Blend luminosity? 🡢 blend_lum",value=False)
+		gr.Checkbox(label="Debug mode 🡢 debug",value=False)

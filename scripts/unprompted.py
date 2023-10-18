@@ -151,10 +151,10 @@ def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
 
 				if block_is_container(block_name):
 					results = parse_children(gr_obj, result)
-					block_content = results[0]
+					block_content += results[0]
 					result = results[1]
 				elif gr_obj.label == "Content":
-					block_content = gr_obj.value
+					block_content += gr_obj.value
 				else:
 					if block_name == "label" or block_name == "markdown" or gr_obj.value is None or gr_obj.value == "": continue  # Skip empty fields
 
