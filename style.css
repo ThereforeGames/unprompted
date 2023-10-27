@@ -48,6 +48,44 @@ details[open]
 	display: block;
 }
 
+#promo .thumbnail
+{
+	float: left;
+	width: 150px;
+	margin-bottom: 10px;
+}
+
+#promo h1
+{
+	font-size: 20px;
+	letter-spacing: 0.015em;
+	margin-top: 10px;
+}
+
+#promo p
+{
+	margin: 1em 0;
+}
+
+#promo .gr-button
+{
+	transition: 0.1s;
+	display: inline-block;
+	padding: 0.25em 0.75em;
+	font-weight: bold;
+	color: var(--background-fill-primary);
+	border-radius: 0.5em;
+	text-align: center;
+	vertical-align: middle;
+	background-color: var(--body-text-color);
+}
+
+#promo .gr-button:hover
+{
+	background-color: var(--checkbox-background-color-selected);
+	color: var(--body-text-color);
+}
+
 .gradio-group div .wizard-autoinclude
 {
 	margin-top: 20px;
@@ -65,9 +103,24 @@ details[open]
 	top: -10px;
 }
 
-.wizard-autoinclude span
+.wizard-autoinclude input[type="checkbox"]:checked+span
 {
+	color: var(--checkbox-background-color-selected);
 	font-weight: 1000;
+}
+
+.unprompted-badge
+{
+	display: inline-block;
+	padding: 0.25em 0.75em;
+	font-size: 0.75em;
+	font-weight: bold;
+	color: white;
+	border-radius: 0.5em;
+	text-align: center;
+	vertical-align: middle;
+	margin-left: var(--size-2);
+	background-color: var(--checkbox-background-color-selected);
 }
 
 .patreon-symbol

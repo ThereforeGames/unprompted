@@ -252,3 +252,124 @@ Add an entry called `templates` as shown below:
 The asterisk wildcard represents any prompt. Restart the WebUI and you're all set!
 
 </details>
+
+<details><summary>Using Metatags with Your [choose] Blocks</summary>
+
+In this guide, we will utilize the `[tags]` and `[filter_tags]` shortcodes to create a more dynamic `[choose]` block.
+
+Let's say we want to generate a random animal. We can use the following prompt:
+
+```
+[choose]
+	dog
+	cat
+	lion
+	tiger
+	wolf
+	lizard
+	turtle
+	crocodile
+	newt
+	salamander
+	frog
+[/choose]
+```
+
+But what if we want to generate a random animal that is also a reptile? We could create a separate `[choose]` block for reptiles, but that would be time-consuming and redundant. Instead, we can use the `[tags]` shortcode to filter our options.
+
+We can sort our animals into three categories: `mammal`, `reptile`, and `amphibian`. Here's how we can do this:
+
+```
+[choose]
+	[tags mammal]
+		dog
+		cat
+		lion
+		tiger
+		wolf
+	[/tags]
+	[tags reptile]
+		lizard
+		turtle
+		crocodile
+	[/tags]
+	[tags amphibian]
+		newt
+		salamander
+		frog
+	[/tags]
+[/choose]
+```
+
+Now we can simply write `[filter_tags reptile]` before our `[choose]` block to select a random reptile.
+
+Note that the `[tags]` shortcode is not limited to use with `[choose]` blocks. You can use it anywhere in your template to create grouped content that can be filtered by `[filter_tags]`.
+
+We can also write multiple tags in a single `[tags]` block. Both reptiles and amphibians are known for laying eggs, so we can add a `lays_eggs` tag to both of those categories and use it as our filter criteria:
+
+```
+[filter_tags lays_eggs]
+[choose]
+	[tags mammal]
+		dog
+		cat
+		lion
+		tiger
+		wolf
+	[/tags]
+	[tags reptile lays_eggs]
+		lizard
+		turtle
+		crocodile
+	[/tags]
+	[tags amphibian lays_eggs]
+		newt
+		salamander
+		frog
+	[/tags]
+[/choose]
+```
+
+Now it will only select animals that lay eggs - either a reptile or an amphibian.
+
+For our final example, let's say we want to generate a mammal that is **not** a feline. To achieve this, we will first create `feline` and `canine` genus tags within the mammal category (yes, we can use nested `[tags]`!):
+
+```
+[choose]
+	[tags mammal]
+		[tags genus="feline"]
+			cat
+			lion
+			tiger
+		[/tags]
+		[tags genus="canine"]
+			dog
+			wolf
+		[/tags]
+	[/tags]
+	[tags reptile lays_eggs]
+		lizard
+		turtle
+		crocodile
+	[/tags]
+	[tags amphibian lays_eggs]
+		newt
+		salamander
+		frog
+	[/tags]
+[/choose]
+```
+
+Then we update our filter to exclude the `feline` genus using the `!` operator:
+
+```
+[filter_tags mammal genus="!feline"]
+```
+
+With this setup, we will only get `dog` or `wolf` as a result.
+
+As you can see, `[tags]` and `[filter_tags]` are very flexible - you can use them to create complex, multi-layered prompts that are easy to maintain.
+
+For more information on these shortcodes, please consult the [Unprompted Manual](MANUAL.md).
+
+</details>

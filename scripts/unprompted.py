@@ -15,7 +15,7 @@ import lib_unprompted.shortcodes as shortcodes
 import lib_unprompted.helpers as helpers
 from pathlib import Path
 from enum import IntEnum, auto
-import sys, os, html
+import sys, os, html, random
 
 base_dir = scripts.basedir()
 
@@ -288,8 +288,6 @@ class Scripts(scripts.Script):
 	shortcodes_region = [None] * 2
 	shortcodes_dropdown = [None] * 2
 
-	# templates_dropdown = [None] * 2
-
 	def title(self):
 		return "Unprompted"
 
@@ -297,8 +295,9 @@ class Scripts(scripts.Script):
 		return scripts.AlwaysVisible
 
 	def ui(self, is_img2img):
+		mode_string = "img2img" if is_img2img else "txt2img"
 		with gr.Group():
-			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open):
+			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open, elem_classes=["unprompted-accordion",mode_string]):
 				with gr.Row(equal_height=True):
 					is_enabled = gr.Checkbox(label="Enabled", value=gradio_enabled_checkbox_workaround)
 
@@ -308,11 +307,18 @@ class Scripts(scripts.Script):
 				unprompted_seed = gr.Number(label="Unprompted Seed", value=-1)
 				setattr(unprompted_seed, "do_not_save_to_config", True)
 
-				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/beautiful_soul_v0.0.1/main{Unprompted.Config.formats.txt}")): is_open = False
+				if (os.path.exists(f"{base_dir}/{Unprompted.Config.template_directory}/pro/beautiful_soul_v0.1.0/main{Unprompted.Config.formats.txt}")): is_open = False
 				else: is_open = True
 
+				promos = []
+				promos.append(f'<a href="https://payhip.com/b/L1uNF" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_beautiful_soul.png" class="thumbnail"></a><h1><strong>Beautiful Soul</strong>: Bring your characters to life.</h1><p>A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. <strong>Available at half price until November 11th!</strong></p><a href="https://payhip.com/b/L1uNF" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
+				promos.append(f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_demoncrawl_avatar_generator.png" class="thumbnail"></a><h1>The <strong>DemonCrawl</strong> Pixel Art Avatar Generator</h1><p>Create pixel art portraits in the style of the popular roguelite, <a href="https://demoncrawl.com" _target=blank>DemonCrawl</a>. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
+				promos.append(f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_fantasy.png" class="thumbnail"></a><h1>Create beautiful art for your <strong>Fantasy Card Game</strong></h1><p>Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
+				promos.append(f'<a href="https://github.com/ThereforeGames/unprompted" target="_blank"><img src="{get_local_file_dir()}/images/promo_github_star.png" class="thumbnail"></a><h1>Give Unprompted a <strong>star</strong> for visibility</h1><p>Most WebUI users have never heard of Unprompted. You can help more people discover it by giving the repo a ⭐ on Github. Thank you for your support!</p><a href="https://github.com/ThereforeGames/unprompted" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the Unprompted repo">Visit Github ➜</button></a>')
+				promos.append(f'<a href="https://github.com/sponsors/ThereforeGames" target="_blank"><img src="{get_local_file_dir()}/images/promo_github_sponsor.png" class="thumbnail"></a><h1>Become a Sponsor</h1><p>One of the best ways to support Unprompted is by becoming our Sponsor on Github - sponsors receive access to a private repo containing all of our premium add-ons. <em>(Still setting that up... should be ready soon!)</em></p><a href="https://github.com/sponsors/ThereforeGames" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the Unprompted repo">Visit Github ➜</button></a>')
+
 				with gr.Accordion("🎉 Promo", open=is_open):
-					plug = gr.HTML(label="plug", elem_id="promo", value=f'<a href="https://payhip.com/b/L1uNF" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_beautiful_soul.png" style="float: left;width: 150px;margin-bottom:10px;"></a><h1 style="font-size: 20px;letter-spacing:0.015em;margin-top:10px;"><strong>Beautiful Soul</strong>: Bring your characters to life.</h1><p style="margin:1em 0;">A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. <strong>Available at half price until November 11th!</strong></p><a href="https://payhip.com/b/L1uNF" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
+					plug = gr.HTML(label="plug", elem_id="promo", value=random.choice(promos))
 
 				with gr.Accordion("🧙 Wizard", open=Unprompted.Config.ui.wizard_open):
 					if Unprompted.Config.ui.wizard_enabled:
@@ -399,6 +405,7 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "wizard", f"{Unprompted.Config.syntax.tag_close}wizard", preprocess)
 
 						with gr.Tabs():
+							
 							self.filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
 							self.filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
 
@@ -413,7 +420,7 @@ class Scripts(scripts.Script):
 										# Render the text file's UI with special parser object
 										wizard_shortcode_parser.parse(file.read())
 										# Auto-include is always the last element
-										gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
+										gr.Checkbox(label=f"🪄 Auto-include {self.dropdown_item_name} in prompt", value=False, elem_classes=["wizard-autoinclude",mode_string])
 										# Add event listeners
 										wizard_prep_event_listeners(self.filtered_templates[filename])
 
@@ -456,7 +463,7 @@ class Scripts(scripts.Script):
 												# Run the shortcode's UI template to populate
 												Unprompted.shortcode_objects[key].ui(gr)
 												# Auto-include is always the last element
-												gr.Checkbox(label="🪄 Auto-include this in prompt", value=False, elem_classes=["wizard-autoinclude"])
+												gr.Checkbox(label=f"🪄 Auto-include [{key}] in prompt", value=False, elem_classes=["wizard-autoinclude",mode_string])
 												# Add event listeners
 												wizard_prep_event_listeners(self.filtered_shortcodes[key])
 
@@ -503,7 +510,7 @@ class Scripts(scripts.Script):
 								self.shortcodes_region[int(is_img2img)] = gr.Blocks()
 								wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)], True)
 
-								wizard_shortcode_btn = gr.Button(value="Generate Shortcode")
+								wizard_shortcode_btn = gr.Button(value="🧠 Generate Shortcode")
 
 							with gr.Tab("Capture"):
 								gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and `[call]` it later, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
@@ -817,6 +824,13 @@ class Scripts(scripts.Script):
 			p.all_prompts[batch_real_index] = prompt_result
 			p.all_negative_prompts[batch_real_index] = negative_prompt_result
 
+			if Unprompted.fix_hires_prompts:
+				Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
+				p.hr_prompt = prompt_result
+				p.hr_negative_prompt = negative_prompt_result
+				p.all_hr_prompts = p.all_prompts
+				p.all_negative_prompts = p.all_negative_prompts
+
 			if (batch_count_index > 0):
 				try:
 					Unprompted.log.debug("Attempting to re-parse and re-activate extra networks...")
@@ -832,17 +846,6 @@ class Scripts(scripts.Script):
 				if unprompted_seed != -1:
 					import random
 					random.seed()
-
-				if Unprompted.fix_hires_prompts:
-					Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
-					p.hr_prompt = Unprompted.shortcode_user_vars["prompt"]
-					p.hr_negative_prompt = Unprompted.shortcode_user_vars["negative_prompt"]
-					p.all_hr_prompts = p.all_prompts
-					p.all_hr_negative_prompts = p.all_negative_prompts
-					# SDXL is using hr_prompts instead of hr_all_prompts
-					# TODO: Check if all_hr_prompts is used anywhere else anymore
-					p.hr_prompts = p.all_prompts
-					p.hr_negative_prompts = p.all_negative_prompts
 			else:
 				Unprompted.log.debug("Proceeding to next batch_count batch")
 				# Increment batch index

@@ -3,7 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.1.5 - 18 October 2023</summary>
+<details open><summary>10.2.0 - 27 October 2023</summary>
+
+### Added
+- New shortcode `[tags]`: Assigns arbitrary metatags that can be used in conjunction with a filter for bypassing the content
+- New shortcode `[filter_tags]`: Bypasses the content of `[tags]` blocks that do not match the given filter
+- New shortcode `[logs]`: Atomic version of `[log]` that allows you print multiple messages at once
+- Blue badge with the number of active Wizard scripts, similar to ControlNet
+- New setting `Config.syntax.not_operator`: Allows you to change the character used for the "not" operator, defaults to `!` (currently only used for tags)
+- New guide: "Using Metatags with Your `[choose]` Blocks"
+
+### Changed
+- Wizard "auto-include" string now contains name of the current script or shortcode
+- Shuffle the Unprompted promo on UI load
+- Minor CSS improvements
+
+### Fixed
+- `[override]`: Fixed a syntax error
+- Fixed an error related to setting `batch_count` > 1 with hires fix enabled
+
+</details>
+
+<details><summary>10.1.5 - 18 October 2023</summary>
 
 ### Fixed
 - Wizard UI: Fixed an issue related to block shortcode content

@@ -49,7 +49,8 @@
 		"tag_close":"/",
 		"tag_escape":"`",
 		"delimiter":"|",
-		"wizard_delimiter":"🡢"
+		"wizard_delimiter":"🡢",
+		"not_operator":"!"
 	},
 	"templates":
 	{

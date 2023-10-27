@@ -5,7 +5,7 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context,content):
 		# self.shortcode_overrides.update(kwargs)
-		self.Unprompted.shortcode_objects["overrides"][pargs[0]] = content
+		self.Unprompted.shortcode_objects["overrides"].shortcode_overrides[pargs[0]] = self.Unprompted.parse_advanced(content,context)
 		return("")
 
 	def ui(self,gr):

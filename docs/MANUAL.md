@@ -987,6 +987,41 @@ Supports the macro `%BASE_DIR%` which will be substituted with an absolute path 
 
 </details>
 
+<details><summary>[filter_tags]</summary>
+
+Prepare a list of tags which will be evaluated against subsequent `[tags]` blocks. The content of `[tags]` is bypassed if it does not match your filters.
+
+Supports the `_extend` parg to add to the existing list of filters instead of replacing it.
+
+Supports the `_clear` parg to clear all filter rules after the first matching `[tags]` block.
+
+Supports the `_once` parg to remove an individual tag from the filter after the first match.
+
+Supports the `_must_match` kwarg that determines the behavior of the filter when using multiple tags:
+
+- `any` (default): The `[tags]` block must contain at least one matching parg or kwarg.
+- `all`: The `[tags]` block must contain all matching pargs and kwargs.
+- `selective`: The `[tags]` block must contain the same pargs. It does **not** have to contain the same kwargs, but if it does, the kwarg values must match.
+
+Supports `Config.syntax.not_operator` to exclude tags from the filter. For example, if you want to exclude all blocks with the "outdoors" tag, you can do it like this: `[filter_tags !outdoors]`.
+
+For kwarg tags, the not operator can be used with keys or values as shown:
+
+- `[filter_tags !location="indoors"]` will exclude all blocks that contain a kwarg with the `location` key
+- `[filter_tags location="!indoors"]` will exclude all blocks that contain a `location` kwarg with a value of `indoors`
+
+Supports the `_debug` parg to print some diagnostic information to the console.
+
+You can clear the filter at any time by calling `[filter_tags]` without any arguments.
+
+```
+[filter_tags location="outdoors"]
+[tags location="indoors"]This will not print[/tags]
+[tags location="outdoors"]This will print[/tags]
+```
+
+</details>
+
 <details><summary>[for var "test var" "update var"]</summary>
 
 Returns the content an arbitrary number of times until the `test` condition returns false.
@@ -1192,6 +1227,20 @@ By default, the message context is `DEBUG`. The first positional argument determ
 
 ```
 [log ERROR]The value of [get some_variable] is wrong![/log]
+```
+
+</details>
+
+<details><summary>[logs]</summary>
+
+Prints one or more messages to the console. This is the atomic version of `[log]`.
+
+By default, the message context is `INFO`. You can change this with the optional `_level` argument.
+
+Each parg is a message to be printed. You should enclose your message in quotes if it contains spaces.
+
+```
+[logs "This is a message" "This is another message" _level="INFO"]
 ```
 
 </details>
@@ -1473,6 +1522,18 @@ The optional `enable_wordnet` keyword argument determines whether WordNet will b
 
 ```
 [synonyms]amazing[/synonyms]
+```
+
+</details>
+
+<details><summary>[tags]</summary>
+
+Assigns arbitrary tags to the content. Supports both parg and kwarg-style tags.
+
+On its own, this shortcode merely returns the content, but it can be used in conjunction with `[filter_tags]` to bypass the content if the tags don't match your filter rules. See `[filter_tags]` for more information.
+
+```
+[tags "tag_one" tag_two="value_two"]A photo of a dog.[/tags]
 ```
 
 </details>

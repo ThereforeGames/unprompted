@@ -75,7 +75,7 @@ class Shortcode():
 					del parts[part_index]  # Prevent the same choice from being made again
 					final_string += _sep
 		except Exception as e:
-			self.log.exception("Exception while parsing the list of choices")
+			self.log.exception(f"Exception while parsing the list of choices. The partially assembled final string was: {final_string}")
 			pass
 
 		# Reset to original value
