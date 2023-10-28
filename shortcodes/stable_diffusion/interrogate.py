@@ -21,7 +21,7 @@ class Shortcode():
 		from lib_unprompted.clipxgpt.model.model import Net
 		import torch
 
-		image = self.Unprompted.parse_arg("image",False)
+		image = self.Unprompted.parse_arg("image","")
 		if not image: image = self.Unprompted.current_image()
 		if isinstance(image,str):
 			if image == self.last_image: return self.last_caption

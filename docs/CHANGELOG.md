@@ -3,7 +3,18 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.2.0 - 27 October 2023</summary>
+<details open><summary>10.2.1 - 28 October 2023</summary>
+
+### Added
+- New ControlNet preset `vivarium_v1`: Uses the `instruct_p2p` model and opinionated inference settings for a quick and fairly accurate bodyswap
+- Bodysnatcher v1.4.2: Added option to disable `[txt2mask]` feature
+
+### Fixed
+- Fixed an issue related to the hires prompt not updating correctly for the first image in a batch
+
+</details>
+
+<details><summary>10.2.0 - 27 October 2023</summary>
 
 ### Added
 - New shortcode `[tags]`: Assigns arbitrary metatags that can be used in conjunction with a filter for bypassing the content

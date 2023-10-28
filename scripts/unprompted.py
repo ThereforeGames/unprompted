@@ -711,13 +711,14 @@ class Scripts(scripts.Script):
 			if unprompted_seed != -1: random.seed()
 		# In standard mode, it is essential to evaluate the prompt here at least once to set up our Extra Networks correctly.
 		else:
+			# TODO: Think about ways of reducing code duplication between this and process_batch()
+
 			Unprompted.update_user_vars(p)
 
 			batch_size_index = 0
 			while batch_size_index < p.batch_size:
 				neg_now = Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt
 				prompt_result = Unprompted.start(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-				# negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 				negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars and Unprompted.shortcode_user_vars["negative_prompt"] != neg_now else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
 
 				Unprompted.shortcode_user_vars["prompt"] = prompt_result
@@ -753,6 +754,14 @@ class Scripts(scripts.Script):
 				batch_size_index += 1
 				Unprompted.shortcode_user_vars["batch_size_index"] += 1
 				Unprompted.shortcode_user_vars["batch_real_index"] += 1
+
+				
+				if Unprompted.fix_hires_prompts:
+					Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
+					p.hr_prompt = prompt_result
+					p.hr_negative_prompt = negative_prompt_result
+					p.all_hr_prompts = p.all_prompts
+					p.all_negative_prompts = p.all_negative_prompts
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
 		if (is_enabled and Unprompted.is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):

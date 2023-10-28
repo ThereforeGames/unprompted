@@ -1,4 +1,4 @@
-[template name="Bodysnatcher v1.4.1"]
+[template name="Bodysnatcher v1.4.2"]
 ![Preview]([base_dir]/bodysnatcher.png)
 <details open><summary>⚠️ Important info, please read carefully</summary>
 
@@ -12,8 +12,9 @@ To achieve compatibility between Unprompted and ControlNet, you must manually re
 
 Here are some guidelines for achieveing the best results with this template:
 
-- Use either the `subtle` or `general` inference preset. The former provides the best image quality while the latter provides improved subject likeness.
+- The new `vivarium_v1` ControlNet body preset enforces its own inference settings, thus many of the tips below do not apply when using this preset!
 - Use either `magic_mirror` or `fidelity` ControlNet body preset.
+- Use either the `subtle` or `general` inference preset. The former provides the best image quality while the latter provides improved subject likeness.
 - Use an inpainting model with strong knowledge of human anatomy, such as EpicPhotoGasm or AbsoluteReality.
 - Use the WebUI's Refiner to switch to a non-inpainting model at ~0.8 steps. This will add extra detail to your final image.
 - If you have a strong computer, set your inpaint area to `Only masked` mode and increase the resolution by as much as your GPU and checkpoint can handle. On my 3090, I get great results with 768x768.
@@ -26,6 +27,7 @@ Here are some guidelines for achieveing the best results with this template:
 
 Each of the included ControlNet presets was designed with a specific purpose in mind. 
 
+- (NEW!) `vivarium` (1 unit): This is an experimental preset that utilizes the `instructp2p` model, opinionated inference settings, and some files from Civitai for fast, accurate bodyswaps. It is the only preset that does not necessarily benefit from using an inpainting model or `[txt2mask]`.
 - `fidelity` (4 units): Strives to produce the most accurate swap results without making any concessions. As such, it is also the most resource-intensive and slow.
 - `magic_mirror` (3 units): Strikes a good balance between accuracy and speed. If we auto-enabled the CN features, this would be the default preset.
 - `quickshot` (1 unit): Produces a decent swap with only a single unit, although it's not as accurate as the other presets.
@@ -47,7 +49,7 @@ Always bodysnatch responsibly.<br>
 [/wizard]
 
 [wizard accordion _label="🎭 Mask Settings"]
-	[set mask_method _new _label="Masking method" _ui="radio" _choices="clipseg|clip_surgery|fastsam"]clipseg[/set]
+	[set mask_method _new _label="Masking method" _ui="radio" _choices="clipseg|clip_surgery|fastsam|none"]clipseg[/set]
 	[set manual_mask_mode _new _label="Manual masking mode" _ui="radio" _choices="add|subtract|discard"]subtract[/set]
 	[set mask_precision _new _label="Mask precision"]75[/set]
 	[set stamp _new _label="Stamp" _info="Paste a temporary image on the init image for the purpose of masking (check unprompted/images/stamps for default stamps)"][/set]
@@ -86,6 +88,10 @@ Always bodysnatch responsibly.<br>
 	[set neg_mask _append]feet[/set]
 [/if]
 
+[if inpaint_full_res=0]
+	[img2img_autosize]
+[/if]
+
 [if "inference_preset != 'none'"]
 	[call "common/presets/img2img/{get inference_preset}"]
 [/if]
@@ -94,11 +100,11 @@ Always bodysnatch responsibly.<br>
 	[call "common/presets/controlnet/{get body_controlnet_preset}"]
 [/if]
 
-[if inpaint_full_res=0]
-	[img2img_autosize]
-[/if]
 [if batch_index=0]
-	[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=5 padding=10 mask_blur=20][get class][/txt2mask]
+	[if "mask_method != 'none'"]
+		[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=5 padding=10 mask_blur=20][get class][/txt2mask]
+	[/if]
+	[else][sets mask_mode=1][/else]
 	[if background_mode=1]
 		[invert_mask]
 	[/if]
