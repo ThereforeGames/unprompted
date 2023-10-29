@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.2.1 - 28 October 2023</summary>
+<details open><summary>10.2.2 - 29 October 2023</summary>
+
+### Fixed
+- Additional fixes for hires variables not syncing properly with batch process
+
+</details>
+
+<details><summary>10.2.1 - 28 October 2023</summary>
 
 ### Added
 - New ControlNet preset `vivarium_v1`: Uses the `instruct_p2p` model and opinionated inference settings for a quick and fairly accurate bodyswap

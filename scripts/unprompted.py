@@ -762,6 +762,8 @@ class Scripts(scripts.Script):
 					p.hr_negative_prompt = negative_prompt_result
 					p.all_hr_prompts = p.all_prompts
 					p.all_negative_prompts = p.all_negative_prompts
+					p.hr_prompts = p.prompts
+					p.hr_negative_prompts = p.negative_prompts
 
 	def process_batch(self, p, is_enabled=True, unprompted_seed=-1, match_main_seed=True, *args, **kwargs):
 		if (is_enabled and Unprompted.is_enabled and Unprompted.Config.stable_diffusion.batch_count_method == "standard"):
@@ -839,6 +841,8 @@ class Scripts(scripts.Script):
 				p.hr_negative_prompt = negative_prompt_result
 				p.all_hr_prompts = p.all_prompts
 				p.all_negative_prompts = p.all_negative_prompts
+				p.hr_prompts = p.prompts
+				p.hr_negative_prompts = p.negative_prompts
 
 			if (batch_count_index > 0):
 				try:
