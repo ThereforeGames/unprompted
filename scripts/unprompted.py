@@ -719,7 +719,7 @@ class Scripts(scripts.Script):
 			while batch_size_index < p.batch_size:
 				neg_now = Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else Unprompted.original_negative_prompt
 				prompt_result = Unprompted.start(apply_prompt_template(Unprompted.original_prompt, Unprompted.Config.templates.default))
-				negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars and Unprompted.shortcode_user_vars["negative_prompt"] != neg_now else Unprompted.original_negative_prompt, Unprompted.Config.templates.default_negative))
+				negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars and Unprompted.shortcode_user_vars["negative_prompt"] != neg_now else neg_now, Unprompted.Config.templates.default_negative))
 
 				Unprompted.shortcode_user_vars["prompt"] = prompt_result
 				Unprompted.shortcode_user_vars["negative_prompt"] = negative_prompt_result
@@ -802,7 +802,7 @@ class Scripts(scripts.Script):
 					# Main string process
 					neg_now = Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars else p.unprompted_original_negative_prompt
 					prompt_result = Unprompted.start(apply_prompt_template(p.unprompted_original_prompt, Unprompted.Config.templates.default))
-					negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars and Unprompted.shortcode_user_vars["negative_prompt"] != neg_now else p.unprompted_original_negative_prompt, Unprompted.Config.templates.default_negative))
+					negative_prompt_result = Unprompted.start(apply_prompt_template(Unprompted.shortcode_user_vars["negative_prompt"] if "negative_prompt" in Unprompted.shortcode_user_vars and Unprompted.shortcode_user_vars["negative_prompt"] != neg_now else neg_now, Unprompted.Config.templates.default_negative))
 				# On the first image, we have already evaluted the prompt in the process() function
 				else:
 					Unprompted.log.debug("Inheriting prompt vars for batch_count_index 0 from process() routine")

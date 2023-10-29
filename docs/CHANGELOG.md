@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.2.2 - 29 October 2023</summary>
+<details open><summary>10.2.3 - 29 October 2023</summary>
+
+### Fixed
+- Fixed a batch processing issue that could cause the negative prompt to repeat itself
+
+</details>
+
+<details><summary>10.2.2 - 29 October 2023</summary>
 
 ### Fixed
 - Additional fixes for hires variables not syncing properly with batch process
