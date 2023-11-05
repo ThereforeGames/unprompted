@@ -50,7 +50,8 @@
 		"tag_escape":"`",
 		"delimiter":"|",
 		"wizard_delimiter":"🡢",
-		"not_operator":"!"
+		"not_operator":"!",
+		"cleanup_extra_spaces":true
 	},
 	"templates":
 	{
@@ -82,7 +83,7 @@
 				"inpaint":"controlnet11Models_inpaint",
 				"instructp2p":"control_v11e_sd15_ip2p",
 				"recolor":"",
-				"ip_adapter":"ip-adapter-plus-face_sd15",
+				"ip_adapter":"ip-adapter_sd15_plus",
 				"t2i_adapter":""
 			},
 			"sdxl_models":

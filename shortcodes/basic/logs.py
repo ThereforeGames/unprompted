@@ -4,7 +4,7 @@ class Shortcode():
 		self.description = "Prints one or more messages to the console."
 
 	def run_atomic(self, pargs, kwargs, context):
-		_level = self.Unprompted.parse_arg("_level","info")
+		_level = self.Unprompted.parse_arg("_level",self.Unprompted.Config.logging.level.lower())
 		log_func = getattr(self.log,_level.lower())
 		for parg in pargs:
 			log_func(self.Unprompted.parse_advanced(parg,context))

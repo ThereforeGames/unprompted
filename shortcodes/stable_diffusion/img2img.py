@@ -28,13 +28,6 @@ class Shortcode():
 		if "init_mask" in self.Unprompted.shortcode_user_vars: init_mask = self.Unprompted.shortcode_user_vars["init_mask"]
 		elif "init_mask_inpaint" in self.Unprompted.shortcode_user_vars: init_mask = self.Unprompted.shortcode_user_vars["init_mask_inpaint"]
 
-		# TODO: There might be a function to retrieve sampler index from its name, if so use that instead
-		sampler_index = 0
-		for i in range(len(sd_samplers.samplers_for_img2img)):
-			if sd_samplers.samplers_for_img2img[i].name == self.Unprompted.shortcode_user_vars["sampler_name"]:
-				sampler_index = i
-				break
-
 		if "img2img_init_image" in self.Unprompted.shortcode_user_vars:
 			init_imgs = [self.Unprompted.shortcode_user_vars["img2img_init_image"]]
 		else:

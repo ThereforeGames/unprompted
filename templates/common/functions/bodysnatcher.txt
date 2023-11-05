@@ -1,4 +1,4 @@
-[template name="Bodysnatcher v1.4.2"]
+[template name="Bodysnatcher v1.4.3"]
 ![Preview]([base_dir]/bodysnatcher.png)
 <details open><summary>⚠️ Important info, please read carefully</summary>
 
@@ -104,7 +104,12 @@ Always bodysnatch responsibly.<br>
 	[if "mask_method != 'none'"]
 		[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=5 padding=10 mask_blur=20][get class][/txt2mask]
 	[/if]
-	[else][sets mask_mode=1][/else]
+	[else]
+		[sets inpainting_mask_invert=1]
+		[if "keep_hands==1 or keep_feet==1"]
+			[txt2mask precision="{get mask_precision}" mode="add" padding=5 mask_blur=20][get neg_mask][/txt2mask]
+		[/if]
+	[/else]
 	[if background_mode=1]
 		[invert_mask]
 	[/if]
@@ -114,4 +119,4 @@ Always bodysnatch responsibly.<br>
 		[zoom_enhance _alt mask_method="{get mask_method}" color_correct_method="{get color_correct_method}" color_correct_timing="{get color_correct_timing}" color_correct_strength="{get color_correct_strength}" sharpen_amount=0.0 mode="discard" mask="{get class} {get fix_bodypart}" replacement="{get prefix} {get subject} {get fix_bodypart} {get simple_description _before=' '}" cfg_scale_min="{get zoom_enhance_base_cfg}" denoising_max="{get zoom_enhance_denoising_max}" controlnet_preset="{get face_controlnet_preset}" debug="{get debug}" inherit_negative="{get zoom_enhance_inherit_negative}" show_original="{get show_original}" no_sync]
 	[/after]
 [/if]
-[get prefix] [get subject][get simple_description _before=" "][if interrogate]as [interrogate][/if]
+[get prefix] [get subject][get simple_description _before=" "][if interrogate]. `[[interrogate]`][/if]

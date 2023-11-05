@@ -575,6 +575,8 @@ class Scripts(scripts.Script):
 		# test compatibility with controlnet
 		Unprompted.main_p = p
 
+		Unprompted.log.debug(f"Directory of the p object: {dir(p)}")
+
 		# as of webui 1.5.1, creating a shallow copy of the p object no longer seems to work.
 		# deepcopy throws errors as well.
 		# Unprompted.p_copy = copy.copy(p)

@@ -72,15 +72,21 @@ class Shortcode():
 						return None
 
 				these_faces = (self.fs_face_path == face_string) and get_cached("face")
-				if not these_faces:
-					# TODO: Avoid reloading faces that were already in self.fs_face_path
-					self.fs_pipeline[swap_method]["face"] = []
+				if not these_faces: 
+					# self.fs_pipeline[swap_method]["face"] = []
+					temp_dict = []
 					for facepath in faces:
-						source_img = Image.open(facepath)
-						source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
-						face = get_faces(source_img, face_index=0)
-						if face:
-							self.fs_pipeline[swap_method]["face"].append(face)
+						# Avoid reloading faces that were already in self.fs_face_path
+						if self.fs_face_path and facepath in self.fs_face_path:
+							temp_dict.append(self.fs_pipeline[swap_method]["face"][self.fs_face_path.index(facepath)])
+						else:
+							source_img = Image.open(facepath)
+							source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
+							face = get_faces(source_img, face_index=0)
+
+							if face:
+								temp_dict.append(face)
+					self.fs_pipeline[swap_method]["face"] = temp_dict
 
 				target_img = cv2.cvtColor(np.array(orig_img), cv2.COLOR_RGB2BGR)
 

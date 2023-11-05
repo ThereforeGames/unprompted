@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.2.3"
+		self.VERSION = "10.3.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -194,7 +194,9 @@ class Unprompted:
 		self.log.debug("After routine completed.")
 		return processed
 
-	def process_string(self, string, context=None, cleanup_extra_spaces=True):
+	def process_string(self, string, context=None, cleanup_extra_spaces=None):
+		if cleanup_extra_spaces==None: cleanup_extra_spaces = self.Config.syntax.cleanup_extra_spaces
+		
 		self.conditional_depth += 1
 		if context: self.current_context = context
 		# First, sanitize contents

@@ -3,7 +3,27 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.2.3 - 29 October 2023</summary>
+<details open><summary>10.3.0 - 5 November 2023</summary>
+
+### Added
+- `Config.syntax.cleanup_extra_spaces`: Determines default behavior of the `process_string()` function with regard to trimming extra spaces (not thoroughly tested; setting this to false may cause issues with certain shortcodes)
+- Unprompted will print the contents of the `p` object if your logger is set to `DEBUG`
+- Bodysnatcher v1.4.3: Supports `keep_hands` and `keep_feet` even when `mask_mode` is "none"
+
+### Changed
+- `[faceswap]`: Improved caching of the face object when adding or changing face filepaths
+- `[log]` and `[logs]`: The default logging context is now inherited from `Config.logging.level`
+- `[while]`: Added `preprocess_block()` to delay execution of inner content until expression is evaluated as true
+- Bodysnatcher v1.4.3: Sets `inpainting_mask_invert` to true when `mask_mode` is "none"
+- Bodysnatcher v1.4.3: Adjusted interrogation syntax
+
+### Fixed
+- `[img2img]`: Removed unnecessary loop through samplers
+- `[upscale]`: Fixed shortcode not working when `models` value did not include a delimiter
+
+</details>
+
+<details><summary>10.2.3 - 29 October 2023</summary>
 
 ### Fixed
 - Fixed a batch processing issue that could cause the negative prompt to repeat itself

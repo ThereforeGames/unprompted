@@ -8,6 +8,9 @@ class Shortcode():
 		self.ops = {"==": helpers.is_equal, "!=": helpers.is_not_equal, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
 		self.description = "Loops content until the condition returns false."
 
+	def preprocess_block(self, pargs, kwargs, context):
+		return True
+
 	def run_block(self, pargs, kwargs, context, content):
 		final_string = ""
 

@@ -93,6 +93,7 @@ class Shortcode():
 
 				for idx, content in enumerate(this_after_content):
 					self.log.info(f"Processing After content for batch {batch_idx}, block {idx}...")
+					self.log.debug(f"After content: {content}")
 					self.Unprompted.shortcode_user_vars["after_index"] = idx
 					
 					self.Unprompted.process_string(content, "after")
