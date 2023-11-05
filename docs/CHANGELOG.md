@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
+<details open><summary>10.3.1 - 5 November 2023</summary>
+
+### Fixed
+- `[config]`: Hotfix for inline JSON parsing
+
+</details>
+
 <details open><summary>10.3.0 - 5 November 2023</summary>
 
 ### Added

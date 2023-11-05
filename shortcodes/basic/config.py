@@ -11,7 +11,7 @@ class Shortcode():
 
 	def run_block(self, pargs, kwargs, context, content):
 		import lib_unprompted.helpers as helpers
-		content = self.Unprompted.parse_alt_tags(content, context)
+		content = self.Unprompted.process_string(content, context)
 
 		# Detect inline JSON string
 		if (content[0] == "{"):
