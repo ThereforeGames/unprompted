@@ -3,14 +3,39 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.3.1 - 5 November 2023</summary>
+<details><summary>10.4.0 - 10 November 2023</summary>
+
+### Added
+- `[faceswap]`: New kwarg `visibility` to control the alpha value of the swapped face, defaults to 1.0
+- `[faceswap]`: New parg `export_embedding` that will save a file of the averaged faces to the given filepath (in safetensors format)
+- `[faceswap]`: New kwarg `embedding_path` that allows you to specify a filepath for the exported embedding
+- `[faceswap]`: You can load a composite face embedding by passing it in the first parg, this is only compatible with the `insightface` pipeline
+- Facelift preset `make_embedding`: Generates a composite face embedding from the given face filepaths
+- Facelift preset `best_quality_v3`: Reduces the visibility of the faceswap slightly in order to maintain some of the original textures
+- Facelift preset `best_quality_v3`: Now prefers the `4xFaceUpDAT` ESRGAN model
+- Facelift v0.1.1: The `faces` upload window now shows safetensors files in addition to images
+- Bodysnatcher v1.4.4: Minor UI updates
+- Bodysnatcher preset `vivarium_v2`: Adjusted inference settings and enabled `[txt2mask]` support
+- Wizard UI type `file`: The `_file_types` kwarg now supports delimited values
+
+### Changed
+- Regional Prompter Buddy v0.0.4: Reduced default `flip_chance` to 0
+- Regional Prompter Buddy v0.0.4: Disabled `base_prompt` by default to match default setting in Regional Prompter
+
+### Fixed
+- Wizard: Fixed a crash that could occur while parsing shortcodes inside of a `[wizard]` block
+- Updated "Getting Started" guide for compatibility with current `[overrides]` syntax
+
+</details>
+
+<details><summary>10.3.1 - 5 November 2023</summary>
 
 ### Fixed
 - `[config]`: Hotfix for inline JSON parsing
 
 </details>
 
-<details open><summary>10.3.0 - 5 November 2023</summary>
+<details><summary>10.3.0 - 5 November 2023</summary>
 
 ### Added
 - `Config.syntax.cleanup_extra_spaces`: Determines default behavior of the `process_string()` function with regard to trimming extra spaces (not thoroughly tested; setting this to false may cause issues with certain shortcodes)

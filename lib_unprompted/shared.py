@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.3.1"
+		self.VERSION = "10.4.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -196,7 +196,7 @@ class Unprompted:
 
 	def process_string(self, string, context=None, cleanup_extra_spaces=None):
 		if cleanup_extra_spaces==None: cleanup_extra_spaces = self.Config.syntax.cleanup_extra_spaces
-		
+
 		self.conditional_depth += 1
 		if context: self.current_context = context
 		# First, sanitize contents
@@ -224,7 +224,7 @@ class Unprompted:
 		import random
 
 		# Replace placeholders
-		string = string_orig.replace("%BASE_DIR%", self.base_dir)
+		string = self.str_replace_macros(string_orig)
 
 		# Relative path
 		if (string[0] == "."):
@@ -305,6 +305,7 @@ class Unprompted:
 	def parse_advanced(self, string, context=None):
 		"""First runs the string through parse_alt_tags, the result of which then goes through simpleeval"""
 		if string is None: return ""
+		
 		if (len(string) < 1): return ""
 		string = self.parse_alt_tags(string, context)
 		if self.Config.advanced_expressions:

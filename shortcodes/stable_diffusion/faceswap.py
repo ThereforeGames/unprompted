@@ -1,7 +1,7 @@
 class Shortcode():
 	def __init__(self, Unprompted):
 		self.Unprompted = Unprompted
-		self.description = ""
+		self.description = "Swap the face in an image using one or more techniques. Note that the Facelift template is more user-friendly for this purpose."
 
 		self.fs_pipelines = ["face_fusion","ghost","insightface"]
 		self.fs_now = ""
@@ -19,16 +19,18 @@ class Shortcode():
 		import lib_unprompted.helpers as helpers
 		from PIL import Image
 
+		visibility = self.Unprompted.parse_arg("visibility",1.0)
+		unload_parts = self.Unprompted.parse_arg("unload","")
+		minimum_similarity = self.Unprompted.parse_arg("minimum_similarity",-1000.0)
+
 		if len(pargs) < 1:
 			self.log.error("You must pass a path to a face image as the first parg.")
 			return ""
-		all_pipelines = (kwargs["pipeline"] if "pipeline" in kwargs else "insightface").split(self.Unprompted.Config.syntax.delimiter)
+		all_pipelines = helpers.ensure(self.Unprompted.parse_arg("pipeline","insightface"),list)
+		# (kwargs["pipeline"] if "pipeline" in kwargs else "insightface").split(self.Unprompted.Config.syntax.delimiter)
 
 		providers = ["CPUExecutionProvider"]
 		model_dir = f"{self.Unprompted.base_dir}/{self.Unprompted.Config.subdirectories.models}"
-
-		unload_parts = self.Unprompted.parse_arg("unload","")
-		minimum_similarity = float(self.Unprompted.parse_arg("minimum_similarity",-1000.0))
 
 		_body = self.Unprompted.parse_alt_tags(kwargs["body"],context) if "body" in kwargs else False
 		if _body:
@@ -53,9 +55,9 @@ class Shortcode():
 
 			if swap_method == "insightface":
 				import lib_unprompted.insightface as insightface
-				
 				import numpy as np
 				import cv2
+				import torch
 
 				def get_faces(img_data: np.ndarray, face_index=0, det_size=(640, 640)):
 					face_analyser = insightface.app.FaceAnalysis(name="buffalo_l", providers=providers)
@@ -73,20 +75,55 @@ class Shortcode():
 
 				these_faces = (self.fs_face_path == face_string) and get_cached("face")
 				if not these_faces: 
-					# self.fs_pipeline[swap_method]["face"] = []
 					temp_dict = []
 					for facepath in faces:
 						# Avoid reloading faces that were already in self.fs_face_path
 						if self.fs_face_path and facepath in self.fs_face_path:
 							temp_dict.append(self.fs_pipeline[swap_method]["face"][self.fs_face_path.index(facepath)])
 						else:
-							source_img = Image.open(facepath)
-							source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
-							face = get_faces(source_img, face_index=0)
+							# Check if the facepath is a safetensors file:
+							if facepath.endswith(".safetensors"):
+								try:
+									from safetensors.torch import load_file
+									tensors = load_file(facepath)
+									embedding = tensors["embedding"].numpy()
+									face = insightface.app.common.Face(embedding=embedding)
+								except:
+									self.log.error(f"Could not parse face from the safetensors file at {facepath}.")
+									continue
+							else:
+								source_img = Image.open(facepath)
+								source_img = cv2.cvtColor(np.array(source_img), cv2.COLOR_RGB2BGR)
+								face = get_faces(source_img, face_index=0)
 
 							if face:
 								temp_dict.append(face)
+
 					self.fs_pipeline[swap_method]["face"] = temp_dict
+			
+				if "export_embedding" in pargs:
+					import os
+					from safetensors.torch import save_file
+
+					self.log.info("Blending faces together...")
+					avg_embedding = np.mean([obj.embedding for obj in temp_dict], axis=0)
+					face = insightface.app.common.Face(embedding=avg_embedding)
+					self.fs_pipeline[swap_method]["face"] = [face]
+
+					embedding_str = self.Unprompted.parse_arg("embedding_path","blended_faces")
+					embedding_path = self.Unprompted.parse_filepath(helpers.str_with_ext(embedding_str, "safetensors"), context=context, must_exist=False, root=self.base_dir + "/user/faces")
+					os.makedirs(os.path.dirname(embedding_path), exist_ok=True)
+					# If embedding file already exists, increment the filename until it doesn't
+					dupe_counter = 2
+					while os.path.exists(embedding_path):
+						# Add a number to the end of the filename
+						embedding_path = embedding_path[:-len(".safetensors")] + str(dupe_counter) + ".safetensors"
+						dupe_counter += 1
+
+					self.log.info(f"Exporting to {embedding_path}...")
+					tensors = {"embedding": torch.tensor(face["embedding"])}
+					save_file(tensors, embedding_path)					
+
 
 				target_img = cv2.cvtColor(np.array(orig_img), cv2.COLOR_RGB2BGR)
 
@@ -433,7 +470,7 @@ class Shortcode():
 
 			# Append to output window
 			try:
-				self.Unprompted.current_image(result)
+				self.Unprompted.current_image(Image.blend(orig_img, result, visibility))
 			except:
 				continue
 
@@ -447,7 +484,10 @@ class Shortcode():
 
 	def ui(self, gr):
 		with gr.Row():
-			gr.Image(label="New face image to swap to 🡢 str",type="filepath",interactive=True)
+			gr.Image(label="New face image(s) to swap to 🡢 str",type="filepath",interactive=True)
 			gr.Image(label="Body image to perform swap on (defaults to SD output) 🡢 body",type="filepath",interactive=True)
 		gr.Dropdown(label="Faceswap pipeline(s) 🡢 pipeline", choices=self.fs_pipelines, value="insightface", multiselect=True, interactive=True, info="You can enable multiple pipelines with the standard delimiter. Please note that each pipeline must download its models on first use.")
+		gr.Checkbox(label="Export all faces as a blended safetensors embedding 🡢 export_embedding",value=False)
+		gr.Textbox(label="Path to save the exported embedding 🡢 embedding_path",placeholder="unprompted/user/faces/blended_faces.safetensors",interactive=True)
+		gr.Slider(label="Visibility 🡢 visibility", value=1.0, maximum=1.0, minimum=0.0, interactive=True, step=0.01)
 		gr.Dropdown(label="Unload pipeline parts from cache 🡢 unload", choices=["all","face","model"],multiselect=True,interactive=True,info="You can release some or all of the pipeline parts from your cache after inference. Useful for low-memory devices.")

@@ -1,6 +1,6 @@
 [if "inference_preset == 'none'"]
 	[logs "Applying optimal inference settings for the Vivarium preset..."]
-	[sets cfg_scale=10 sampler_name="Restart" steps=20 denoising_strength=0.67 mask_blur=0 inpaint_full_res=1 interrogate=1 mask_method=none]
+	[sets cfg_scale=6 sampler_name="Euler" steps=20 denoising_strength=0.67 mask_blur=2 mask_blur_x=2 mask_blur_y=2 inpaint_full_res=1 inpaint_full_res_padding=0 interrogate=0 mask_method=none]
 	[img2img_autosize][civitai lora "epiCRealismHelper" 0.5 _id=110334 _debug][civitai lora "SimplePositive_v1_AutoRunMech" _mvid=159384]
 	[set negative_prompt _append]
 		([civitai embedding "rfneg" _id="120412"] [civitai embedding "UnrealisticDream" 1.0 _mvid="77173"] [civitai embedding "BadDream" _mvid="77169"] [civitai embedding "BeyondNegativev2-neg" _mvid="119407"]::0.95)
@@ -9,4 +9,4 @@
 [else]
 	[logs "For optimal results with Vivarium, set your inference_preset to none" _level="warning"]
 [/else]
-[sets cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_model=instructp2p cn_0_weight=0.8 cn_0_control_mode=0 cn_0_guidance_end=0.3]
+[sets cn_0_enabled=1 cn_0_pixel_perfect=1 cn_0_model=instructp2p cn_0_weight=1.0 cn_0_control_mode=1 cn_0_guidance_end=0.3]

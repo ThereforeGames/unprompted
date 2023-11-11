@@ -362,7 +362,9 @@ class Scripts(scripts.Script):
 									obj = gr.Image(label=this_label, value=content, type="filepath", interactive=True, info=_info, show_label=_show_label)
 								elif (block_name == "file"):
 									if len(content) < 1: content = None
-									obj = gr.File(label=this_label, value=content, interactive=True, info=_info, show_label=_show_label, file_count=kwargs["_file_count"] if "_file_count" in kwargs else "single", file_types=[kwargs["_file_types"]] if "_file_types" in kwargs else None)
+									file_types = helpers.ensure(kwargs["_file_types"].split(Unprompted.Config.syntax.delimiter),list) if "_file_types" in kwargs else None
+
+									obj = gr.File(label=this_label, value=content, interactive=True, info=_info, show_label=_show_label, file_count=kwargs["_file_count"] if "_file_count" in kwargs else "single", file_types=file_types)
 
 								setattr(obj, "do_not_save_to_config", True)
 							return ("")
@@ -380,13 +382,6 @@ class Scripts(scripts.Script):
 
 						wizard_shortcode_parser.register(handler, "template", f"{Unprompted.Config.syntax.tag_close}template")
 
-						def handler(keyword, pargs, kwargs, context):
-							if self.dropdown_item_name:
-								return get_local_file_dir(self.dropdown_item_name)
-							return get_local_file_dir()  # filename
-
-						wizard_shortcode_parser.register(handler, "base_dir")
-
 						def handler(keyword, pargs, kwargs, context, content):
 							if pargs[0] == "accordion":
 								block = gr.Accordion(kwargs["_label"] if "_label" in kwargs else "More", open=True if "_open" in pargs else False)
@@ -396,13 +391,22 @@ class Scripts(scripts.Script):
 								block = gr.Column(scale=int(pargs["_scale"]) if "_scale" in pargs else 1)								
 
 							with block:
-								Unprompted.parse_alt_tags(content, None, wizard_shortcode_parser)
+								# Unprompted.parse_alt_tags(content, None, wizard_shortcode_parser)
+								# Unprompted.process_string(content,parser=wizard_shortcode_parser)
+								wizard_shortcode_parser.parse(content)
 							return ("")
 
 						def preprocess(keyword, pargs, kwargs, context):
 							return True
 
 						wizard_shortcode_parser.register(handler, "wizard", f"{Unprompted.Config.syntax.tag_close}wizard", preprocess)
+
+						def handler(keyword, pargs, kwargs, context):
+							if self.dropdown_item_name:
+								return get_local_file_dir(self.dropdown_item_name)
+							return get_local_file_dir()  # filename
+
+						wizard_shortcode_parser.register(handler, "base_dir")
 
 						with gr.Tabs():
 							

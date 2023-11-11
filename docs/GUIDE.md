@@ -21,7 +21,7 @@ Save the file and boot up your Unprompted interface. I will be using [Automatic'
 Now enter the following as your prompt and press generate:
 
 ```
-[file example]
+[call example]
 ```
 
 You can check the information underneath the resulting picture to confirm that Stable Diffusion received the correct prompt ("Photo of a man").
@@ -70,9 +70,9 @@ Feel free to add a bunch of other colors - I'm keeping things brief for the guid
 
 Now, we can reference our new file in `example.txt` like this:
 
-`Photo of a [file color]-haired [choose]man|woman[/choose]`
+`Photo of a [call color]-haired [choose]man|woman[/choose]`
 
-Yes, we are using a `[file]` shortcode inside of another file. This is perhaps one of the most powerful things about Unprompted!
+Yes, we are using a `[call]` shortcode inside of another file. This is perhaps one of the most powerful things about Unprompted!
 
 ![image](https://user-images.githubusercontent.com/95403634/198935189-03a671ab-1449-48b8-a5c7-ddc7855ae26b.png)
 
@@ -105,7 +105,7 @@ Now no matter how we change the UI, our template will continue using these optim
 
 Imagine a situation where you want the randomness a template offers, but you need to lock in a certain word or phrase of your choosing.
 
-For example, maybe we want to generate a "panda" instead of a "man" or "woman." Do we have to destructively edit our template file? No! We can use the `[override]` shortcode for this. Here's how:
+For example, maybe we want to generate a "panda" instead of a "man" or "woman." Do we have to destructively edit our template file? No! We can use the `[overrides]` shortcode for this. Here's how:
 
 In `example.txt`, we need to wrap the man/woman phrase with a variable that will act like a category:
 
@@ -120,7 +120,7 @@ The `_out` argument indicates to Unprompted that we want to print this variable 
 Now, inside of our web UI, we can change the prompt to this:
 
 ```
-[override subject="panda"][file example]
+[overrides subject="panda"][call example]
 ```
 
 That's it, now you've got pandas!

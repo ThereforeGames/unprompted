@@ -1642,6 +1642,10 @@ The `insightface` pipeline is currently the most developed option as it supports
 - It can process multiple face images (e.g. `[faceswap "C:/pictures/face1.png|C:/pictures/face2.png"]` using `Config.syntax.delimiter` as a separator.)
 - It performs facial similarity analysis to swap the new face onto the best candidate in a picture containing more than one person.
 - It supports the `minimum_similarity` kwarg to bypass the faceswap if no one in the target picture bears resemblance to the new face. This kwarg takes a float value, although I haven't determined the upper and lower boundaries yet. A greater value means "more similar" and the range appears to be something like -10 to 300.
+- It supports the `export_embedding` parg which takes the average of all input faces and exports it to a safetensors embedding file. This file represents a composite face that can be used in lieu of individual images.
+- It supports the `embedding_path` kwarg which is the path to use in conjunction with `export_embedding`. Defaults to `unprompted/user/faces/blended_faces.safetensors`.
+
+Supports the `visibility` kwarg which is the alpha value with which to blend the result back into the original image. Defaults to 1.0.
 
 Supports the `unload` kwarg which allows you to free some or all of the faceswap components after inference. Useful for low memory devices, but will increase inference time. You can pass the following as a delimited string with `Config.syntax.delimiter`: `model`, `face`, `all`.
 

@@ -1,4 +1,4 @@
-[template name="Regional Prompter Buddy v0.0.3"]
+[template name="Regional Prompter Buddy v0.0.4"]
 ![Preview]([base_dir]/regional_prompter_buddy.png)
 
 This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension. It is currently intended for producing images with two subjects, but may be improved to support more regions in the future.
@@ -15,7 +15,7 @@ This is an experimental template that streamlines and optimizes the prompt for u
 </details>
 [/template]
 [set prefix _new]high detail RAW photo of[/set]
-[set simple _label="Simple Prompt" _info="This is a simple description of the overall image that should not contain specific character names." _new]man and woman standing together[/set]
+[set simple _label="Simple Prompt" _info="This is a simple description of the overall image. You can use it to specify environment, lighting, and so on, but it should not contain specific character names." _new]man and woman standing together[/set]
 [wizard accordion _label="👩 Subject A"]
 	[set subject_a _new]woman[/set]
 	[set zoom_a _label="Zoom Enhance A" _new][get subject_a][/set]
@@ -27,7 +27,7 @@ This is an experimental template that streamlines and optimizes the prompt for u
 	[set negative_b _label="Negative Prompt B" _new]((([get subject_a])))[/set]
 [/wizard]
 
-[set flip_chance _new _ui="slider" _label="Chance to flip subjects" _minimum="0" _maximum="100"]50[/set]
+[set flip_chance _new _ui="slider" _label="Chance to flip subjects" _minimum="0" _maximum="100"]0[/set]
 
 [set split_type _new _ui="radio" _choices="Horizontal|Vertical" _info="This template may support more region types in the future if there is enough interest."]Horizontal[/set]
 [if split_type="Horizontal"]
@@ -39,11 +39,11 @@ This is an experimental template that streamlines and optimizes the prompt for u
 
 [set prompt_style _new _info="Determines the overall prompt structure." _choices="Basic|Regional Prompter" _ui="dropdown"]Regional Prompter[/set]
 
-[set region_delimiter _new _info="Term to separate each region; use `AND` for Latent Couple`"]BREAK[/set]
+[set region_delimiter _new _info="Term to separate each region; use `AND` for Latent Couple"]BREAK[/set]
 
 [set affix _new _info="Optional string to append to the base prompt and both subjects."] [/set]
 
-[set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="This value MUST match your Regional Prompter setting or it won't work!"]1[/set]
+[set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="This value MUST match your Regional Prompter setting or it won't work!"]0[/set]
 [set split_negatives _new _ui="checkbox" _info="Give a different negative prompt to each subject"]1[/set]
 [set expanded_base_prompt _new _ui="checkbox" _info="Adds more details to the base prompt if supported by the chosen style."]0[/set]
 [set do_zoom_enhance _new _ui="checkbox" _label="Zoom Enhance Postprocessing"]0[/set]

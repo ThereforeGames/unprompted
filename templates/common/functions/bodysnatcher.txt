@@ -1,8 +1,9 @@
-[template name="Bodysnatcher v1.4.3"]
+[template name="Bodysnatcher v1.4.4"]
 ![Preview]([base_dir]/bodysnatcher.png)
-<details open><summary>⚠️ Important info, please read carefully</summary>
 
-This template works best with inpainting models and ControlNet.
+Seamlessly replaces the selected subject of an image with a new one. This template works best with inpainting models and ControlNet.
+
+<details open><summary>⚠️ Important info, please read carefully</summary>
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically. Restart the WebUI after making this change.
 
@@ -48,18 +49,26 @@ Always bodysnatch responsibly.<br>
 	[set interrogate _new _ui="checkbox" _label="Interrogate starting image" _info="Adds a descriptive caption to the prompt"]1[/set]
 [/wizard]
 
+[wizard accordion _label="🧩 Presets"]
+	[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/img2img/*.*' _basename _hide_ext}"]subtle_v1[/set]
+	[set body_controlnet_preset _new _info="Loads multiple ControlNet units, please make sure you have 'Allow other scripts to control this extension' enabled (Note: the 'dev' preset is for internal testing)" _label="Body ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
+	[set face_controlnet_preset _new _info="Loads a ControlNet unit for the face upscale step (Experimental; not recommended)" _label="Face ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
+[/wizard]
+
 [wizard accordion _label="🎭 Mask Settings"]
+	[wizard row]
+		[set keep_hands _new _label="Keep original hands" _ui="checkbox"]1[/set]
+		[set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
+	[/wizard]
 	[set mask_method _new _label="Masking method" _ui="radio" _choices="clipseg|clip_surgery|fastsam|none"]clipseg[/set]
 	[set manual_mask_mode _new _label="Manual masking mode" _ui="radio" _choices="add|subtract|discard"]subtract[/set]
 	[set mask_precision _new _label="Mask precision"]75[/set]
 	[set stamp _new _label="Stamp" _info="Paste a temporary image on the init image for the purpose of masking (check unprompted/images/stamps for default stamps)"][/set]
 	[set background_mode _new _label="Background Mode" _ui="checkbox" _info="Inverts the class mask and disables the zoom_enhance step (note: you'll probably want to increase the mask_precision - try 150 precision to start)"]0[/set]
-	[set keep_hands _new _label="Keep original hands" _ui="checkbox" _info="You don't really want Stable Diffusion to remake those hands, do you?"]1[/set]
-	[set keep_feet _new _label="Keep original feet" _ui="checkbox"]1[/set]
 [/wizard]
 
 [wizard accordion _label="🔍 Zoom Enhance Settings"]
-	[set bypass_zoom_enhance _new _label="Bypass zoom_enhance" _ui="checkbox"]1[/set]
+	[set bypass_zoom_enhance _new _label="Bypass zoom_enhance" _ui="checkbox" _info="In general, the Facelift template works better with Bodysnatcher than Zoom Enhance does."]1[/set]
 	[set fix_bodypart _new _label="Fix a body part" _info="Note: currently not compatible with Background Mode"]face[/set]
 	[set zoom_enhance_denoising_max _new _label="Max denoising strength"]0.45[/set]
 	[set zoom_enhance_base_cfg _new _ui="slider" _minimum="1" _maximum="30" _label="Minimum CFG for upscaling step"]10[/set]
@@ -72,10 +81,6 @@ Always bodysnatch responsibly.<br>
 	[set color_correct_timing _new _label="Color correct timing" _info="Post may produce more accurate colors, but it tends to look a bit posterized" _ui="dropdown" _choices="pre|post"]pre[/set]
 	[set color_correct_strength _new _label="Color correct strength" _ui="slider" _minimum=1 _maximum=5 _info="Experimental, recommend leaving it at 1"]1[/set]
 [/wizard]
-
-[set inference_preset _new _info="Locks CFG scale, denoising strength, etc. to recommended values" _label="Inference Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/img2img/*.*' _basename _hide_ext}"]subtle_v1[/set]
-[set body_controlnet_preset _new _info="Loads multiple ControlNet units, please make sure you have 'Allow other scripts to control this extension' enabled (note: the 'dev' preset is for internal testing)" _label="Body ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
-[set face_controlnet_preset _new _info="Loads a ControlNet unit for the face upscale step (not recommended)" _label="Face ControlNet Preset" _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/controlnet/*.*' _basename _hide_ext}"]none[/set]
 
 [set debug _new _label="Debug Mode" _ui="checkbox"]0[/set]
 
@@ -102,7 +107,7 @@ Always bodysnatch responsibly.<br>
 
 [if batch_index=0]
 	[if "mask_method != 'none'"]
-		[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=5 padding=10 mask_blur=20][get class][/txt2mask]
+		[txt2mask precision="{get mask_precision}" method="{get mask_method}" mode="{get manual_mask_mode}" negative_mask="{get neg_mask}" neg_padding=0 padding=3 mask_blur=0][get class][/txt2mask]
 	[/if]
 	[else]
 		[sets inpainting_mask_invert=1]
