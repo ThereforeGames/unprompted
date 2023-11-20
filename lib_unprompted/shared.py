@@ -9,7 +9,7 @@ import inspect
 import sys
 import time
 import logging
-from . import helpers
+from lib_unprompted import helpers
 
 
 def parse_config(base_dir="."):

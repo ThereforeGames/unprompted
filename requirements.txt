@@ -10,3 +10,4 @@ onnx # [faceswap]
 onnxruntime # [faceswap]
 mxnet -f https://dist.mxnet.io/python/cpu # [faceswap]
 albumentations # [faceswap] insightface
+opencv-python
