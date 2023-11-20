@@ -6,7 +6,7 @@ class Shortcode():
 		min_value = None
 		for key in pargs:
 			this_value = self.Unprompted.parse_advanced(key)
-			if min_value is None or this_value < min_value: min_value = this_value
+			if min_value is None or float(this_value) < min_value: min_value = this_value
 		return(min_value)
 
 	def ui(self,gr):

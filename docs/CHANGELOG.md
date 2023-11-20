@@ -5,6 +5,13 @@ For more details on new features, please check the [Manual](./MANUAL.md).
 
 <details open><summary>10.4.1 - 20 November 2023</summary>
 
+### Fixed
+- `[max]`: Fixed an issue with float values
+
+</details>
+
+<details><summary>10.4.1 - 20 November 2023</summary>
+
 ### Changed
 - Tweaked `shared.py` import statements to make importing Unprompted from other locations a bit easier
 - Updated `requirements.txt`

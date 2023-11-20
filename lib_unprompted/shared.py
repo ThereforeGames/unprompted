@@ -101,7 +101,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.4.0"
+		self.VERSION = "10.4.2"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -169,12 +169,12 @@ class Unprompted:
 		self.log.info(f"Loading Unprompted v{self.VERSION} by Therefore Games")
 		self.load_shortcodes()
 
-	def start(self, string):
-		self.log.debug("Main routine started...")
+	def start(self, string, debug=True):
+		if debug: self.log.debug("Main routine started...")
 		self.routine = "main"
 		self.conditional_depth = -1
 		result = self.process_string(string)
-		self.log.debug("Main routine completed.")
+		if debug: self.log.debug("Main routine completed.")
 		return result
 
 	def cleanup(self):
