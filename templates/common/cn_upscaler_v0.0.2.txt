@@ -1,0 +1,6 @@
+[##]
+A decent starting point to upscale images using the Tile model for ControlNet.
+Ideally, you should mask out the face and run the result through Facelift.
+Best ESRGAN model I'm aware of: 4x_RealisticRescaler_100000_G
+[/##]
+[if batch_real_index=0][sets sampler="Restart" steps=20 denoising_strength=0.25 cfg_scale=15 cn_0_enabled=1 cn_0_model=ip-adapter-plus-face_sd15 cn_0_module=ip-adapter_clip_sd15 cn_0_weight=0.5 cn_0_pixel_perfect=0 negative_prompt="rfneg UnrealisticDream BadDream BeyondV3-neg" cn_1_enabled=1 cn_1_module=inpaint_only cn_1_model=inpaint cn_1_weight=1.0 cn_1_guidance_end=1.0 cn_1_control_mode=2], best quality (worst quality:-1)[/if]

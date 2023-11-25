@@ -44,10 +44,10 @@ class Shortcode():
 				else:
 					return_string += _default
 			elif (parg in self.Unprompted.shortcode_user_vars):
-				if "_parse" in pargs:
-					# self.log.debug(f"Parg {parg} value to parse: {self.Unprompted.shortcode_user_vars[parg]}")
+				if "_parse" in pargs or (self.Unprompted.Config.syntax.global_prefix and parg.startswith(self.Unprompted.Config.syntax.global_prefix)):
 					this_var = self.Unprompted.process_string(self.Unprompted.shortcode_user_vars[parg],context)
-					# self.log.debug(f"Parse result: {this_var}")
+					if "_read_only" not in pargs:
+						self.Unprompted.shortcode_user_vars[parg] = this_var
 				else: this_var = self.Unprompted.shortcode_user_vars[parg]
 
 				if (isinstance(this_var, list)): return_string += _sep.join(str(x) for x in this_var)

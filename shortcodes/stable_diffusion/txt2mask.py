@@ -523,6 +523,23 @@ class Shortcode():
 						if (pixel_data[0] == 0 and pixel_data[1] == 0 and pixel_data[2] == 0): black_pixels += 1
 				subject_size = 1 - black_pixels / total_pixels
 				self.Unprompted.shortcode_user_vars[kwargs["size_var"]] = subject_size
+			if "aspect_var" in kwargs:
+				paste_mask = final_img.resize((self.init_image.width, self.init_image.height))
+				paste_mask = ImageOps.colorize(paste_mask.convert("L"), black="black", white="white")
+				paste_mask = paste_mask.convert('RGBA')
+				mask_data = paste_mask.load()
+				width, height = paste_mask.size
+				# Convert black pixels to transparent
+				for y in range(height):
+					for x in range(width):
+						if mask_data[x, y] == (0, 0, 0, 255): mask_data[x, y] = (0, 0, 0, 0)
+				# Crop the image by transparency
+				cropped = paste_mask.crop(paste_mask.getbbox())
+				# Get the aspect ratio of cropped mask
+				aspect_ratio = cropped.size[0] / cropped.size[1]
+				self.log.debug(f"Mask aspect ratio: {aspect_ratio}")
+				self.Unprompted.shortcode_user_vars[kwargs["aspect_var"]] = aspect_ratio
+				if "save" in kwargs: cropped.save(f"cropped_mask.png")
 
 			# Inpaint sketch compatibility
 			if "sketch_color" in kwargs:

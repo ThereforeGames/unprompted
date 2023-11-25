@@ -1,2 +1,0 @@
-[# A decent starting point to upscale images using the Tile model for ControlNet.]
-[sets sampler="DPM++ 3M SDE" denoising_strength=0.2 cfg_scale=3 cn_0_enabled=1 cn_0_pixel_perfect=0 cn_0_module=tile_resample cn_0_model=tile cn_0_weight=1.15 cn_0_control_mode=2]

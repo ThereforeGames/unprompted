@@ -1,4 +1,4 @@
-[template name="Regional Prompter Buddy v0.0.4"]
+[template name="Regional Prompter Buddy v0.0.5"]
 ![Preview]([base_dir]/regional_prompter_buddy.png)
 
 This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension. It is currently intended for producing images with two subjects, but may be improved to support more regions in the future.
@@ -14,17 +14,17 @@ This is an experimental template that streamlines and optimizes the prompt for u
 
 </details>
 [/template]
-[set prefix _new]high detail RAW photo of[/set]
+[set prefix _new _info="e.g. 'high detail RAW photo of`"][/set]
 [set simple _label="Simple Prompt" _info="This is a simple description of the overall image. You can use it to specify environment, lighting, and so on, but it should not contain specific character names." _new]man and woman standing together[/set]
 [wizard accordion _label="👩 Subject A"]
-	[set subject_a _new]woman[/set]
+	[set subject_a _new][get global_subject][/set]
+	[set negative_a _label="Negative Prompt A" _info="By default, the negative prompts include the name of the opposite subject to maximize difference in appearance." _new]([get subject_b])[/set]
 	[set zoom_a _label="Zoom Enhance A" _new][get subject_a][/set]
-	[set negative_a _label="Negative Prompt A" _info="By default, the negative prompts include the name of the opposite subject to maximize difference in appearance." _new]((([get subject_b])))[/set]
 [/wizard]
 [wizard accordion _label="👨 Subject B"]
 	[set subject_b _new]man[/set]
+	[set negative_b _label="Negative Prompt B" _new]([get subject_a])[/set]
 	[set zoom_b _label="Zoom Enhance B" _new][get subject_b][/set]
-	[set negative_b _label="Negative Prompt B" _new]((([get subject_a])))[/set]
 [/wizard]
 
 [set flip_chance _new _ui="slider" _label="Chance to flip subjects" _minimum="0" _maximum="100"]0[/set]
@@ -43,13 +43,13 @@ This is an experimental template that streamlines and optimizes the prompt for u
 
 [set affix _new _info="Optional string to append to the base prompt and both subjects."] [/set]
 
-[set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="This value MUST match your Regional Prompter setting or it won't work!"]0[/set]
-[set split_negatives _new _ui="checkbox" _info="Give a different negative prompt to each subject"]1[/set]
-[set expanded_base_prompt _new _ui="checkbox" _info="Adds more details to the base prompt if supported by the chosen style."]0[/set]
+[set base_prompt _new _ui="checkbox" _label="Use base prompt" _info="Note: This will toggle the Base Prompt setting of RP for you automatically."]0[/set]
+[set split_negatives _new _ui="checkbox" _info="Give a different negative prompt to each subject. Note: This MUST match the value of `common negative prompt` in RP or you may get errors!"]1[/set]
+[set expanded_base_prompt _new _ui="checkbox" _info="Adds more details to the base prompt if supported by the chosen style."]1[/set]
 [set do_zoom_enhance _new _ui="checkbox" _label="Zoom Enhance Postprocessing"]0[/set]
 
 [set original_neg][get negative_prompt][/set]
-[set current_neg](twins clones identical people siblings doppelgangers:1.6) [get original_neg][/set]
+[set current_neg] [get original_neg][/set]
 
 [chance "{get flip_chance}"]
 	[set temp_subject][get subject_a][/set]
@@ -65,13 +65,14 @@ This is an experimental template that streamlines and optimizes the prompt for u
 [/if]
 [else]
 	[if base_prompt]
-	[get prefix] [if expanded_base_prompt][get subject_a] and [get subject_b][/if] [get simple] [get affix] [get region_delimiter]
+	[get prefix] [if expanded_base_prompt][get subject_a] and [get subject_b][/if] [get simple] [get affix] ADDBASE
 	[/if]
 	[get prefix] [get subject_a] [get affix], [get simple] [get region_delimiter]
 	[get prefix] [get subject_b] [get affix], [get simple]
 [/else]
 
 [if split_negatives]
+[if base_prompt][set prompt _prepend](same face:-1) (twins:-1) [/set][/if]
 [set negative_prompt]solo [get original_neg] [get region_delimiter] [get negative_a] [get current_neg] [get region_delimiter] [get negative_b] [get current_neg][/set]
 [/if]
 

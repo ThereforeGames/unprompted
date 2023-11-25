@@ -5,6 +5,7 @@ class Shortcode():
 
 	def run_atomic(self, pargs, kwargs, context):
 		import math
+		import lib_unprompted.helpers as helpers
 		if not len(pargs):
 			self.log.error("No number found at pargs[0]")
 			return ""
@@ -25,7 +26,7 @@ class Shortcode():
 		if "." in str(num):
 			if (round_func == round): return round_func(num, place)
 			else: return round_helper(num, place)
-		elif self.Unprompted.is_int(num):
+		elif helpers.is_int(num):
 			return round_helper(num, place)
 		else:
 			self.log.error(f"The number does not appear to be a valid type: {num}")

@@ -7,7 +7,7 @@ if os.path.isfile(f"{this_path}/config_user.json"):
 	import json
 	cfg_dict = json.load(open(f"{this_path}/config_user.json", "r", encoding="utf8"))
 	if "skip_requirements" in cfg_dict and cfg_dict["skip_requirements"]:
-		print("Unprompted - Skipping install.py check per skip_requirements flag")
+		print("Unprompted - Skipping install.py check per `skip_requirements` flag")
 		quit()
 	else:
 		print("Unprompted - You can skip the intall check to improve startup times by setting `skip_requirements` to true in config_user.json")

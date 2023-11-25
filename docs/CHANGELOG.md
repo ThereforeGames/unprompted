@@ -3,7 +3,46 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.4.1 - 20 November 2023</summary>
+<details open><summary>10.5.0 - 25 November 2023</summary>
+
+### About
+This update introduces global variables, several image processing shortcodes and improvements to some included templates and presets. The image features were motivated by Unprompted's integration with [BooruDatasetTagManager](https://github.com/starik222/BooruDatasetTagManager/pull/89) (my own PR.) For example, you can use `[image_info]` to assess image quality and influence the results of the Autotagger. Enjoy!
+
+### Added
+- New shortcode `[resize]`: Resizes the image to the given dimensions, works with the SD image by default
+- `[resize]` can be toggled to peform a crop instead
+- New shortcode `[image_info]`: Returns various types of metadata about the image, including quality assessment via the pyiqa toolbox
+- New shortcode `[cast]`: Converts the content to a given datatype
+- New config setting `globals`: Allows you to create variables in key/value format that will be available to all templates and shortcodes
+- New config setting `Syntax.global_prefix`: The prefix for global variables, defaults to `global_`
+- `[get]`: Automatically runs variables through the parser if they begin with `Unprompted.Config.syntax.global_prefix`, which means that global variables can be initialized to complex values such as function names or other shortcodes
+- `[get]`: New parg `_read_only`, use with `_parse` in order to prevent the parser from writing the result back to the variable (which is the new default behavior of `_parse`)
+- `[txt2mask]`: New kwarg `aspect_var` which returns the aspect ratio of the mask 
+- Regional Prompter Buddy v0.1.0: Now references `global_subject` for default `subject_a`
+- Regional Prompter Buddy v0.1.0: Adjusted default settings to improve speed of workflows
+- Bodysnatcher v1.5.0: New setting `max_image_size` size to limit the dimensions of the output image
+- Bodysnatcher v1.5.0: New setting `mask_informs_size` which uses the mask aspect ratio to determine the inpainting dimensions
+- Bodysnatcher v1.5.0: New setting `mask_size_limit` to cap the dimensions of the aforementioned feature
+- Bodysnatcher v1.5.0: New setting `mask_padding` to adjust the padding applied by `[txt2mask]`
+- Bodysnatcher v1.5.0: Now references `global_subject`, `global_prefix`, and `global_class` for default values
+- Bodysnatcher v1.5.0: Now uses the new `vivarium_v3` preset by default
+- Bodysnatcher v1.5.0: Minor UI updates
+- `viviarum_v3` ControlNet preset: Now uses the `reference` model at a low strength to help preserve lighting
+- `vivarium_v3` ControlNet preset: Adjusts denoising strength depending on whether an inpainting model is active
+- `vivarium_v3` ControlNet preset: Now references `global_negative_prompt` for inference
+- `vivarium_v3` ControlNet preset: No longer specifies `mask_method` as I find the preset equally effective with or without it, albeit in different ways - try both!
+- `best_quality_v4` Facelift preset: Now prefers the `TGHQFace8x_500k` ESRGAN model, as the `4xFaceUpDAT` model is throwing errors in the current WebUI
+- ControlNet image variables can now take a PIL object in addition to a filepath
+- New `Reload Unprompted` button in the WebUI
+- Warning message about the (presently significant) limitations of Gradio's dynamic refresh capabilities and temporarily disabled some refresh features
+
+### Fixed
+- `[round]`: Fixed error with rounding ints
+- The `Unprompted.current_image()` method now takes care to update the size of `image_mask` if needed
+
+</details>
+
+<details><summary>10.4.2 - 20 November 2023</summary>
 
 ### Fixed
 - `[max]`: Fixed an issue with float values

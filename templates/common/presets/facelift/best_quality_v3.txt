@@ -1,1 +1,0 @@
-[restore_faces unload="{get unload}" method=gfpgan image="{get body}"][faceswap "{get faces}" unload="{get unload_all}" visibility=0.75][restore_faces unload="{get unload}" method=gpen][upscale models="4xFaceUpDAT|4x-UltraSharp|R-ESRGAN 4x+" scale=1 limit=1 visibility=0.8 keep_res]

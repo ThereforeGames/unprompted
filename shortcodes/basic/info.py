@@ -30,7 +30,7 @@ class Shortcode():
 			except ImportError:
 				self.log.error(f"Could not import FrozenCLIPEmbedder")
 
-		return (return_string[:-1])
+		return (return_string[:-len(delimiter)])
 
 	def ui(self, gr):
 		gr.Checkbox(label="Return the character count 🡢 character_count")

@@ -32,6 +32,12 @@ class Unprompted:
 	def load_shortcodes(self):
 		start_time = time.time()
 		self.log.info("Initializing Unprompted shortcode parser...")
+		# Reset variables for reload support
+		self.shortcode_objects = {}
+		self.shortcode_modules = {}
+		self.shortcode_user_vars = {}
+		self.cleanup_routines = []
+		self.after_routines = []
 
 		# Load shortcodes
 		import importlib.util
@@ -101,7 +107,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.4.2"
+		self.VERSION = "10.5.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -170,6 +176,9 @@ class Unprompted:
 		self.load_shortcodes()
 
 	def start(self, string, debug=True):
+		if debug: self.log.debug("Loading global variables...")
+		for global_var, value in self.Config.globals.__dict__.items():
+			self.shortcode_user_vars[self.Config.syntax.global_prefix+global_var] = value
 		if debug: self.log.debug("Main routine started...")
 		self.routine = "main"
 		self.conditional_depth = -1
@@ -432,8 +441,14 @@ class Unprompted:
 				all_units = cnet.get_all_units_in_processing(this_p)
 
 				if att_split[2] == "image":
-					import imageio
-					this_val = imageio.imread(self.str_replace_macros(self.shortcode_user_vars[att]))
+					# Check if we supplied a string
+					if isinstance(self.shortcode_user_vars[att], str):
+						import imageio
+						this_val = imageio.imread(self.str_replace_macros(self.shortcode_user_vars[att]))
+					# Otherwise, assume we supplied a PIL image and convert to numpy
+					else:
+						import numpy
+						this_val = numpy.array(self.shortcode_user_vars[att])
 				else:
 					this_val = self.shortcode_user_vars[att]
 					# Apply preset model names
@@ -548,8 +563,17 @@ class Unprompted:
 
 		if new_image:
 			if update_init_images:
+				# Resize the mask to match the new image if necessary
+				if "image_mask" in self.shortcode_user_vars and self.shortcode_user_vars["image_mask"]:
+					self.log.debug(f"Detected `image_mask`. Ensuring it matches the size of our new image...")
+					self.shortcode_user_vars["image_mask"] = self.shortcode_user_vars["image_mask"].resize(new_image.size)
+
 				if self.routine == "after":
 					self.shortcode_user_vars["init_images"][idx] = self.after_processed.images[idx]
+				
+				# Update the SD vars if Unprompted.main_p exists
+				#if hasattr(self, "main_p"):
+				#	self.update_stable_diffusion_vars(self.main_p)
 			return True
 		return None
 

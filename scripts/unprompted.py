@@ -1,8 +1,10 @@
 # Unprompted by Therefore Games. All Rights Reserved.
-# https://patreon.com/thereforegames
-# https://github.com/ThereforeGames/unprompted
 
 # This script is intended to be used as an extension for Automatic1111's Stable Diffusion WebUI.
+
+# You may support the project here:
+# https://github.com/ThereforeGames/unprompted
+# https://patreon.com/thereforegames
 
 import gradio as gr
 
@@ -21,7 +23,7 @@ base_dir = scripts.basedir()
 
 sys.path.append(base_dir)
 # Main object
-from lib_unprompted.shared import Unprompted
+from lib_unprompted.shared import Unprompted, parse_config
 
 Unprompted = Unprompted(base_dir)
 
@@ -311,7 +313,7 @@ class Scripts(scripts.Script):
 				else: is_open = True
 
 				promos = []
-				promos.append(f'<a href="https://payhip.com/b/L1uNF" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_beautiful_soul.png" class="thumbnail"></a><h1><strong>Beautiful Soul</strong>: Bring your characters to life.</h1><p>A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date. <strong>Available at half price until November 11th!</strong></p><a href="https://payhip.com/b/L1uNF" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
+				promos.append(f'<a href="https://payhip.com/b/L1uNF" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_beautiful_soul.png" class="thumbnail"></a><h1><strong>Beautiful Soul</strong>: Bring your characters to life.</h1><p>A highly expressive character generator for the A1111 WebUI. With thousands of wildcards and direct ControlNet integration, this is by far our most powerful Unprompted template to date.</p><a href="https://payhip.com/b/L1uNF" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
 				promos.append(f'<a href="https://payhip.com/b/qLUX9" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_demoncrawl_avatar_generator.png" class="thumbnail"></a><h1>The <strong>DemonCrawl</strong> Pixel Art Avatar Generator</h1><p>Create pixel art portraits in the style of the popular roguelite, <a href="https://demoncrawl.com" _target=blank>DemonCrawl</a>. Includes a custom Stable Diffusion model trained by the game\'s developer, as well as a custom GUI and the ability to randomize your prompts.</p><a href="https://payhip.com/b/qLUX9" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
 				promos.append(f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_fantasy.png" class="thumbnail"></a><h1>Create beautiful art for your <strong>Fantasy Card Game</strong></h1><p>Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
 				promos.append(f'<a href="https://github.com/ThereforeGames/unprompted" target="_blank"><img src="{get_local_file_dir()}/images/promo_github_star.png" class="thumbnail"></a><h1>Give Unprompted a <strong>star</strong> for visibility</h1><p>Most WebUI users have never heard of Unprompted. You can help more people discover it by giving the repo a ⭐ on Github. Thank you for your support!</p><a href="https://github.com/ThereforeGames/unprompted" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the Unprompted repo">Visit Github ➜</button></a>')
@@ -387,7 +389,7 @@ class Scripts(scripts.Script):
 								block = gr.Accordion(kwargs["_label"] if "_label" in kwargs else "More", open=True if "_open" in pargs else False)
 							elif pargs[0] == "row":
 								block = gr.Row(equal_height=pargs["_equal_height"] if "_equal_height" in pargs else False)
-							elif pargs[1] == "column":
+							elif pargs[0] == "column":
 								block = gr.Column(scale=int(pargs["_scale"]) if "_scale" in pargs else 1)								
 
 							with block:
@@ -427,8 +429,9 @@ class Scripts(scripts.Script):
 										gr.Checkbox(label=f"🪄 Auto-include {self.dropdown_item_name} in prompt", value=False, elem_classes=["wizard-autoinclude",mode_string])
 										# Add event listeners
 										wizard_prep_event_listeners(self.filtered_templates[filename])
+									Unprompted.log.debug(f"Added {'img2img' if is_img2img else 'txt2img'} Wizard Template: {self.dropdown_item_name}")
 
-								txt_files = glob.glob(f"{base_dir}/{Unprompted.Config.template_directory}/**/*.txt", recursive=True) if (not is_img2img or not first_load) else Unprompted.wizard_template_files
+								txt_files = glob.glob(f"{base_dir}/{Unprompted.Config.template_directory}/**/*.txt", recursive=True) if (not is_img2img) else Unprompted.wizard_template_files
 								is_first = True
 
 								with region:
@@ -439,7 +442,6 @@ class Scripts(scripts.Script):
 												first_line = file.readline()
 												# Make sure this text file starts with the [template] tag - this identifies it as a valid template
 												if first_line.startswith(f"{Unprompted.Config.syntax.tag_start}template"):
-													# if not first_load: print(f"adding {filename}")
 													file.seek(0)  # Go back to start of file
 													wizard_add_template(is_first)
 													Unprompted.wizard_template_names.append(self.dropdown_item_name)
@@ -452,11 +454,14 @@ class Scripts(scripts.Script):
 									if (len(self.filtered_templates) > 1):
 										self.templates_dropdown[int(is_img2img)].change(fn=wizard_select_item, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value=WizardModes.TEMPLATES)], outputs=list(self.filtered_templates.values()))
 
-								return gr.Dropdown.update(choices=Unprompted.wizard_template_names)  # Unprompted.wizard_template_names
+								Unprompted.log.debug(f"Finished populating {'img2img' if is_img2img else 'txt2img'} templates.")
+								return gr.Dropdown.update(choices=Unprompted.wizard_template_names)
 
 							def wizard_populate_shortcodes(region, first_load=False):
 								if not first_load:
 									Unprompted.load_shortcodes()
+									Unprompted.log.warning("Sorry, Gradio is presently incapable of dynamically creating UI elements. You must restart the WebUI to see new shortcodes in the Wizard. This is expected to change in a future release: https://github.com/gradio-app/gradio/issues/4689")									
+									return ""
 
 								with region:
 									for key in shortcode_list:
@@ -476,26 +481,23 @@ class Scripts(scripts.Script):
 								return gr.Dropdown.update(choices=list(Unprompted.shortcode_objects.keys()))
 
 							def wizard_refresh_templates():
-								Unprompted.log.debug("Refreshing the Wizard Templates")
+								Unprompted.log.debug("Refreshing the Wizard Templates...")
+								Unprompted.log.warning("Sorry, Gradio is presently incapable of dynamically creating UI elements. You must restart the WebUI to update Wizard templates. This is expected to change in a future release: https://github.com/gradio-app/gradio/issues/4689")
+								return ""
 								Unprompted.wizard_template_names.clear()
 								Unprompted.wizard_template_files.clear()
 								Unprompted.wizard_template_kwargs.clear()
 								return wizard_populate_templates(self.templates_region[int(is_img2img)])
 
 							def wizard_refresh_shortcodes():
-								Unprompted.log.debug("Refreshing the Wizard Shortcodes")
-								Unprompted.shortcode_modules = {}
-								Unprompted.shortcode_objects = {}
-								Unprompted.shortcode_user_vars = {}
-								Unprompted.cleanup_routines = []
-								Unprompted.after_routines = []
+								Unprompted.log.debug("Refreshing the Wizard Shortcodes...")
 								return wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)])
 
 							with gr.Tab("Templates"):
 								with gr.Row():
 									self.templates_dropdown[int(is_img2img)] = gr.Dropdown(choices=[], label="Select template:", type="index", info="These are your GUI templates - you can think of them like custom scripts, except you can run an unlimited number of them at the same time.")
 									templates_refresh = ToolButton(value='\U0001f504', elem_id=f"templates-refresh")
-									templates_refresh.click(fn=wizard_refresh_templates, outputs=self.templates_dropdown[int(is_img2img)])
+									templates_refresh.click(fn=wizard_refresh_templates) # , outputs=self.templates_dropdown[int(is_img2img)]
 
 								self.templates_region[int(is_img2img)] = gr.Blocks()
 								wizard_populate_templates(self.templates_region[int(is_img2img)], True)
@@ -509,7 +511,7 @@ class Scripts(scripts.Script):
 								with gr.Row():
 									self.shortcodes_dropdown[int(is_img2img)] = gr.Dropdown(choices=shortcode_list, label="Select shortcode:", value=Unprompted.Config.ui.wizard_default_shortcode, info="GUI for setting up any shortcode in Unprompted. More engaging than reading the manual!")
 									shortcodes_refresh = ToolButton(value='\U0001f504', elemn_id=f"shortcodes-refresh")
-									shortcodes_refresh.click(fn=wizard_refresh_shortcodes, outputs=self.shortcodes_dropdown[int(is_img2img)])
+									shortcodes_refresh.click(fn=wizard_refresh_shortcodes) # , outputs=self.shortcodes_dropdown[int(is_img2img)]
 
 								self.shortcodes_region[int(is_img2img)] = gr.Blocks()
 								wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)], True)
@@ -567,8 +569,22 @@ class Scripts(scripts.Script):
 					with gr.Tab("🎓 Guides"):
 						guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
-				open_templates = gr.Button(value="📂 Open templates folder")
-				open_templates.click(fn=lambda: open_folder(f"{base_dir}/{Unprompted.Config.template_directory}"), inputs=[], outputs=[])
+				
+				def reload_unprompted():
+					Unprompted.log.debug("Reloading Unprompted...")
+					Unprompted.log.debug("Reloading `config.json`...")
+					Unprompted.cfg_dict, Unprompted.Config = parse_config(base_dir)
+					Unprompted.load_shortcodes()
+					# self.shortcodes_dropdown[int(is_img2img)].update(choices=wizard_refresh_shortcodes()) 
+					# self.templates_dropdown[int(is_img2img)].update(choices=wizard_refresh_templates())
+					Unprompted.log.debug("Reload completed!")
+
+				with gr.Row():
+					open_templates = gr.Button(value="📂 Open templates folder")
+					open_templates.click(fn=lambda: open_folder(f"{base_dir}/{Unprompted.Config.template_directory}"), inputs=[], outputs=[])
+
+					reload_config = gr.Button(value="\U0001f504 Reload Unprompted")
+					reload_config.click(fn=reload_unprompted, inputs=[], outputs=[])
 
 		return [is_enabled, unprompted_seed, match_main_seed]
 

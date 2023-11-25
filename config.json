@@ -11,6 +11,14 @@
 		"shortcodes":"shortcodes",
 		"models":"models"
 	},
+	"globals":
+	{
+		"prefix":"high detail RAW photo of",
+		"subject":"mona lisa",
+		"class":"woman",
+		"fluff":"best quality (worst quality:-1) (disfigured:-1)[civitai lora 'epiCRealismHelper' 0.5 _id=110334 _debug][civitai lora 'SimplePositive_v1_AutoRunMech' _mvid=159384]",
+		"negative_prompt":"[civitai embedding 'rfneg' _id='120412'] [civitai embedding 'UnrealisticDream' 1.0 _mvid='77173'] [civitai embedding 'BadDream' _mvid='77169'] [civitai embedding 'BeyondNegativev2-neg' _mvid='119407']"
+	},
 	"logging":
 	{
 		"colors":
@@ -49,6 +57,7 @@
 		"tag_close":"/",
 		"tag_escape":"`",
 		"delimiter":"|",
+		"global_prefix":"global_",
 		"wizard_delimiter":"🡢",
 		"not_operator":"!",
 		"cleanup_extra_spaces":true

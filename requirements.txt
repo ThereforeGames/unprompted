@@ -1,3 +1,4 @@
+opencv-python # general
 nltk # natural language processing
 pattern@git+https://github.com/NicolasBizzozzero/pattern # natural language processing
 sentence-transformers # [img2pez]
@@ -10,4 +11,4 @@ onnx # [faceswap]
 onnxruntime # [faceswap]
 mxnet -f https://dist.mxnet.io/python/cpu # [faceswap]
 albumentations # [faceswap] insightface
-opencv-python
+pyiqa # [image_info] image quality assessment
