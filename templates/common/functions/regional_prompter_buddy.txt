@@ -1,4 +1,4 @@
-[template name="Regional Prompter Buddy v0.0.5"]
+[template name="Regional Prompter Buddy v0.1.0"]
 ![Preview]([base_dir]/regional_prompter_buddy.png)
 
 This is an experimental template that streamlines and optimizes the prompt for use with the [Regional Prompter](https://github.com/hako-mikan/sd-webui-regional-prompter) extension. It is currently intended for producing images with two subjects, but may be improved to support more regions in the future.
