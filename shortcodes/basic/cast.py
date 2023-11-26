@@ -14,6 +14,7 @@ class Shortcode():
 				"int": to_int,
 				"float": float,
 				"str": str,
+				"bool": bool,
 				"list": list,
 				"dict": dict,
 				# Add more casting functions as needed

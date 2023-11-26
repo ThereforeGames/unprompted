@@ -117,6 +117,14 @@ Do note, however, that your mileage may vary if you are not using the default sa
 
 In addition to all of the Stable Diffusion variables exposed by Automatic1111's WebUI, Unprompted gives you access to the following variables:
 
+### global variables
+
+These variables are loaded from your `config.json` file and made available to all shortcodes and templates.
+
+They are prefixed with `Unprompted.Config.syntax.global_prefix`, which defaults to `global_`. Therefore, if you have a variable called `subject` in your config file, you can access it with `[get global_subject]`.
+
+The content of a global variable is processed when selected with `[get]`, which means you can store complex values into these variables such as functions or shortcodes, and they will not impact performance until you actually retrieve the value.
+
 ### batch_count_index
 
 An integer that correponds to your progress in a batch run. For example, if your batch count is set to 5, then `batch_count_index` will return a value from 0 to 4.
@@ -792,6 +800,20 @@ See `[switch]`.
 
 </details>
 
+<details><summary>[cast]</summary>
+
+Converts the content to the specified datatype.
+
+For security reasons, this shortcode is limited to the following datatypes: `int`, `float`, `str`, `bool`, `list`, `dict`.
+
+Please note that Unprompted is a weakly-typed language, which means that you can generally use a variable as any datatype without casting it. However, this shortcode may be useful when trying to pass an Unprompted variable to an outside function.
+
+```
+[cast int]34.7[/cast]
+```
+
+</details>
+
 <details><summary>[casing type]</summary>
 
 Converts the casing of content to the selected type. Possible types:
@@ -1089,7 +1111,9 @@ Supports the `_all_external` kwarg to retrieve all variables from an external .j
 
 Supports the `_escape` parg to remove square brackets from the returned value. This is useful for when you want to use the result of `[get]` as a shortcode argument.
 
-Supports the `_parse` parg to parse any shortcodes inside the returned value. This is useful when used in conjunction with `[set _defer]`.
+Supports the `_parse` parg to parse any shortcodes inside the returned value. This is useful when used in conjunction with `[set _defer]`. Note that global variables are parsed automatically. After parsing, the result is stored to the variable.
+
+Supports the `_read_only` parg which is used in conjunction with `_parse` to prevent the variable from being overwritten by the parsed result.
 
 ```
 My name is [get name]
@@ -1173,6 +1197,36 @@ The optional `max` argument allows you to specify the maximum number of hyponyms
 
 ```
 Possible results: dog, cat, bird, ...
+```
+
+</details>
+
+<details<summary>[image_info]</summary>
+
+Returns various types of metadata about the image, including quality assessment via the pyiqa toolbox.
+
+Supports the `file` kwarg which is the path to the image file. It can also take a PIL Image object. If not specified, this shortcode will analyze the current SD image.
+
+Supports the `width` parg for retrieving the width of the image in pixels.
+
+Supports the `height` parg for retrieving the height of the image in pixels.
+
+Supports the `aspect_ratio` parg for retrieving the aspect ratio of the image (`width` / `height`).
+
+Supports the `filename` parg which is the base name of the image file.
+
+Supports the `filetype` parg which is the file extension of the image file.
+
+Supports the `filesize` parg which is the size of the image file in bytes.
+
+Supports the `iqa` kwarg which is an image quality assessment metric to process the image with. Please refer to the [pyiqa docs](https://github.com/chaofengc/IQA-PyTorch) for a list of supported metrics. I like `laion_aes` for calculating an aesthetic score.
+
+Supports the `pixel_count` parg which is the total number of pixels in the image.
+
+Supports the `unload_metrics` parg which will unload the pyiqa metrics from memory after the shortcode is processed.
+
+```
+[image_info file="a:/inbox/somanypixels.png" pixel_count]
 ```
 
 </details>
@@ -1366,6 +1420,34 @@ A photo of red flowers.
 ```
 ```
 Result: A photo of purple marbles.
+```
+
+</details>
+
+<details><summary>[resize]</summary>
+
+Resizes an image to the given dimensions, works with the SD image by default.
+
+The first parg is the path to your `image`. It can also take a PIL Image object.
+
+Supports the `save_out` parg which is the path to save the resized image to. If you do not specify this, the new image will overwrite the original.
+
+Supports `width` and `height` kwargs which are the new dimensions of the image.
+
+Supports the `unit` kwarg which is the unit of measurement for the `width` and `height` kwargs. Options include `px` and `%`. Defaults to `px`.
+
+Supports the `technique` kwarg which is the method of resizing. Options include `scale` and `crop`. Defaults to `scale`.
+
+Supports the `resample_method` kwarg which is the method of resampling when using the `scale` technique. Options include `Nearest Neighbor`, `Box`, `Bilinear`, `Hamming`, `Bicubic`, and `Lanczos`. Defaults to `Lanczos`.
+
+Supports the `origin` kwarg which is the anchor point of the image when using the `crop` technique. Options include `top_left`, `top_center`, `top_right`, `middle_left`, `middle_center`, `middle_right`, `bottom_left`, `bottom_center`, and `bottom_right`. Defaults to `middle_center`.
+
+Supports the `keep_ratio` parg which will preserve the aspect ratio of the image. Note that if you specify both `width` and `height`, it will take precedence over `keep_ratio`.
+
+Supports the `min_width` and `min_height` kwargs which can be used to set a minimum size for the image. This is applied after the `keep_ratio` parg. If the image is smaller than the minimum, it will be scaled up to the minimum.
+
+```
+[resize "a:/inbox/picture.png" width=350]
 ```
 
 </details>
@@ -1982,6 +2064,8 @@ Supports the optional `padding` argument which increases the radius of your sele
 Supports the optional `smoothing` argument which refines the boundaries of the mask, allowing you to create a smoother selection. Default is 20. Try increasing this value if you find that your masks are looking blocky.
 
 Supports the optional `size_var` argument which will cause the shortcode to calculate the region occupied by your mask selection as a percentage of the total canvas. That value is stored into the variable you specify. For example: `[txt2mask size_var=test]face[/txt2mask]` if "face" takes up 40% of the canvas, then the `test` variable will become 0.4.
+
+Supports the `aspect_var` kwarg which is the name of a variable to store the aspect ratio of the mask. For example, if the mask is 512x768, the variable will become `0.667`.
 
 Supports the optional `negative_mask` argument which will subtract areas from the content mask.
 
