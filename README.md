@@ -126,6 +126,7 @@ We would like to thank the authors of the following libraries, which are used by
 - [Ghost](https://github.com/ai-forever/ghost) by A. Groshev, A. Maltseva, D. Chesakov, A. Kuznetsov and D. Dimitrov
 - [FaceFusion](https://github.com/facefusion/facefusion) by Henry Ruhs
 - [GPEN](https://github.com/yangxy/GPEN) by Tao Yang, Peiran Ren, Xuansong Xie, and Lei Zhang
+- [IQA-Pytorch](https://github.com/chaofengc/IQA-PyTorch) by Chaofeng Chen and Jiadi Mo
 
 ---
 
