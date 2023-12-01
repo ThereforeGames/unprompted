@@ -6,6 +6,14 @@ If you encounter any confusing, incomplete, or out-of-date information here, ple
 
 ## ❔ Known Issues
 
+<details><summary>WebUI slowdowns</summary>
+
+Due to the nature of Gradio, creating many UI elements leads to performance issues in the WebUI. This may be resolved in Gradio 4, as [suggested here](https://github.com/gradio-app/gradio/issues/4841#issuecomment-1632141732).
+
+In the meantime, you can improve performance by disabling Wizard tabs you do not use. For example, you can disable the Shortcodes tab by setting `ui.wizard_shortcodes` to false in `config_user.json`.
+
+</details>
+
 <details><summary>Compatibility with ControlNet</summary>
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically.

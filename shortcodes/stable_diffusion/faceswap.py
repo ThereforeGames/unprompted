@@ -111,7 +111,7 @@ class Shortcode():
 					self.fs_pipeline[swap_method]["face"] = [face]
 
 					embedding_str = self.Unprompted.parse_arg("embedding_path","blended_faces")
-					embedding_path = self.Unprompted.parse_filepath(helpers.str_with_ext(embedding_str, "safetensors"), context=context, must_exist=False, root=self.base_dir + "/user/faces")
+					embedding_path = self.Unprompted.parse_filepath(helpers.str_with_ext(embedding_str, ".safetensors"), context=context, must_exist=False, root=self.Unprompted.base_dir + "/user/faces")
 					os.makedirs(os.path.dirname(embedding_path), exist_ok=True)
 					# If embedding file already exists, increment the filename until it doesn't
 					dupe_counter = 2

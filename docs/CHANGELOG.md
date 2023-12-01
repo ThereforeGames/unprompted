@@ -3,7 +3,25 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.5.0 - 25 November 2023</summary>
+<details open><summary>10.6.0 - 1 December 2023</summary>
+
+### Added
+- New settings `Config.ui.wizard_shortcodes`, `Config.ui.wizard_templates`, `Config.ui.wizard_capture`: Allows you to disable certain Wizard tabs in order to improve WebUI performance
+- `[max]` and `[min]`: Supports the `_key` parg to return the key of the max/min value instead of the value itself
+- `[max]` and `[min]`: Can now parse values given as a list separated by `Config.syntax.delimiter`
+- `[get]`: Supports the `_key` kwarg to return the names of requested variables instead of their values
+- `[get]`: Supports the `_regex` kwarg to return the values of matching variables
+
+### Changed
+- `[set]`: Now parses the value of the first parg, allowing you to use shortcodes in evaluating the variable name
+- `[get]`: The default value of `_sep` is now `Config.syntax.delimiter` instead of space
+
+### Fixed
+- `[faceswap]`: Fixed `embedding_path` processing
+
+</details>
+
+<details><summary>10.5.0 - 25 November 2023</summary>
 
 ### About
 This update introduces global variables, several image processing shortcodes and improvements to some included templates and presets. The image features were motivated by Unprompted's integration with [BooruDatasetTagManager](https://github.com/starik222/BooruDatasetTagManager/pull/89) (my own PR.) For example, you can use `[image_info]` to assess image quality and influence the results of the Autotagger. Enjoy!

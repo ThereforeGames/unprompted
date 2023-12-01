@@ -10,14 +10,16 @@ class Shortcode():
 		import lib_unprompted.helpers as helpers
 		overrides = self.Unprompted.shortcode_objects["overrides"]
 		can_set = True
-
+		
 		if (content is None or len(content) < 1): return ""
 
-		self.Unprompted.is_var_deprecated(pargs[0])
+		key = self.Unprompted.parse_alt_tags(pargs[0],context)
+
+		self.Unprompted.is_var_deprecated(key)
 
 		# Prep content with override support
-		if (pargs[0] in overrides.shortcode_overrides):
-			content = overrides.shortcode_overrides[pargs[0]]
+		if (key in overrides.shortcode_overrides):
+			content = overrides.shortcode_overrides[key]
 		elif "_defer" not in pargs:
 			if "_raw" in pargs:
 				content = self.Unprompted.process_string(content, context)
@@ -26,24 +28,24 @@ class Shortcode():
 			content = helpers.autocast(content)
 
 		if "_new" in pargs:
-			if pargs[0] in self.Unprompted.shortcode_user_vars:
+			if key in self.Unprompted.shortcode_user_vars:
 				# Check if this var already holds a valid value, if not we will set it
 				if "_choices" in kwargs:
-					if self.Unprompted.shortcode_user_vars[pargs[0]] in self.Unprompted.parse_advanced(kwargs["_choices"], context).split(self.Unprompted.Config.syntax.delimiter): can_set = False
+					if self.Unprompted.shortcode_user_vars[key] in self.Unprompted.parse_advanced(kwargs["_choices"], context).split(self.Unprompted.Config.syntax.delimiter): can_set = False
 				else: can_set = False
 		elif "_choices" in kwargs:
 			if str(content) not in self.Unprompted.parse_advanced(kwargs["_choices"], context).split(self.Unprompted.Config.syntax.delimiter): can_set = False
 
 		if can_set:
-			if ("_append" in pargs): self.Unprompted.shortcode_user_vars[pargs[0]] += content
-			elif ("_prepend" in pargs): self.Unprompted.shortcode_user_vars[pargs[0]] = content + self.Unprompted.shortcode_user_vars[pargs[0]]
-			else: self.Unprompted.shortcode_user_vars[pargs[0]] = content
+			if ("_append" in pargs): self.Unprompted.shortcode_user_vars[key] += content
+			elif ("_prepend" in pargs): self.Unprompted.shortcode_user_vars[key] = content + self.Unprompted.shortcode_user_vars[key]
+			else: self.Unprompted.shortcode_user_vars[key] = content
 
-			self.log.debug(f"Setting {pargs[0]} to {self.Unprompted.shortcode_user_vars[pargs[0]]}")
+			self.log.debug(f"Setting {key} to {self.Unprompted.shortcode_user_vars[key]}")
 
 		if "_remember" in pargs:
-			if pargs[0] not in self.Unprompted.shortcode_objects["remember"].globals:
-				self.Unprompted.shortcode_objects["remember"].globals.append(pargs[0])
+			if key not in self.Unprompted.shortcode_objects["remember"].globals:
+				self.Unprompted.shortcode_objects["remember"].globals.append(key)
 
 		if "_external" in kwargs:
 			import json
@@ -51,12 +53,12 @@ class Shortcode():
 
 			# We load the file twice so that we can prepare the full data to send with json.dump
 			json_obj = helpers.create_load_json(filepath, encoding=self.Unprompted.Config.formats.default_encoding)
-			json_obj[pargs[0]] = self.Unprompted.shortcode_user_vars[pargs[0]]
+			json_obj[key] = self.Unprompted.shortcode_user_vars[key]
 
 			with open(filepath, "w", encoding=self.Unprompted.Config.formats.default_encoding) as f:
 				json.dump(json_obj, f, ensure_ascii=False)
 
-		if ("_out" in pargs): return (self.Unprompted.shortcode_user_vars[pargs[0]])
+		if ("_out" in pargs): return (self.Unprompted.shortcode_user_vars[key])
 		else: return ("")
 
 	def ui(self, gr):

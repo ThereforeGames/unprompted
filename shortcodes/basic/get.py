@@ -6,8 +6,9 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		import lib_unprompted.helpers as helpers
 		_default = str(self.Unprompted.parse_advanced(kwargs["_default"], context)) if "_default" in kwargs else ""
-		_sep = str(self.Unprompted.parse_advanced(kwargs["_sep"], context)) if "_sep" in kwargs else " "
+		_sep = str(self.Unprompted.parse_advanced(kwargs["_sep"], context)) if "_sep" in kwargs else self.Unprompted.Config.syntax.delimiter
 		_escape = self.Unprompted.parse_arg("_escape",False)
+		_key = self.Unprompted.parse_arg("_key",False)
 
 		return_string = ""
 
@@ -20,7 +21,17 @@ class Shortcode():
 				self.Unprompted.shortcode_user_vars[key] = value
 		
 		if "_var" in kwargs:
-			return_string += str(self.Unprompted.parse_advanced(kwargs["_var"], context))
+			return_string += str(self.Unprompted.parse_advanced(kwargs["_var"], context)) + _sep
+		
+		if "_regex" in kwargs:
+			import re
+			regex = re.compile(kwargs["_regex"])
+			for key, value in self.Unprompted.shortcode_user_vars.items():
+				if regex.match(key):
+					if _key: return_string += f"{key}{_sep}"
+					else: return_string += f"{value}{_sep}"
+		
+		if return_string: return_string = return_string[:-len(_sep)]
 
 		for idx, parg in enumerate(pargs):
 			self.Unprompted.is_var_deprecated(parg)
@@ -48,7 +59,9 @@ class Shortcode():
 					this_var = self.Unprompted.process_string(self.Unprompted.shortcode_user_vars[parg],context)
 					if "_read_only" not in pargs:
 						self.Unprompted.shortcode_user_vars[parg] = this_var
-				else: this_var = self.Unprompted.shortcode_user_vars[parg]
+				else:
+					if _key: this_var = parg
+					else: this_var = self.Unprompted.shortcode_user_vars[parg]
 
 				if (isinstance(this_var, list)): return_string += _sep.join(str(x) for x in this_var)
 				else: return_string += str(this_var)

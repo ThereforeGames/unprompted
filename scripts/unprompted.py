@@ -116,10 +116,11 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 					# Skip special fields
 					if block_name == "file":
 						this_val = f"{Unprompted.Config.syntax.delimiter}".join([str(e.name) for e in gr_obj.value])
-					else: this_val = gr_obj.value
+					else:
+						this_val = gr_obj.value
 					if (arg_name == "prompt"): continue
 
-					this_val = Unprompted.make_alt_tags(html.escape(str(helpers.autocast(this_val)).replace("\"","\'"),quote = False))
+					this_val = Unprompted.make_alt_tags(html.escape(str(helpers.autocast(this_val)).replace("\"", "\'"), quote=False))
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
 					result += f" {arg_name}={this_val}"
@@ -299,7 +300,7 @@ class Scripts(scripts.Script):
 	def ui(self, is_img2img):
 		mode_string = "img2img" if is_img2img else "txt2img"
 		with gr.Group():
-			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open, elem_classes=["unprompted-accordion",mode_string]):
+			with gr.Accordion("Unprompted", open=Unprompted.Config.ui.open, elem_classes=["unprompted-accordion", mode_string]):
 				with gr.Row(equal_height=True):
 					is_enabled = gr.Checkbox(label="Enabled", value=gradio_enabled_checkbox_workaround)
 
@@ -364,7 +365,7 @@ class Scripts(scripts.Script):
 									obj = gr.Image(label=this_label, value=content, type="filepath", interactive=True, info=_info, show_label=_show_label)
 								elif (block_name == "file"):
 									if len(content) < 1: content = None
-									file_types = helpers.ensure(kwargs["_file_types"].split(Unprompted.Config.syntax.delimiter),list) if "_file_types" in kwargs else None
+									file_types = helpers.ensure(kwargs["_file_types"].split(Unprompted.Config.syntax.delimiter), list) if "_file_types" in kwargs else None
 
 									obj = gr.File(label=this_label, value=content, interactive=True, info=_info, show_label=_show_label, file_count=kwargs["_file_count"] if "_file_count" in kwargs else "single", file_types=file_types)
 
@@ -390,7 +391,7 @@ class Scripts(scripts.Script):
 							elif pargs[0] == "row":
 								block = gr.Row(equal_height=pargs["_equal_height"] if "_equal_height" in pargs else False)
 							elif pargs[0] == "column":
-								block = gr.Column(scale=int(pargs["_scale"]) if "_scale" in pargs else 1)								
+								block = gr.Column(scale=int(pargs["_scale"]) if "_scale" in pargs else 1)
 
 							with block:
 								# Unprompted.parse_alt_tags(content, None, wizard_shortcode_parser)
@@ -411,7 +412,7 @@ class Scripts(scripts.Script):
 						wizard_shortcode_parser.register(handler, "base_dir")
 
 						with gr.Tabs():
-							
+
 							self.filtered_templates = Unprompted.wizard_groups[WizardModes.TEMPLATES][int(is_img2img)]
 							self.filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
 
@@ -426,7 +427,7 @@ class Scripts(scripts.Script):
 										# Render the text file's UI with special parser object
 										wizard_shortcode_parser.parse(file.read())
 										# Auto-include is always the last element
-										gr.Checkbox(label=f"🪄 Auto-include {self.dropdown_item_name} in prompt", value=False, elem_classes=["wizard-autoinclude",mode_string])
+										gr.Checkbox(label=f"🪄 Auto-include {self.dropdown_item_name} in prompt", value=False, elem_classes=["wizard-autoinclude", mode_string])
 										# Add event listeners
 										wizard_prep_event_listeners(self.filtered_templates[filename])
 									Unprompted.log.debug(f"Added {'img2img' if is_img2img else 'txt2img'} Wizard Template: {self.dropdown_item_name}")
@@ -460,7 +461,7 @@ class Scripts(scripts.Script):
 							def wizard_populate_shortcodes(region, first_load=False):
 								if not first_load:
 									Unprompted.load_shortcodes()
-									Unprompted.log.warning("Sorry, Gradio is presently incapable of dynamically creating UI elements. You must restart the WebUI to see new shortcodes in the Wizard. This is expected to change in a future release: https://github.com/gradio-app/gradio/issues/4689")									
+									Unprompted.log.warning("Sorry, Gradio is presently incapable of dynamically creating UI elements. You must restart the WebUI to see new shortcodes in the Wizard. This is expected to change in a future release: https://github.com/gradio-app/gradio/issues/4689")
 									return ""
 
 								with region:
@@ -472,7 +473,7 @@ class Scripts(scripts.Script):
 												# Run the shortcode's UI template to populate
 												Unprompted.shortcode_objects[key].ui(gr)
 												# Auto-include is always the last element
-												gr.Checkbox(label=f"🪄 Auto-include [{key}] in prompt", value=False, elem_classes=["wizard-autoinclude",mode_string])
+												gr.Checkbox(label=f"🪄 Auto-include [{key}] in prompt", value=False, elem_classes=["wizard-autoinclude", mode_string])
 												# Add event listeners
 												wizard_prep_event_listeners(self.filtered_shortcodes[key])
 
@@ -484,54 +485,59 @@ class Scripts(scripts.Script):
 								Unprompted.log.debug("Refreshing the Wizard Templates...")
 								Unprompted.log.warning("Sorry, Gradio is presently incapable of dynamically creating UI elements. You must restart the WebUI to update Wizard templates. This is expected to change in a future release: https://github.com/gradio-app/gradio/issues/4689")
 								return ""
-								Unprompted.wizard_template_names.clear()
-								Unprompted.wizard_template_files.clear()
-								Unprompted.wizard_template_kwargs.clear()
-								return wizard_populate_templates(self.templates_region[int(is_img2img)])
+								if Unprompted.Config.ui.wizard_templates:
+									Unprompted.wizard_template_names.clear()
+									Unprompted.wizard_template_files.clear()
+									Unprompted.wizard_template_kwargs.clear()
+									return wizard_populate_templates(self.templates_region[int(is_img2img)])
+								return ""
 
 							def wizard_refresh_shortcodes():
 								Unprompted.log.debug("Refreshing the Wizard Shortcodes...")
 								return wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)])
 
-							with gr.Tab("Templates"):
-								with gr.Row():
-									self.templates_dropdown[int(is_img2img)] = gr.Dropdown(choices=[], label="Select template:", type="index", info="These are your GUI templates - you can think of them like custom scripts, except you can run an unlimited number of them at the same time.")
-									templates_refresh = ToolButton(value='\U0001f504', elem_id=f"templates-refresh")
-									templates_refresh.click(fn=wizard_refresh_templates) # , outputs=self.templates_dropdown[int(is_img2img)]
+							if Unprompted.Config.ui.wizard_templates:
+								with gr.Tab("Templates"):
+									with gr.Row():
+										self.templates_dropdown[int(is_img2img)] = gr.Dropdown(choices=[], label="Select template:", type="index", info="These are your GUI templates - you can think of them like custom scripts, except you can run an unlimited number of them at the same time.")
+										templates_refresh = ToolButton(value='\U0001f504', elem_id=f"templates-refresh")
+										templates_refresh.click(fn=wizard_refresh_templates)  # , outputs=self.templates_dropdown[int(is_img2img)]
 
-								self.templates_region[int(is_img2img)] = gr.Blocks()
-								wizard_populate_templates(self.templates_region[int(is_img2img)], True)
+									self.templates_region[int(is_img2img)] = gr.Blocks()
+									wizard_populate_templates(self.templates_region[int(is_img2img)], True)
 
-								self.templates_dropdown[int(is_img2img)].choices = Unprompted.wizard_template_names
+									self.templates_dropdown[int(is_img2img)].choices = Unprompted.wizard_template_names
 
-								wizard_template_btn = gr.Button(value="🧠 Generate Shortcode")
+									wizard_template_btn = gr.Button(value="🧠 Generate Shortcode")
 
-							with gr.Tab("Shortcodes"):
-								shortcode_list = list(Unprompted.shortcode_objects.keys())
-								with gr.Row():
-									self.shortcodes_dropdown[int(is_img2img)] = gr.Dropdown(choices=shortcode_list, label="Select shortcode:", value=Unprompted.Config.ui.wizard_default_shortcode, info="GUI for setting up any shortcode in Unprompted. More engaging than reading the manual!")
-									shortcodes_refresh = ToolButton(value='\U0001f504', elemn_id=f"shortcodes-refresh")
-									shortcodes_refresh.click(fn=wizard_refresh_shortcodes) # , outputs=self.shortcodes_dropdown[int(is_img2img)]
+							if Unprompted.Config.ui.wizard_shortcodes:
+								with gr.Tab("Shortcodes"):
+									shortcode_list = list(Unprompted.shortcode_objects.keys())
+									with gr.Row():
+										self.shortcodes_dropdown[int(is_img2img)] = gr.Dropdown(choices=shortcode_list, label="Select shortcode:", value=Unprompted.Config.ui.wizard_default_shortcode, info="GUI for setting up any shortcode in Unprompted. More engaging than reading the manual!")
+										shortcodes_refresh = ToolButton(value='\U0001f504', elemn_id=f"shortcodes-refresh")
+										shortcodes_refresh.click(fn=wizard_refresh_shortcodes)  # , outputs=self.shortcodes_dropdown[int(is_img2img)]
 
-								self.shortcodes_region[int(is_img2img)] = gr.Blocks()
-								wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)], True)
+									self.shortcodes_region[int(is_img2img)] = gr.Blocks()
+									wizard_populate_shortcodes(self.shortcodes_region[int(is_img2img)], True)
 
-								wizard_shortcode_btn = gr.Button(value="🧠 Generate Shortcode")
+									wizard_shortcode_btn = gr.Button(value="🧠 Generate Shortcode")
 
-							with gr.Tab("Capture"):
-								gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and `[call]` it later, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
-								# wizard_capture_include_inference = gr.Checkbox(label="Include inference settings",value=True)
-								wizard_capture_include_inference = gr.Radio(label="Include inference settings:", choices=["none", "simple", "verbose"], value="simple", interactive=True)
-								wizard_capture_include_prompt = gr.Radio(label="Include prompt:", choices=["none", "original", "postprocessed"], value="original", interactive=True)
-								wizard_capture_include_neg_prompt = gr.Radio(label="Include negative prompt:", choices=["none", "original", "postprocessed"], value="original", interactive=True)
-								wizard_capture_include_model = gr.Checkbox(label="Include model", value=False)
-								wizard_capture_add_template_block = gr.Checkbox(label="Add [template] block", value=False)
-								wizard_capture_btn = gr.Button(value="Generate code for my last image")
+							if Unprompted.Config.ui.wizard_capture:
+								with gr.Tab("Capture"):
+									gr.Markdown(value="This assembles Unprompted code with the WebUI settings for the last image you generated. You can save the code to your `templates` folder and `[call]` it later, or send it to someone as 'preset' for foolproof image reproduction.<br><br>**⚠️ Important:** <em>When you change your inference settings, you must generate an image before Unprompted can detect the changes. This is due to a limitation in the WebUI extension framework.</em>")
+									# wizard_capture_include_inference = gr.Checkbox(label="Include inference settings",value=True)
+									wizard_capture_include_inference = gr.Radio(label="Include inference settings:", choices=["none", "simple", "verbose"], value="simple", interactive=True)
+									wizard_capture_include_prompt = gr.Radio(label="Include prompt:", choices=["none", "original", "postprocessed"], value="original", interactive=True)
+									wizard_capture_include_neg_prompt = gr.Radio(label="Include negative prompt:", choices=["none", "original", "postprocessed"], value="original", interactive=True)
+									wizard_capture_include_model = gr.Checkbox(label="Include model", value=False)
+									wizard_capture_add_template_block = gr.Checkbox(label="Add [template] block", value=False)
+									wizard_capture_btn = gr.Button(value="Generate code for my last image")
 
 							wizard_result = gr.HTML(label="wizard_result", value="", elem_id="unprompted_result")
-							wizard_template_btn.click(fn=wizard_generate_template, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
-							wizard_shortcode_btn.click(fn=wizard_generate_shortcode, inputs=[self.shortcodes_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
-							wizard_capture_btn.click(fn=wizard_generate_capture, inputs=[wizard_capture_include_inference, wizard_capture_include_prompt, wizard_capture_include_neg_prompt, wizard_capture_include_model, wizard_capture_add_template_block], outputs=wizard_result)
+							if Unprompted.Config.ui.wizard_templates: wizard_template_btn.click(fn=wizard_generate_template, inputs=[self.templates_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
+							if Unprompted.Config.ui.wizard_shortcodes: wizard_shortcode_btn.click(fn=wizard_generate_shortcode, inputs=[self.shortcodes_dropdown[int(is_img2img)], gr.Variable(value=is_img2img), gr.Variable(value="<strong>RESULT:</strong> ")], outputs=wizard_result)
+							if Unprompted.Config.ui.wizard_capture: wizard_capture_btn.click(fn=wizard_generate_capture, inputs=[wizard_capture_include_inference, wizard_capture_include_prompt, wizard_capture_include_neg_prompt, wizard_capture_include_model, wizard_capture_add_template_block], outputs=wizard_result)
 
 					else:
 						gr.HTML(label="wizard_debug", value="You have disabled the Wizard in your config.")
@@ -569,13 +575,12 @@ class Scripts(scripts.Script):
 					with gr.Tab("🎓 Guides"):
 						guide = gr.Markdown(value=get_markdown("docs/GUIDE.md"))
 
-				
 				def reload_unprompted():
 					Unprompted.log.debug("Reloading Unprompted...")
 					Unprompted.log.debug("Reloading `config.json`...")
 					Unprompted.cfg_dict, Unprompted.Config = parse_config(base_dir)
 					Unprompted.load_shortcodes()
-					# self.shortcodes_dropdown[int(is_img2img)].update(choices=wizard_refresh_shortcodes()) 
+					# self.shortcodes_dropdown[int(is_img2img)].update(choices=wizard_refresh_shortcodes())
 					# self.templates_dropdown[int(is_img2img)].update(choices=wizard_refresh_templates())
 					Unprompted.log.debug("Reload completed!")
 
@@ -777,7 +782,6 @@ class Scripts(scripts.Script):
 				Unprompted.shortcode_user_vars["batch_size_index"] += 1
 				Unprompted.shortcode_user_vars["batch_real_index"] += 1
 
-				
 				if Unprompted.fix_hires_prompts:
 					Unprompted.log.debug("Synchronizing prompt vars with hr_prompt vars")
 					p.hr_prompt = prompt_result
