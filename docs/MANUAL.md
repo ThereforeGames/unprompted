@@ -1854,7 +1854,7 @@ If the given `path` ends with the `*` wildcard, `[init_image]` will choose a ran
 
 <details><summary>[invert_mask]</summary>
 
-Inverts the mask. Great in combination with `[txt2mask]` and `[instance2mask]`.
+Inverts the mask. Great in combination with `[txt2mask]` and `[instance2mask]`. Simply put the tag `[invert_mask]`.
 
 Currently lacks batch support.
 
