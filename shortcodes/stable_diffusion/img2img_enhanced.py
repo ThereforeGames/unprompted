@@ -18,7 +18,9 @@ class Shortcode():
 	def __init__(self, Unprompted):
 		import lib_unprompted.helpers as helpers
 		self.Unprompted = Unprompted
-		self.description = "img2img enhanced edition. This will allow you to run img2img either on a single image or on a batch of images. If you are running a batch of images inside of an [after] block. I believe the [after] block is required for this"
+		self.description = "img2img enhanced edition. This will allow you to run img2img either on a single image or on a batch of images. "
+		self.description += "If you are running a batch of images inside of an [after] block. I believe the [after] block is required for this. "
+		self.description += "The img2img_enhanced task requires that you have have the Automatic1111 setting: User Interface -> Infotext -> Write Infotext to metadata of the generated image, turned on."
 
 		# the isFirstPass is being used to detect when we have the array of processed images from the previous operation
 		# the first batch that comes through in the after def has the original images as well as an additional
@@ -102,17 +104,20 @@ class Shortcode():
 
 			for image in processed.images:
 
-				# pull the image details out from the image.info				
-				image_details = self.process_image_details(image.info["parameters"])
+				try:					
+					# pull the image details out from the image.info				
+					image_details = self.process_image_details(image.info["parameters"])
+					image_positive_prompt = image_details["image_prompt"]
+					image_steps = image_details["Steps"]
+					image_sampler = image_details["Sampler"]
+					image_config_scale = image_details["CFG scale"]
+					image_unpromted_negative_prompt = image_details["Unprompted Negative Prompt"]
 
-				image_positive_prompt = image_details["image_prompt"]
-				image_steps = image_details["Steps"]
-				image_sampler = image_details["Sampler"]
-				image_config_scale = image_details["CFG scale"]
-				image_unpromted_negative_prompt = image_details["Unprompted Negative Prompt"]
-
-				current_width = self.Unprompted.parse_arg("width",0)
-				current_height = self.Unprompted.parse_arg("height",0)
+					current_width = self.Unprompted.parse_arg("width",0)
+					current_height = self.Unprompted.parse_arg("height",0)
+				except Exception as e:
+					self.log.exception("Exception while running the img2img_enhanced task. The img2img_enhanced task requires that you have have the Automatic1111 setting: User Interface -> Infotext -> Write Infotext to metadata of the generated image, turned on.")
+					return ""
 		
 				if current_width == 0 or current_height == 0:
 					current_width = image.width
@@ -139,11 +144,10 @@ class Shortcode():
 					config_scale = image_config_scale
 
 				denoising_strength = self.Unprompted.parse_arg("denoising_strength",0.0)
-				if (denoising_strength == 0):
-					# if no denoising strenth is set, then use the one from the image details, otherwise grab it from the user vars if it exists there
-					denoising_strength = image_details["Denoising strength"] if "Denoising strength" in image_details else 0
-					if (denoising_strength == None):
-						denoising_strength = self.Unprompted.shortcode_user_vars["denoising_strength"] if self.Unprompted.shortcode_user_vars["denoising_strength"] is not None else 1.0,
+				if (denoising_strength == 0):					
+					denoising_strength = self.Unprompted.shortcode_user_vars["denoising_strength"] if self.Unprompted.shortcode_user_vars["denoising_strength"] is not None else 0.0
+					if (denoising_strength == 0):
+						denoising_strength = image_details["Denoising strength"] if "Denoising strength" in image_details else 1.0
 
 				img2img_result = modules.img2img.img2img(
 					"unprompted_img2img",  #id_task
@@ -188,7 +192,7 @@ class Shortcode():
 			return ""
    
 		except Exception as e:
-			self.log.exception("Exception while running the img2img task")
+			self.log.exception("Exception while running the img2img_enhanced task")
 			return ""
 
 	def ui(self, gr):
