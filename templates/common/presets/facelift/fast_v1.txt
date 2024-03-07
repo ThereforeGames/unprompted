@@ -1,0 +1,1 @@
+[faceswap "{get faces}" unload="{get unload_all}" body="{get body}"][restore_faces unload="{get unload}" method=gpen]

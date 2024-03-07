@@ -8,7 +8,7 @@ color-matcher # [zoom_enhance]
 modelscope # [faceswap] face_fusion
 tensorflow # [faceswap]
 onnx # [faceswap]
-onnxruntime # [faceswap]
+onnxruntime-gpu -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ # [faceswap] GPU support (CUDA 12 package)
 mxnet -f https://dist.mxnet.io/python/cpu # [faceswap]
 albumentations # [faceswap] insightface
 pyiqa # [image_info] image quality assessment

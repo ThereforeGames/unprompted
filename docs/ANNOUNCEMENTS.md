@@ -1,6 +1,28 @@
 # Unprompted Announcements
 Stay informed on the latest Unprompted news and updates.
 
+<details><summary>Spice It Up - 6 March 2024</summary>
+
+Hi folks,
+
+I have just released Unprompted v10.7.0, which includes two notable features:
+
+First, the **Magic Spice template** that aims to "beautify" your Stable Diffusion results using techniques from [Fooocus](https://github.com/lllyasviel/Fooocus) and elsewhere.
+
+It can, for example: run a GPT-2 model to expand your prompt, automatically apply optimized Loras and embeddings, and even fix issues with image contrast. Here are some before/after examples using the `allspice_v1` preset:
+
+![magic_spice_demo]([base_dir]/images/posts/magic_spice_demo.jpg)
+
+This update also adds the `[autotone]` shortcode, which implements the Photoshop algorithm by the same name. It adjusts the black point of an image to enhance contrast. Particularly useful when working with low CFG or Loras that present gamma problems. Simply include `[after][autotone][/after]` in your prompts to engage the feature:
+
+![autotone_demo]([base_dir]/images/posts/autotone_demo.png)
+
+Finally, v10.7.0 addresses a few bugs and improves compatibility with the Forge WebUI.
+
+Thank you for enjoying Unprompted.
+
+</details>
+
 <details><summary>Cool Autumn Update — 11 October 2023</summary>
 
 Hi folks,

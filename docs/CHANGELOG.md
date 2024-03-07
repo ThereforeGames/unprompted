@@ -3,7 +3,42 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.6.0 - 1 December 2023</summary>
+<details open><summary>10.7.0 - 6 March 2024</summary>
+
+### Added
+- New shortcode `[autotone]`: Adjusts the black point of the image to enhance contrast (should be placed inside an `[after]` block)
+- New free template Magic Spice v0.0.1: Produces high-quality images regardless of the simplicity of your prompt, using ideas from Fooocus and elsewhere
+- `[faceswap]`: Now supports the `gender_bonus` kwarg to boost facial similarity score when source and target genders are equal (compatible with insightface pipeline only)
+- `[faceswap]`: Now supports the `age_influence` kwarg to penalize facial similarity score based on the difference of ages between source and target faces (compatible with insightface pipeline only)
+- `[faceswap]`: Now supports the `prefer_gpu` kwarg to run inference on the video card if possible
+- `[faceswap]`: The `make_embedding` option will now save gender and age values into the blended embedding
+- `[faceswap]`: The insightface analyser is now properly cached, improving inference time significantly
+- `[gpt]`: Now supports the `instruction` kwarg to help steer models that are capable of following instruction-response format prompts
+- Added a customized `insightface_cuda` package that swaps hardcoded CPU references to CUDA equivalents
+- Wizard UI now supports `_lines` and `_max_lines` to specify number of rows in a textbox UI element
+- Unprompted now detects if you're using the Forge WebUI
+- New txt2img preset `restart_fast_v1`
+- New txt2img preset `dpm_lightning_8step_v1`: Uses the new Lightning sampler and Lora in Forge WebUI for super fast SDXL inference
+- New helper function `str_to_rgb()`
+- Facelift template banner image
+
+### Changed
+- `[gpt]`: The default GPT-2 model is now `LykosAI/GPT-Prompt-Expansion-Fooocus-v2`
+- `[gpt]`: Renamed the `cache` parg to `unload` to match naming convention of other shortcodes
+- Facelift template now defaults to the `fast_v1` preset
+
+### Fixed
+- The `wizard_generate_shortcode()` and `wizard_generate_template()` methods will no longer escape special HTML characters in the prompt
+- `[after]`: Fixed compatibility issue with Forge WebUI
+- `[faceswap]`: The `export_embedding` parg will now bypass the cache to avoid errors
+- The `get_local_file_dir()` method now uses the `unprompted_dir` variable in case Unprompted is not in the usual `extensions` directory
+
+### Removed
+- Developer presets
+
+</details>
+
+<details><summary>10.6.0 - 1 December 2023</summary>
 
 ### Added
 - New settings `Config.ui.wizard_shortcodes`, `Config.ui.wizard_templates`, `Config.ui.wizard_capture`: Allows you to disable certain Wizard tabs in order to improve WebUI performance

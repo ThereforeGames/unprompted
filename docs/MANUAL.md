@@ -18,6 +18,8 @@ In the meantime, you can improve performance by disabling Wizard tabs you do not
 
 To achieve compatibility between Unprompted and ControlNet, you must manually rename the `unprompted` extension folder to `_unprompted`. This is due to [a limitation in the Automatic1111 extension framework](https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011) whereby priority is determined alphabetically.
 
+Additionally, if you're using the Forge WebUI, you should move `_unprompted` to `extensions-builtin/_unprompted` so that it can execute ahead of Forge's native ControlNet extension.
+
 </details>
 
 <details><summary>Compatibility with other extensions</summary>
@@ -554,6 +556,8 @@ The `[set]` block supports `_show_label` which lets you toggle visibility of the
 
 The `[set]` block supports `_info` which is descriptive text that will appear near the UI element.
 
+The `[set]` block supports `_lines` and `_max_lines` to specify the number of rows shown in a `textbox` element.
+
 Supports the `[wizard]` shortcode which will group the inner `[set]` blocks into a group UI element, the type of which is defined by the first parg: `accordion`, `row`, or `column`.
 
 </details>
@@ -746,6 +750,22 @@ Supports the optional `confidence` argument, which is a float between 0 and 1 th
 ```
 ```
 RESULT: spelling is very difficult sometimes, okay!!!
+```
+
+</details>
+
+<details><summary>[autotone]</summary>
+
+Adjusts the black point of a given image for enhanced contrast. The algorithm produces results that are virtually identical to the **Image > Auto Tone** feature in Photoshop.
+
+Supports the `file` kwarg which is the filepath to an image to modify. Defaults to the Stable Diffusion output.
+
+Supports the `show` parg which will append the original image to the output window.
+
+Supports the `out` kwarg which is a location to save the modified image to.
+
+```
+[after][autotone][/after]
 ```
 
 </details>
@@ -1131,23 +1151,25 @@ My name is [get name]
 
 <details><summary>[gpt]</summary>
 
-Processes the content with a given GPT model. This is similar to the "Magic Prompts" feature of Dynamic Prompts, if you're familiar with that.
+Processes the content with a given GPT-2 model. This is similar to the "Magic Prompts" feature of Dynamic Prompts, if you're familiar with that.
 
 This shortcode requires the "transformers" package which is included with the WebUI by default, but you may need to install the package manually if you're using Unprompted as a standalone program.
 
 You can leave the content blank for a completely randomized prompt.
 
-Supports the `model` kwarg which can accept a pretrained model identifier from the HuggingFace hub. Defaults to `Gustavosta/MagicPrompt-Stable-Diffusion`. The first time you use a new model, it will be downloaded to the `unprompted/models/gpt` folder.
+Supports the `model` kwarg which can accept a pretrained model identifier from the HuggingFace hub. Defaults to `LykosAI/GPT-Prompt-Expansion-Fooocus-v2`. The first time you use a new model, it will be downloaded to the `unprompted/models/gpt` folder.
 
 Please see the Wizard UI for a list of suggested models.
 
 Supports the `task` kwarg which determines behavior of the transformers pipeline module. Defaults to `text-generation`. You can set this to `summarization` if you want to shorten your prompts a la Midjourney.
 
+Supports the `instruction` kwarg which is a string to be prepended to the prompt. This text will be excluded from the final result. Example: `[gpt instruction="Generate a list of animals"]cat,[/gpt]` may return `cat, dog, bird, horse, cow`.
+
 Supports the `max_length` kwarg which is the maximum number of words to be returned by the shortcode. Defaults to 50.
 
 Supports the `min_length` kwarg which is the minimum number of words to be returned by the shortcode. Defaults to 1.
 
-Supports the `cache` parg to keep the model and tokenizer in memory between runs.
+Supports the `unload` parg to prevent keeping the model and tokenizer in memory between runs.
 
 
 </details>
@@ -1689,7 +1711,7 @@ All of your kwargs are sent as URL parameters to the API (with the exception of 
 
 Supports shorthand syntax with pargs, where the first parg is `types` (e.g. LORA or TextualInversion), the second parg is `query` (model name search terms), the third parg is `_weight` (optional, defaults to 1.0), and the fourth parg (also optional) is the `_file`. For example: `[civitai lora EasyNegative 0.5]`.
 
-The `query` value is used as the filename to look for on your filesystem. You can typically search Civitai for a direct model filename (e.g. `query="kkw-new-neg-v1.4"` will return the 'New Negative' model). However, if this isn't working for whatever reason, you can override the filesystem search with the `_file` kwarg: `[civitai query="New Negative" _file="kkw-new-neg-v1.4"]` - but consider this a last resort!
+The `query` value is used as the filename to look for on your filesystem. You can typically search Civitai for a direct model filename (e.g. `query="kkw-new-neg-v1.4"` will return the 'New Negative' model). However, if this isn't working for whatever reason, you can override the filesystem search with the `_file` kwarg: `[civitai query="New Negative" _file="kkw-new-neg-v1.4"]`.
 
 This shortcode will auto-correct the case-sensitivity of `types` to the API's expected format. The API is a bit inconsistent in this regard (e.g. lora = `LORA`, controlnet = `Controlnet`, aestheticgradient = `AestheticGradient`...) but Unprompted will handle it for you. Here are the other edge cases that Unprompted will catch:
 
@@ -1734,10 +1756,14 @@ The `insightface` pipeline is currently the most developed option as it supports
 - It supports the `minimum_similarity` kwarg to bypass the faceswap if no one in the target picture bears resemblance to the new face. This kwarg takes a float value, although I haven't determined the upper and lower boundaries yet. A greater value means "more similar" and the range appears to be something like -10 to 300.
 - It supports the `export_embedding` parg which takes the average of all input faces and exports it to a safetensors embedding file. This file represents a composite face that can be used in lieu of individual images.
 - It supports the `embedding_path` kwarg which is the path to use in conjunction with `export_embedding`. Defaults to `unprompted/user/faces/blended_faces.safetensors`.
+- It supports the `gender_bonus` kwarg to boost facial similarity score when source and target genders are equal.
+- It supports the `age_influence` kwarg to penalize facial similarity score based on the difference of ages between source and target faces.
 
 Supports the `visibility` kwarg which is the alpha value with which to blend the result back into the original image. Defaults to 1.0.
 
 Supports the `unload` kwarg which allows you to free some or all of the faceswap components after inference. Useful for low memory devices, but will increase inference time. You can pass the following as a delimited string with `Config.syntax.delimiter`: `model`, `face`, `all`.
+
+Supports the `prefer_gpu` kwarg to run on the video card whenever possible.
 
 It is recommended to follow this shortcode with `[restore_faces]` in order to improve the resolution of the swapped result. Or, use the included Facelift template as an all-in-one solution.
 

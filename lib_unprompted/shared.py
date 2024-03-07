@@ -62,7 +62,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, None, preprocess)
 					def handler(keyword, pargs, kwargs, context):
-						self.prep_for_shortcode(keyword,pargs,kwargs,context)
+						self.prep_for_shortcode(keyword, pargs, kwargs, context)
 						return (self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 
 				# Normal atomic
@@ -70,7 +70,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name)
 					def handler(keyword, pargs, kwargs, context):
-						self.prep_for_shortcode(keyword,pargs,kwargs,context)
+						self.prep_for_shortcode(keyword, pargs, kwargs, context)
 						return (self.shortcode_objects[f"{keyword}"].run_atomic(pargs, kwargs, context))
 			else:
 				# Allow shortcode to run before inner content
@@ -81,7 +81,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}", preprocess)
 					def handler(keyword, pargs, kwargs, context, content):
-						self.prep_for_shortcode(keyword,pargs,kwargs,context,content)
+						self.prep_for_shortcode(keyword, pargs, kwargs, context, content)
 						return (self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 
 				# Normal block
@@ -89,7 +89,7 @@ class Unprompted:
 
 					@shortcodes.register(shortcode_name, f"{self.Config.syntax.tag_close}{shortcode_name}")
 					def handler(keyword, pargs, kwargs, context, content):
-						self.prep_for_shortcode(keyword,pargs,kwargs,context,content)
+						self.prep_for_shortcode(keyword, pargs, kwargs, context, content)
 						return (self.shortcode_objects[f"{keyword}"].run_block(pargs, kwargs, context, content))
 
 			# Setup extra routines
@@ -107,7 +107,7 @@ class Unprompted:
 		self.log.info(f"Finished loading in {time.time()-start_time} seconds.")
 
 	def __init__(self, base_dir="."):
-		self.VERSION = "10.6.0"
+		self.VERSION = "10.7.0"
 
 		self.shortcode_modules = {}
 		self.shortcode_objects = {}
@@ -178,7 +178,7 @@ class Unprompted:
 	def start(self, string, debug=True):
 		if debug: self.log.debug("Loading global variables...")
 		for global_var, value in self.Config.globals.__dict__.items():
-			self.shortcode_user_vars[self.Config.syntax.global_prefix+global_var] = value
+			self.shortcode_user_vars[self.Config.syntax.global_prefix + global_var] = value
 		if debug: self.log.debug("Main routine started...")
 		self.routine = "main"
 		self.conditional_depth = -1
@@ -204,13 +204,13 @@ class Unprompted:
 		return processed
 
 	def process_string(self, string, context=None, cleanup_extra_spaces=None):
-		if cleanup_extra_spaces==None: cleanup_extra_spaces = self.Config.syntax.cleanup_extra_spaces
+		if cleanup_extra_spaces == None: cleanup_extra_spaces = self.Config.syntax.cleanup_extra_spaces
 
 		self.conditional_depth += 1
 		if context: self.current_context = context
 		# First, sanitize contents
 		string = self.shortcode_parser.parse(self.sanitize_pre(string, self.Config.syntax.sanitize_before), context)
-		self.conditional_depth = max(0, self.conditional_depth -1)
+		self.conditional_depth = max(0, self.conditional_depth - 1)
 		return (self.sanitize_post(string, cleanup_extra_spaces))
 
 	def sanitize_pre(self, string, rules_obj, only_remove_last=False):
@@ -268,7 +268,7 @@ class Unprompted:
 		self.kwargs = kwargs
 		self.context = context
 		self.content = content
-	
+
 	def parse_arg(self, key, default=False, datatype=None, context=None, pargs=None, kwargs=None, arithmetic=True, delimiter=None):
 		"""Processes the argument, casting it to the correct datatype."""
 		# Load defaults from the Unprompted object
@@ -285,8 +285,8 @@ class Unprompted:
 		if pargs and key in pargs:
 			return True
 		elif kwargs and key in kwargs:
-			if arithmetic: default = self.parse_advanced(str(kwargs[key]),context)
-			else: default = self.parse_alt_tags(str(kwargs[key]),context)
+			if arithmetic: default = self.parse_advanced(str(kwargs[key]), context)
+			else: default = self.parse_alt_tags(str(kwargs[key]), context)
 			if delimiter:
 				try:
 					# We will cast the value to a string so that we can split it, but
@@ -300,7 +300,7 @@ class Unprompted:
 
 		try:
 			if type(default) == list:
-				for idx,val in enumerate(default):
+				for idx, val in enumerate(default):
 					default[idx] = datatype(val)
 			else:
 				default = datatype(default)
@@ -310,11 +310,10 @@ class Unprompted:
 
 		return default
 
-	
 	def parse_advanced(self, string, context=None):
 		"""First runs the string through parse_alt_tags, the result of which then goes through simpleeval"""
 		if string is None: return ""
-		
+
 		if (len(string) < 1): return ""
 		string = self.parse_alt_tags(string, context)
 		if self.Config.advanced_expressions:
@@ -360,11 +359,11 @@ class Unprompted:
 		string = string.replace(tmp_start, self.Config.syntax.tag_start_alt).replace(tmp_end, self.Config.syntax.tag_end_alt)
 
 		return (parser.parse(string, context))
-	
+
 	def make_alt_tags(self, string):
 		"""Similar to parse_alt_tags, but in reverse; converts square brackets to nested alt tags."""
 		if string is None or len(string) < 1: return ""
-		
+
 		# Find maximum nested depth
 		nested = 0
 		while True:
@@ -384,7 +383,7 @@ class Unprompted:
 			end_new = tmp_end * (i + 1)
 
 			string = string.replace(start_old, start_new).replace(end_old, end_new)
-		
+
 		# Convert primary square bracket tag to alt tag
 		string = string.replace(self.Config.syntax.tag_start, self.Config.syntax.tag_start_alt).replace(self.Config.syntax.tag_end, self.Config.syntax.tag_end_alt)
 
@@ -453,10 +452,10 @@ class Unprompted:
 					this_val = self.shortcode_user_vars[att]
 					# Apply preset model names
 					if att_split[2] == "model":
-						if self.shortcode_user_vars["sd_base"]== "sd1": cn_dict = self.Config.stable_diffusion.controlnet.sd1_models
+						if self.shortcode_user_vars["sd_base"] == "sd1": cn_dict = self.Config.stable_diffusion.controlnet.sd1_models
 						elif self.shortcode_user_vars["sd_base"] == "sdxl": cn_dict = self.Config.stable_diffusion.controlnet.sdxl_models
 
-						if hasattr(cn_dict,this_val):
+						if hasattr(cn_dict, this_val):
 							this_val = getattr(cn_dict, this_val)
 				setattr(all_units[int(att_split[1])], "_".join(att_split[2:]), this_val)
 				cnet.update_cn_script_in_processing(this_p, all_units)
@@ -548,15 +547,18 @@ class Unprompted:
 			if self.routine == "after":
 				if new_image:
 					self.after_processed.images[idx] = new_image
-				else: return self.after_processed.images[idx]
+				else:
+					return self.after_processed.images[idx]
 			elif "init_images" in self.shortcode_user_vars and self.shortcode_user_vars["init_images"]:
 				if new_image:
 					self.shortcode_user_vars["init_images"][idx] = new_image
-				else: return self.shortcode_user_vars["init_images"][idx]
+				else:
+					return self.shortcode_user_vars["init_images"][idx]
 			elif "default_image" in self.shortcode_user_vars:
 				if new_image:
 					self.shortcode_user_vars["default_image"] = new_image
-				else: return self.shortcode_user_vars["default_image"]
+				else:
+					return self.shortcode_user_vars["default_image"]
 		except Exception as e:
 			self.log.exception("Could not find the current image.")
 			return None
@@ -570,16 +572,16 @@ class Unprompted:
 
 				if self.routine == "after":
 					self.shortcode_user_vars["init_images"][idx] = self.after_processed.images[idx]
-				
+
 				# Update the SD vars if Unprompted.main_p exists
 				#if hasattr(self, "main_p"):
 				#	self.update_stable_diffusion_vars(self.main_p)
 			return True
 		return None
 
-	def escape_tags(self, string, new_start = None, new_end = None):
-		if not new_start: new_start = self.Config.syntax.tag_escape+self.Config.syntax.tag_start_alt
-		if not new_end: new_end = self.Config.syntax.tag_escape+self.Config.syntax.tag_end_alt
+	def escape_tags(self, string, new_start=None, new_end=None):
+		if not new_start: new_start = self.Config.syntax.tag_escape + self.Config.syntax.tag_start_alt
+		if not new_end: new_end = self.Config.syntax.tag_escape + self.Config.syntax.tag_end_alt
 		# self.log.warning(f"string is {string}")
 		# self.log.warning(f"string after replacing is {string.replace(self.Config.syntax.tag_start,new_start).replace(self.Config.syntax.tag_end,new_end)}")
-		return string.replace(self.Config.syntax.tag_start,new_start).replace(self.Config.syntax.tag_end,new_end)
+		return string.replace(self.Config.syntax.tag_start, new_start).replace(self.Config.syntax.tag_end, new_end)

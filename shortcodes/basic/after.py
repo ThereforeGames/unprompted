@@ -15,7 +15,7 @@ class Shortcode():
 		# if "batch_indexing" in kwargs: self.batch_indexing = bool(self.Unprompted.parse_advanced(kwargs["batch_indexing"]))
 
 		batch_real_index = self.Unprompted.shortcode_user_vars["batch_real_index"] if "batch_real_index" in self.Unprompted.shortcode_user_vars else 0
-		dupe_index_mode = self.Unprompted.parse_arg("dupe_index_mode","concat")
+		dupe_index_mode = self.Unprompted.parse_arg("dupe_index_mode", "concat")
 
 		# Create list inside of list to house [after] content for this batch number
 		while batch_real_index >= len(self.after_content):
@@ -26,10 +26,10 @@ class Shortcode():
 		is_new_index = index >= len(self.after_content[batch_real_index])
 		if is_new_index or dupe_index_mode != "skip":
 			self.log.debug(f"Queueing up content (Batch #{batch_real_index}, After {index}): {content}")
-			
+
 			if is_new_index or dupe_index_mode == "replace":
 				self.log.debug(f"Replacing content in After routine (index {index})")
-				helpers.list_set(self.after_content[batch_real_index],index,content,"")
+				helpers.list_set(self.after_content[batch_real_index], index, content, "")
 			elif not is_new_index:
 				if dupe_index_mode == "concat":
 					self.log.debug(f"Concatenating content to After routine (index {index})")
@@ -61,17 +61,21 @@ class Shortcode():
 							self.log.debug(f"{success_string} Regional Prompter")
 						elif script_title == "controlnet":
 							# Update the controlnet script args with a list of 0 units
-							cn_path = self.Unprompted.extension_path(self.Unprompted.Config.stable_diffusion.controlnet.extension)
-							if cn_path:
-								cn_module = helpers.import_file(f"{self.Unprompted.Config.stable_diffusion.controlnet.extension}.internal_controlnet.external_code", f"{cn_path}/internal_controlnet/external_code.py")
-								cn_module.update_cn_script_in_processing(self.Unprompted.main_p, [])
-								self.log.debug(f"{success_string} ControlNet")
-							else:
-								self.log.error("Could not communicate with ControlNet.")
+							if self.Unprompted.webui == "auto1111":
+								cn_path = self.Unprompted.extension_path(self.Unprompted.Config.stable_diffusion.controlnet.extension)
+								if cn_path:
+									cn_lib = "internal_controlnet"
+									# cn_lib = "lib_controlnet"
+									cn_module = helpers.import_file(f"{self.Unprompted.Config.stable_diffusion.controlnet.extension}.{cn_lib}.external_code", f"{cn_path}/{cn_lib}/external_code.py")
+									cn_module.update_cn_script_in_processing(self.Unprompted.main_p, [])
+									self.log.debug(f"{success_string} ControlNet")
+								else:
+									self.log.error("Could not communicate with ControlNet.")
 
 							pass
 					except Exception as e:
 						self.log.exception(f"Exception while trying to bypass an extension: {script_title}")
+						pass
 					i += 1
 
 			if processed:
@@ -95,11 +99,11 @@ class Shortcode():
 					self.log.info(f"Processing After content for batch {batch_idx}, block {idx}...")
 					self.log.debug(f"After content: {content}")
 					self.Unprompted.shortcode_user_vars["after_index"] = idx
-					
+
 					self.Unprompted.process_string(content, "after")
 
 			self.after_content = []
-			
+
 			return (self.Unprompted.after_processed)
 		return processed
 

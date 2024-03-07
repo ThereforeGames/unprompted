@@ -20,6 +20,7 @@ from enum import IntEnum, auto
 import sys, os, html, random
 
 base_dir = scripts.basedir()
+unprompted_dir = str(Path(*Path(base_dir).parts[-2:])).replace("\\", "/")
 
 sys.path.append(base_dir)
 # Main object
@@ -27,6 +28,7 @@ from lib_unprompted.shared import Unprompted, parse_config
 
 Unprompted = Unprompted(base_dir)
 
+Unprompted.log.debug(f"The `base_dir` is: {base_dir}")
 ext_dir = os.path.split(os.path.normpath(base_dir))[1]
 if ext_dir == "unprompted":
 	Unprompted.log.warning("The extension folder must be renamed from unprompted to _unprompted in order to ensure compatibility with other extensions. Please see this A1111 WebUI issue for more details: https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/8011")
@@ -39,6 +41,13 @@ Unprompted.main_p = None
 Unprompted.is_enabled = True
 Unprompted.original_prompt = None
 Unprompted.original_negative_prompt = ""
+
+if os.path.exists(f"./modules_forge"):
+	Unprompted.webui = "forge"
+else:
+	Unprompted.webui = "auto1111"
+
+Unprompted.log.debug(f"WebUI type: {Unprompted.webui}")
 
 Unprompted.wizard_template_files = []
 Unprompted.wizard_template_names = []
@@ -95,7 +104,7 @@ def wizard_prep_event_listeners(obj):
 			wizard_set_event_listener(child)
 
 
-def wizard_generate_template(option, is_img2img, prepend="", append=""):
+def wizard_generate_template(option, is_img2img, html_safe=True, prepend="", append=""):
 	filepath = os.path.relpath(Unprompted.wizard_template_files[option], f"{base_dir}/{Unprompted.Config.template_directory}")
 	# Remove file extension
 	filepath = os.path.splitext(filepath)[0]
@@ -120,7 +129,9 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 						this_val = gr_obj.value
 					if (arg_name == "prompt"): continue
 
-					this_val = Unprompted.make_alt_tags(html.escape(str(helpers.autocast(this_val)).replace("\"", "\'"), quote=False))
+					this_val = str(helpers.autocast(this_val)).replace("\"", "\'")
+					if html_safe: this_val = html.escape(this_val, quote=False)
+					this_val = Unprompted.make_alt_tags(this_val)
 
 					if " " in this_val: this_val = f"\"{this_val}\""  # Enclose in quotes if necessary
 					result += f" {arg_name}={this_val}"
@@ -139,7 +150,7 @@ def wizard_generate_template(option, is_img2img, prepend="", append=""):
 	return (prepend + result + append)
 
 
-def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
+def wizard_generate_shortcode(option, is_img2img, html_safe=True, prepend="", append=""):
 	if hasattr(Unprompted.shortcode_objects[option], "wizard_prepend"): result = Unprompted.shortcode_objects[option].wizard_prepend
 	else: result = Unprompted.Config.syntax.tag_start + option
 	filtered_shortcodes = Unprompted.wizard_groups[WizardModes.SHORTCODES][int(is_img2img)]
@@ -182,7 +193,9 @@ def wizard_generate_shortcode(option, is_img2img, prepend="", append=""):
 					elif (block_name == "number" or block_name == "slider"): result += f" {arg_name}={helpers.autocast(gr_obj.value)}"
 					elif (block_name == "textbox"):
 						if len(this_val) > 0: result += f" {arg_name}=\"{this_val}\""
-					else: result += f" {arg_name}=\"{html.escape(this_val, quote=False)}\""
+					else:
+						if html_safe: this_val = html.escape(this_val, quote=False)
+						result += f" {arg_name}=\"{this_val}\""
 
 		except:
 			pass
@@ -256,10 +269,12 @@ def wizard_generate_capture(include_inference, include_prompt, include_neg_promp
 
 
 def get_local_file_dir(filename=None):
-	unp_dir = os.path.basename(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+	# unp_dir = os.path.basename(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 	if filename: filepath = "/" + str(Path(os.path.relpath(filename, f"{base_dir}")).parent)
 	else: filepath = ""
-	return (f"file/extensions/{unp_dir}{filepath}")
+
+	return (f"file/{unprompted_dir}{filepath}")
 
 
 def get_markdown(file):
@@ -319,6 +334,7 @@ class Scripts(scripts.Script):
 				promos.append(f'<a href="https://payhip.com/b/hdgNR" target="_blank"><img src="{get_local_file_dir()}/images/promo_box_fantasy.png" class="thumbnail"></a><h1>Create beautiful art for your <strong>Fantasy Card Game</strong></h1><p>Generate a wide variety of creatures and characters in the style of a fantasy card game. Perfect for heroes, animals, monsters, and even crazy hybrids.</p><a href="https://payhip.com/b/hdgNR" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View premium assets for Unprompted">Download Now ➜</button></a>')
 				promos.append(f'<a href="https://github.com/ThereforeGames/unprompted" target="_blank"><img src="{get_local_file_dir()}/images/promo_github_star.png" class="thumbnail"></a><h1>Give Unprompted a <strong>star</strong> for visibility</h1><p>Most WebUI users have never heard of Unprompted. You can help more people discover it by giving the repo a ⭐ on Github. Thank you for your support!</p><a href="https://github.com/ThereforeGames/unprompted" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the Unprompted repo">Visit Github ➜</button></a>')
 				promos.append(f'<a href="https://github.com/sponsors/ThereforeGames" target="_blank"><img src="{get_local_file_dir()}/images/promo_github_sponsor.png" class="thumbnail"></a><h1>Become a Sponsor</h1><p>One of the best ways to support Unprompted is by becoming our Sponsor on Github - sponsors receive access to a private repo containing all of our premium add-ons. <em>(Still setting that up... should be ready soon!)</em></p><a href="https://github.com/sponsors/ThereforeGames" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the Unprompted repo">Visit Github ➜</button></a>')
+				promos.append(f'<a href="https://github.com/ThereforeGames/sd-webui-breadcrumbs" target="_blank"><img src="{get_local_file_dir()}/images/promo_breadcrumbs.png" class="thumbnail"></a><h1>Try our new Breadcrumbs extension</h1><p>From the developer of Unprompted comes <strong>sd-webui-breadcrumbs</strong>, an extension designed to improve the WebUI\'s navigation flow. Tedious "menu diving" is a thing of the past!</p><a href="https://github.com/ThereforeGames/sd-webui-breadcrumbs" target=_blank><button class="gr-button gr-button-lg gr-button-secondary" title="View the sd-webui-breadcrumbs repo">Visit Github ➜</button></a>')
 
 				with gr.Accordion("🎉 Promo", open=is_open):
 					plug = gr.HTML(label="plug", elem_id="promo", value=random.choice(promos))
@@ -348,7 +364,7 @@ class Scripts(scripts.Script):
 								if (block_name == "textbox"):
 									if "_placeholder" in kwargs: this_placeholder = kwargs["_placeholder"]
 									else: this_placeholder = str(content)
-									obj = gr.Textbox(label=this_label, max_lines=1, placeholder=this_placeholder, info=_info, show_label=_show_label)
+									obj = gr.Textbox(label=this_label, lines=int(kwargs["_lines"]) if "_lines" in kwargs else 1, max_lines=int(kwargs["_max_lines"]) if "_max_lines" in kwargs else 1, placeholder=this_placeholder, info=_info, show_label=_show_label)
 								elif (block_name == "checkbox"):
 									obj = gr.Checkbox(label=this_label, value=bool(int(content)), info=_info, show_label=_show_label)
 								elif (block_name == "number"):
@@ -651,8 +667,8 @@ class Scripts(scripts.Script):
 						autoinclude_obj = autoinclude_obj.children[-1]
 
 					if (autoinclude_obj.value):
-						if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, "", Unprompted.original_prompt)
-						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, "", Unprompted.original_prompt)
+						if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, False, "", Unprompted.original_prompt)
+						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, False, "", Unprompted.original_prompt)
 						p.all_prompts[0] = Unprompted.original_prompt  # test
 						p.unprompted_original_prompt = Unprompted.original_prompt
 

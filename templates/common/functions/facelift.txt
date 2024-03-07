@@ -1,4 +1,6 @@
 [template name="Facelift v0.1.1"]
+![Preview]([base_dir]/facelift.png)
+
 An all-in-one solution for performing faceswaps by combining different models and postprocessing techniques.
 [/template]
 [wizard row]

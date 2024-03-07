@@ -80,7 +80,7 @@
 			{
 				"canny":"controlnet11Models_canny",
 				"depth":"controlnet11Models_depth",
-				"normalmap":"control_v11p_sd15_normalbae",
+				"normalmap":"controlnet11Models_normal",
 				"openpose":"controlnet11Models_openpose",
 				"mlsd":"",
 				"lineart":"controlnet11Models_animeline",

@@ -9,4 +9,4 @@ Unprompted is a powerful templating language written in Python. Unlike most temp
 
 Software created by [Therefore Games](https://therefore.games). If you like my work, you can [sponsor the project on ☕ Github](https://github.com/sponsors/ThereforeGames) or [support me on <span class="patreon-symbol">┃🔴</span> Patreon](https://patreon.com/thereforegames). Thank you!
 
-*Compatible with Python v3.10.6 and WebUI v1.6.0.*
+*Compatible with Python v3.10.6 and WebUI v1.7.0.*

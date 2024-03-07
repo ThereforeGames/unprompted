@@ -41,8 +41,6 @@ class Shortcode():
 					contents = self.Unprompted.shortcode_objects["function"].functions[name]
 					next_context = name
 			else:
-				# self.log.debug(f"{name} is assumed to be a filepath")
-
 				file = self.Unprompted.parse_filepath(helpers.str_with_ext(name, self.Unprompted.Config.txt_format), context=context, must_exist=False)
 
 				if not os.path.exists(file):
