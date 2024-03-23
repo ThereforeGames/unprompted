@@ -1,0 +1,1 @@
+[txt2mask smoothing=20]Room walls composed of the same material[/txt2mask]Newly renovated and clean room walls

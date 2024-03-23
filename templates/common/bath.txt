@@ -1,0 +1,1 @@
+[txt2mask smoothing=20]bath[/txt2mask]Remodeled bath

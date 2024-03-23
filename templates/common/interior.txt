@@ -1,0 +1,1 @@
+[txt2mask smoothing=20]Chairs, desks, sofas, lighting, interior ,Furniture[/txt2mask]Beautiful and unified interior
