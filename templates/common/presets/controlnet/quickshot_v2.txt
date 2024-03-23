@@ -1,3 +1,0 @@
-[sets 
- cn_0_enabled=1 cn_0_pixel_perfect=0 cn_0_module=none cn_0_model=instructp2p cn_0_weight=1.0 cn_0_guidance_end=0.35 cn_0_control_mode=0
- ]

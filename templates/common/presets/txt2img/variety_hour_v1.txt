@@ -1,1 +1,0 @@
-[set cfg_scale][random _float _min=3 _max=7.5][/set][set sampler_name][choose]Euler a|DPM++ 3M SDE|Restart[/choose][/set][set steps][random _min=20 _max=30][/set]

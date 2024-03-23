@@ -1,1 +1,0 @@
-[faceswap "{get faces}" unload="{get unload_all}" export_embedding]

@@ -1,7 +1,0 @@
-[choose]
-blonde
-brunette
-ginger
-bald
-[call ./colors]-haired
-[/choose]

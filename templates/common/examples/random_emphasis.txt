@@ -1,7 +1,0 @@
-[# Applies random amount of emphasis to a random part of the prompt for use with A1111 WebUI.]
-
-[set word_count][eval][info word_count][get my_prompt][/info]-1[/eval][/set]
-[set term_start][random _min=0 _max="{get word_count}"][/set]
-[set term_end][eval][get term_start]+[random _min=1 _max=2][/eval][/set]
-[set term][substring start="{get term_start}" end="{get term_end}" unit=words][get my_prompt][/substring][/set]
-[replace _from="{get term}" _to="({get term}:{random _min=0.5 _max=3.0 _float})"][get my_prompt][/replace]

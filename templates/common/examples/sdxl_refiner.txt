@@ -1,5 +1,0 @@
-[# Applies the SDXL refiner task via img2img - I recommend increasing your "cache models in RAM" setting in the WebUI if you have the RAM to do so.]
-[set base_model _new]sd_xl_base_1.0[/set]
-[set refiner_model _new]sd_xl_refiner_1.0[/set]
-[set sd_model][get base_model][/set]
-[after][sets sd_model="{get refiner_model}" denoising_strength=0.25][img2img][/after]
