@@ -23,7 +23,7 @@ Optimizing for quality means that the model will try to generate the best possib
 [/template]
 [set subject _new _label="Subject" _info="Enter a prompt to enhance." _max_lines=20 _lines=3]Statue of God[/set]
 
-[set style_preset _new _info="May download extra dependencies on first use." _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/magic_spice/*.*' _basename _hide_ext}" _label="Choose Your Spice"]allspice_v1[/set]
+[set style_preset _new _info="May download extra dependencies on first use." _ui="dropdown" _choices="none|{filelist '%BASE_DIR%/templates/common/presets/magic_spice/*.*' _basename _hide_ext}" _label="Choose Your Spice"]allspice_v2[/set]
 
 [set aspect_ratio _new _ui="radio" _choices="■ Square|↕️ Portrait|↔️ Landscape|Custom"]■ Square[/set]
 
