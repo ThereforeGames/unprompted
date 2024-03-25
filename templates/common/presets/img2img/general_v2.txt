@@ -1,1 +1,0 @@
-[sets cfg_scale=4 sampler_name="DPM++ 3M SDE" steps=20 denoising_strength=0.85 mask_blur=0]

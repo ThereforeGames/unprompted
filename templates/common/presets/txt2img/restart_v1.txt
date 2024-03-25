@@ -1,1 +1,0 @@
-[sets cfg_scale=6.5 sampler_name="Restart" steps=20]

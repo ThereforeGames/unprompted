@@ -1,2 +1,0 @@
-[# Note: This preset is only compatible with WebUI Forge and assumes that the Lightning lora has been merged into the active model.]
-[sets cfg_scale=2 sampler_name="DPM++ 2M SDE SGMUniform" steps=6]
