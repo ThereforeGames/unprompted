@@ -9,6 +9,12 @@ class Shortcode():
 		self.counter = -1  # start at -1 so that the first image is 0 when we iterate
 		self.image_array = []
 
+		# using a counter to keep track of the current image index as something isn't working quite
+		# right with getting the image index from the shortcode_user_vars
+		# this also helps with grid detection as well
+		self.counter = -1  # start at -1 so that the first image is 0 when we iterate
+		self.image_array = []
+
 	def run_atomic(self, pargs, kwargs, context):
 		import modules.img2img
 		from modules import sd_samplers
@@ -72,6 +78,12 @@ class Shortcode():
 			img2img_images = []
 			temp_gr_request = lambda: None
 			temp_gr_request.username = "unprompted"
+
+			# subtract the real_first_image_index to get the correct zero based index of the prompt for the first image
+			prompt = self.Unprompted.after_processed.all_prompts[self.counter]
+			negative_prompt = self.Unprompted.after_processed.all_negative_prompts[self.counter]
+
+			image = self.image_array[self.counter]
 
 			# subtract the real_first_image_index to get the correct zero based index of the prompt for the first image
 			prompt = self.Unprompted.after_processed.all_prompts[self.counter]
@@ -166,6 +178,11 @@ class Shortcode():
 		else:
 			self.Unprompted.after_processed.images.extend(img2img_images)
 			self.Unprompted.shortcode_user_vars["init_images"] = self.Unprompted.after_processed.images
+		return ""
+
+	def after(self, p=None, processed=None):
+		self.counter = -1  # reset the counter for the next run
+		self.image_array = []  # this array holds the whole images, make sure to clear it after the run
 		return ""
 
 	def after(self, p=None, processed=None):
