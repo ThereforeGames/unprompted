@@ -3,7 +3,28 @@ All notable changes to this project will be documented in this file.
 
 For more details on new features, please check the [Manual](./MANUAL.md).
 
-<details open><summary>10.7.0 - 6 March 2024</summary>
+<details open><summary>10.8.0 - 25 March 2024</summary>
+
+### Added
+- `[gpt]`: Now supports `tokenizer` kwarg to load a separate model as the tokenizer
+- `[gpt]`: Now supports `transformers_class` kwarg to specify the methods of inference, defaults to `auto`
+- `[gpt]`: Now supports `prefix` and `affix` kwargs to include extra strings in the returned result
+- `[gpt]`: Catch exception when there are issues with the `model` or `tokenizer`
+- `[replace]`: Now supports delimited values in `_from` and `_to` kwargs
+- Magic Spice preset `booru_spice_v2`: Updated syntax for better compatiblity with Animagine XL 3.1
+- Magic Spice preset `photo_spice_v2`: Updated GPT model to SuperPrompt
+- Magic Spice preset `allspice_v2`: Updated GPT model to SuperPrompt
+- New config setting `Config.ui.wizard_prepends`: Determines whether the Wizard's autoincludes are prepended or appended to your prompt (defaults to true; prepend)
+- New txt2img preset `dpm_lightning_8step_merged_v1`: Compatible only with Forge UI, use with models that have prebaked Lightning lora
+
+### Fixed
+- `photo_spice_v2`: Fixed an issue with the `do_fluff` variable
+- `[zoom_enhance]`: Fixed a possible crash due to unused `scipy` package
+- `[img2img]`: Fixed an issue with Forge WebUI
+
+</details>
+
+<details><summary>10.7.0 - 6 March 2024</summary>
 
 ### Added
 - New shortcode `[autotone]`: Adjusts the black point of the image to enhance contrast (should be placed inside an `[after]` block)

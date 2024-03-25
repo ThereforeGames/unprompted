@@ -667,8 +667,13 @@ class Scripts(scripts.Script):
 						autoinclude_obj = autoinclude_obj.children[-1]
 
 					if (autoinclude_obj.value):
-						if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, False, "", Unprompted.original_prompt)
-						elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, False, "", Unprompted.original_prompt)
+						if Unprompted.Config.ui.wizard_prepends:
+							if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, False, "", Unprompted.original_prompt)
+							elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, False, "", Unprompted.original_prompt)
+						else:
+							if mode == WizardModes.SHORTCODES: Unprompted.original_prompt = wizard_generate_shortcode(key, is_img2img, False, Unprompted.original_prompt, "")
+							elif mode == WizardModes.TEMPLATES: Unprompted.original_prompt = wizard_generate_template(idx, is_img2img, False, Unprompted.original_prompt, "")
+
 						p.all_prompts[0] = Unprompted.original_prompt  # test
 						p.unprompted_original_prompt = Unprompted.original_prompt
 

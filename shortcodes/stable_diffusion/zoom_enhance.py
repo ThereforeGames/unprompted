@@ -9,7 +9,6 @@ def process_images_inner_(this_p):
 
 
 class Shortcode():
-
 	def __init__(self, Unprompted):
 		import lib_unprompted.helpers as helpers
 		self.Unprompted = Unprompted
@@ -27,7 +26,6 @@ class Shortcode():
 	def run_atomic(self, pargs, kwargs, context):
 		import cv2, numpy, math
 		from modules import devices, sd_models, shared
-		from scipy import mean, interp, ravel, array
 		from PIL import Image, ImageFilter, ImageChops, ImageOps
 		from blendmodes.blend import blendLayers, BlendType
 		from lib_unprompted.simpleeval import simple_eval
@@ -56,8 +54,7 @@ class Shortcode():
 		upscale_min = float(self.Unprompted.parse_advanced(kwargs["upscale_min"], context)) if "upscale_min" in kwargs else 0.03
 		# (upscale_width + upscale_height) / 1024
 		upscale_min = upscale_min * (512**2)  # Scale the minimum area up depending on the canvas size
-		bypass_adaptive_hires = self.Unprompted.parse_arg("bypass_adaptive_hires",False)
-
+		bypass_adaptive_hires = self.Unprompted.parse_arg("bypass_adaptive_hires", False)
 
 		self.log.debug(f"The upscale_min for this image is {upscale_min}")
 
@@ -93,9 +90,9 @@ class Shortcode():
 		self.Unprompted.main_p.n_iter = 1
 		self.Unprompted.main_p.mask_for_overlay = None
 
-		_image = self.Unprompted.parse_alt_tags(kwargs["image"],context) if "image" in kwargs else False
+		_image = self.Unprompted.parse_alt_tags(kwargs["image"], context) if "image" in kwargs else False
 		if _image:
-			starting_image = Image.open(self.Unprompted.parse_alt_tags(_image,context))
+			starting_image = Image.open(self.Unprompted.parse_alt_tags(_image, context))
 			image_pil = starting_image
 			is_img2img = False
 		else:
@@ -149,7 +146,6 @@ class Shortcode():
 
 		append_originals = []
 
-		
 		image_idx = self.Unprompted.shortcode_user_vars["batch_real_index"] if "batch_real_index" in self.Unprompted.shortcode_user_vars else 0
 
 		all_replacements = (self.Unprompted.parse_alt_tags(kwargs["replacement"], context) if "replacement" in kwargs else "face").split(self.Unprompted.Config.syntax.delimiter)

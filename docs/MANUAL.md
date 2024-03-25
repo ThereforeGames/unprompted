@@ -1169,6 +1169,12 @@ Supports the `max_length` kwarg which is the maximum number of words to be retur
 
 Supports the `min_length` kwarg which is the minimum number of words to be returned by the shortcode. Defaults to 1.
 
+Supports the `prefix` and `affix` kwargs to include custom strings in the returned result.
+
+Supports the `tokenizer` kwarg to load a separate model as the tokenizer.
+
+Supports the `transformers_class` to specify the methods of inference, defaults to `auto`. Also supports `t5`.
+
 Supports the `unload` parg to prevent keeping the model and tokenizer in memory between runs.
 
 
@@ -1435,7 +1441,7 @@ Updates the content using argument pairings as replacement logic.
 
 Arguments are case-sensitive.
 
-Supports the optional `_from` and `_to` arguments, which can process secondary shortcode tags as replacement targets, e.g. `[replace _from="{get var_a}" _to="{get var_b}"]`.
+Supports the optional `_from` and `_to` arguments, which can process secondary shortcode tags as replacement targets, e.g. `[replace _from="{get var_a}" _to="{get var_b}"]`. These arguments also support delimited values with `Unprompted.Config.syntax.delimiter`.
 
 Supports the optional `_count` argument which limits the number of occurances to replace. For example, `[replace the="a" _count=1]the frog and the dog and the log[/replace]` will return `a frog and the dog and the log`.
 

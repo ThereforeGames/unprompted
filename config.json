@@ -111,6 +111,7 @@
 		"wizard_capture":true,
 		"wizard_open":false,
 		"wizard_default_shortcode":"txt2mask",
+		"wizard_prepends":true,
 		"dry_run_open":false,
 		"resources_open":true
 	}
