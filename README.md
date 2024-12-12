@@ -8,7 +8,7 @@
 
 Unprompted is a **powerful templating language** and **Swiss Army knife** for the [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui).
 
-Built around `[shortcodes]`, Unprompted is uniquely designed for **maximum readibility with natural language.** This makes it **easy to learn and use**, even for those with no prior programming experience.
+Built around `[shortcodes]`, Unprompted is uniquely designed for **maximum readability with natural language.** This makes it **easy to learn and use**, even for those with no prior programming experience.
 
 Now also available as a [ComfyUI node](https://github.com/ThereforeGames/ComfyUI-Unprompted).
 
