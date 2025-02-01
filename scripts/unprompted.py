@@ -1085,6 +1085,8 @@ class Scripts(scripts.Script):
 		Unprompted.shortcode_user_vars["sd_model"] = opts.data["sd_model_checkpoint"]
 		Unprompted.shortcode_user_vars["sd_base"] = "none"
 		Unprompted.shortcode_user_vars["sd_res"] = 1024
+		Unprompted.shortcode_user_vars["unprompted_seed"] = unprompted_seed
+		Unprompted.shortcode_user_vars["sd_seed"] = p.seed
 		if sd_models.model_data.sd_model:
 			Unprompted.update_stable_diffusion_architecture_vars(sd_models.model_data.sd_model)
 

@@ -653,7 +653,7 @@ class Unprompted:
 			elif att == "sd_model" and self.shortcode_user_vars[att] != self.original_model and isinstance(self.shortcode_user_vars[att], str):
 				info = sd_models.get_closet_checkpoint_match(self.shortcode_user_vars["sd_model"])
 				if info:
-					new_model = sd_models.load_model(info, None)  #, None
+					new_model = sd_models.reload_model_weights(info=info)
 					self.update_stable_diffusion_architecture_vars(new_model)
 			elif att == "sd_vae":
 				from modules import sd_vae
